@@ -34,6 +34,7 @@ import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BitsFilteredDocIdSet;
 import org.apache.lucene.search.DocIdSet;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.QueryWrapperFilter;
 import org.apache.lucene.util.Accountable;
@@ -58,11 +59,11 @@ public final class TermsFilter extends Filter implements Accountable {
 
   /*
    * this class is often used for large number of terms in a single field.
-   * to optimize for this case and to be filter-cache friendly we 
+   * to optimize for this case and to be filter-cache friendly we
    * serialize all terms into a single byte array and store offsets
    * in a parallel array to keep the # of object constant and speed up
    * equals / hashcode.
-   * 
+   *
    * This adds quite a bit of complexity but allows large term filters to
    * be efficient for GC and cache-lookups
    */
@@ -71,7 +72,7 @@ public final class TermsFilter extends Filter implements Accountable {
   private final TermsAndField[] termsAndFields;
   private final int hashCode; // cached hashcode for fast cache lookups
   private static final int PRIME = 31;
-  
+
   /**
    * Creates a new {@link TermsFilter} from the given list. The list
    * can contain duplicate terms and multiple fields.
@@ -90,7 +91,7 @@ public final class TermsFilter extends Filter implements Accountable {
         return null;
       }}, terms.size());
   }
-  
+
   /**
    * Creates a new {@link TermsFilter} from the given {@link BytesRef} list for
    * a single field.
@@ -108,7 +109,7 @@ public final class TermsFilter extends Filter implements Accountable {
       }
     }, terms.size());
   }
-  
+
   /**
    * Creates a new {@link TermsFilter} from the given {@link BytesRef} array for
    * a single field.
@@ -117,7 +118,7 @@ public final class TermsFilter extends Filter implements Accountable {
     // this ctor prevents unnecessary Term creations
    this(field, Arrays.asList(terms));
   }
-  
+
   /**
    * Creates a new {@link TermsFilter} from the given array. The array can
    * contain duplicate terms and multiple fields.
@@ -125,8 +126,8 @@ public final class TermsFilter extends Filter implements Accountable {
   public TermsFilter(final Term... terms) {
     this(Arrays.asList(terms));
   }
-  
-  
+
+
   private TermsFilter(FieldAndTermEnum iter, int length) {
     // TODO: maybe use oal.index.PrefixCodedTerms instead?
     // If number of terms is more than a few hundred it
@@ -158,7 +159,7 @@ public final class TermsFilter extends Filter implements Accountable {
         // deduplicate
         if (previousField.equals(currentField)) {
           if (previousTerm.bytesEquals(currentTerm)){
-            continue;            
+            continue;
           }
         } else {
           final int start = lastTermsAndField == null ? 0 : lastTermsAndField.end;
@@ -172,7 +173,7 @@ public final class TermsFilter extends Filter implements Accountable {
         serializedTerms = ArrayUtil.grow(serializedTerms, lastEndOffset+currentTerm.length);
       }
       System.arraycopy(currentTerm.bytes, currentTerm.offset, serializedTerms, lastEndOffset, currentTerm.length);
-      offsets[index] = lastEndOffset; 
+      offsets[index] = lastEndOffset;
       lastEndOffset += currentTerm.length;
       index++;
       previousTerm = currentTerm;
@@ -185,7 +186,7 @@ public final class TermsFilter extends Filter implements Accountable {
     this.termsBytes = ArrayUtil.shrink(serializedTerms, lastEndOffset);
     this.termsAndFields = termsAndFields.toArray(new TermsAndField[termsAndFields.size()]);
     this.hashCode = hash;
-    
+
   }
 
   @Override
@@ -203,6 +204,35 @@ public final class TermsFilter extends Filter implements Accountable {
 
   @Override
   public DocIdSet getDocIdSet(LeafReaderContext context, Bits acceptDocs) throws IOException {
+//    final LeafReader reader = context.reader();
+//    BitDocIdSet.Builder builder = new BitDocIdSet.Builder(reader.maxDoc());
+//    final Fields fields = reader.fields();
+//    final BytesRef spare = new BytesRef(this.termsBytes);
+//    Terms terms = null;
+//    TermsEnum termsEnum = null;
+//    PostingsEnum docs = null;
+//    for (TermsAndField termsAndField : this.termsAndFields) {
+//      if ((terms = fields.terms(termsAndField.field)) != null) {
+//        termsEnum = terms.iterator(); // this won't return null
+//        for (int i = termsAndField.start; i < termsAndField.end; i++) {
+//          spare.offset = offsets[i];
+//          spare.length = offsets[i+1] - offsets[i];
+//          if (termsEnum.seekExact(spare)) {
+//            docs = termsEnum.postings(docs, PostingsEnum.NONE); // no freq since we don't need them
+//            builder.or(docs);
+//          }
+//        }
+//      }
+//    }
+//    return BitsFilteredDocIdSet.wrap(builder.build(), acceptDocs);
+    return getDocIdSet(context, acceptDocs, PostingsEnum.NONE, null);
+  }
+
+  public interface PostingsEnumAdapter {
+    public abstract PostingsEnum get(PostingsEnum postingsEnum) throws IOException;
+  }
+
+  public DocIdSet getDocIdSet(LeafReaderContext context, Bits acceptDocs, int flags, PostingsEnumAdapter postingsEnumAdapter) throws IOException {
     final LeafReader reader = context.reader();
     BitDocIdSet.Builder builder = new BitDocIdSet.Builder(reader.maxDoc());
     final Fields fields = reader.fields();
@@ -217,7 +247,8 @@ public final class TermsFilter extends Filter implements Accountable {
           spare.offset = offsets[i];
           spare.length = offsets[i+1] - offsets[i];
           if (termsEnum.seekExact(spare)) {
-            docs = termsEnum.postings(docs, PostingsEnum.NONE); // no freq since we don't need them
+            docs = termsEnum.postings(docs, flags);
+            if (null != postingsEnumAdapter) docs = postingsEnumAdapter.get(docs);
             builder.or(docs);
           }
         }
@@ -234,7 +265,7 @@ public final class TermsFilter extends Filter implements Accountable {
     if (super.equals(obj) == false) {
       return false;
     }
-    
+
     TermsFilter test = (TermsFilter) obj;
     // first check the fields before even comparing the bytes
     if (test.hashCode == hashCode && Arrays.equals(termsAndFields, test.termsAndFields)) {
@@ -252,7 +283,7 @@ public final class TermsFilter extends Filter implements Accountable {
   public int hashCode() {
     return 31 * super.hashCode() + hashCode;
   }
-  
+
   @Override
   public String toString(String defaultField) {
     StringBuilder builder = new StringBuilder();
@@ -285,8 +316,8 @@ public final class TermsFilter extends Filter implements Accountable {
     final int start;
     final int end;
     final String field;
-    
-    
+
+
     TermsAndField(int start, int end, String field) {
       super();
       this.start = start;
@@ -315,7 +346,7 @@ public final class TermsFilter extends Filter implements Accountable {
       result = prime * result + start;
       return result;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
       if (this == obj) return true;
@@ -329,23 +360,23 @@ public final class TermsFilter extends Filter implements Accountable {
       if (start != other.start) return false;
       return true;
     }
-    
+
   }
-  
+
   private static abstract class FieldAndTermEnum {
     protected String field;
-    
+
     public abstract BytesRef next();
-    
+
     public FieldAndTermEnum() {}
-    
+
     public FieldAndTermEnum(String field) { this.field = field; }
-    
+
     public String field() {
       return field;
     }
   }
-  
+
   /*
    * simple utility that returns the in-place sorted list
    */

@@ -56,8 +56,9 @@ public class TermsQueryBuilder implements QueryBuilder {
     BooleanQuery.Builder bq = new BooleanQuery.Builder();
     bq.setDisableCoord(DOMUtils.getAttribute(e, "disableCoord", false));
     bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
-    bq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
-    final TermsQueryProcessor tp = new TermsQueryProcessor(bq.build());
+    BooleanQuery query = bq.build();
+    query.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
+    final TermsQueryProcessor tp = new TermsQueryProcessor(query);
 
     termBuilder.extractTerms(tp, e);
 
