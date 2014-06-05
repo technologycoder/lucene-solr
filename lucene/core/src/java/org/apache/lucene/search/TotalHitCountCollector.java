@@ -43,8 +43,7 @@ public class TotalHitCountCollector extends Collector {
 
   @Override
   public PostingFeatures postingFeatures() {
-    // we don't need frequencies here
-    return PostingFeatures.DOCS_ONLY;
+    return PostingFeatures.DOCS_AND_FREQS;
   }
 
   @Override
