@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import java.io.InputStream;
 
 /*
@@ -95,6 +96,8 @@ public class CoreParser implements QueryBuilder {
     queryFactory.addBuilder("FilteredQuery", new FilteredQueryBuilder(filterFactory, queryFactory));
     queryFactory.addBuilder("ConstantScoreQuery", new ConstantScoreQueryBuilder(queryFactory));
     queryFactory.addBuilder("PhraseQuery", new PhraseQueryBuilder(analyzer));
+    //GenericTextQuery is a error tolerant version of PhraseQuery
+    queryFactory.addBuilder("GenericTextQuery", new GenericTextQueryBuilder(analyzer));
 
     filterFactory.addBuilder("CachedFilter", new CachedFilterBuilder(queryFactory,
         filterFactory, maxNumCachedFilters));
