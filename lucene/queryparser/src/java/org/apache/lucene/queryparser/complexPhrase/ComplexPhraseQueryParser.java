@@ -19,7 +19,6 @@ package org.apache.lucene.queryparser.complexPhrase;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,10 +32,12 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MultiTermQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.spans.SpanBoostQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanNotQuery;
 import org.apache.lucene.search.spans.SpanOrQuery;
@@ -258,7 +259,7 @@ public class ComplexPhraseQueryParser extends QueryParser {
       }
       final Query contents = this.contents[0];
       // ArrayList spanClauses = new ArrayList();
-      if (contents instanceof TermQuery) {
+      if ((contents instanceof TermQuery) || (contents instanceof PrefixQuery) || (contents instanceof WildcardQuery)) {
         return contents;
       }
       // Build a sequence of Span clauses arranged in a SpanNear - child
