@@ -20,39 +20,43 @@ package org.apache.lucene.util.fst;
 // TODO: can we use just ByteArrayDataInput...?  need to
 // add a .skipBytes to DataInput.. hmm and .setPosition
 
-/** Reads from a single byte[]. */
+import java.nio.ByteBuffer;
+
+/** Reads from a single ByteBuffer. */
 final class ForwardBytesReader extends FST.BytesReader {
-  private final byte[] bytes;
-  private int pos;
+  private final ByteBuffer buffer;
 
   public ForwardBytesReader(byte[] bytes) {
-    this.bytes = bytes;
+    this.buffer = ByteBuffer.wrap(bytes);
+  }
+
+  public ForwardBytesReader(ByteBuffer buffer) {
+    this.buffer = (ByteBuffer) buffer.asReadOnlyBuffer().position(0);
   }
 
   @Override
   public byte readByte() {
-    return bytes[pos++];
+    return buffer.get();
   }
 
   @Override
   public void readBytes(byte[] b, int offset, int len) {
-    System.arraycopy(bytes, pos, b, offset, len);
-    pos += len;
+    buffer.get(b, offset, len);
   }
 
   @Override
   public void skipBytes(long count) {
-    pos += count;
+    buffer.position(buffer.position() + (int)count);
   }
 
   @Override
   public long getPosition() {
-    return pos;
+    return buffer.position();
   }
 
   @Override
   public void setPosition(long pos) {
-    this.pos = (int) pos;
+    buffer.position((int) pos);
   }
 
   @Override
