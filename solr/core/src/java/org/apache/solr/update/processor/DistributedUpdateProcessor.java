@@ -665,6 +665,7 @@ public class DistributedUpdateProcessor extends UpdateRequestProcessor {
       // TODO: what if its is already recovering? Right now recoveries queue up -
       // should they?
       final String recoveryUrl = error.req.node.getBaseUrl();
+      final String coreName = error.req.node.getCoreName();
       
       Thread thread = new Thread() {
         {
@@ -672,7 +673,7 @@ public class DistributedUpdateProcessor extends UpdateRequestProcessor {
         }
         @Override
         public void run() {
-          log.info("try and ask " + recoveryUrl + " to recover");
+          log.info("try and ask " + recoveryUrl + " " + coreName + " to recover");
           HttpSolrServer server = new HttpSolrServer(recoveryUrl);
           try {
             server.setSoTimeout(60000);
@@ -680,12 +681,12 @@ public class DistributedUpdateProcessor extends UpdateRequestProcessor {
             
             RequestRecovery recoverRequestCmd = new RequestRecovery();
             recoverRequestCmd.setAction(CoreAdminAction.REQUESTRECOVERY);
-            recoverRequestCmd.setCoreName(error.req.node.getCoreName());
+            recoverRequestCmd.setCoreName(coreName);
             try {
               server.request(recoverRequestCmd);
             } catch (Throwable t) {
               SolrException.log(log, recoveryUrl
-                  + ": Could not tell a replica to recover", t);
+                  + ": Could not tell a replica ("+coreName+") to recover", t);
             }
           } finally {
             server.shutdown();

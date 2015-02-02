@@ -853,11 +853,12 @@ public class CoreAdminHandler extends RequestHandlerBase {
   protected void handleRequestRecoveryAction(SolrQueryRequest req,
       SolrQueryResponse rsp) throws IOException {
     final SolrParams params = req.getParams();
-    log.info("It has been requested that we recover");
+    final String coreName = params.get(CoreAdminParams.CORE);
+    log.info("It has been requested that we ({}={}) recover", CoreAdminParams.CORE, coreName);
     Thread thread = new Thread() {
       @Override
       public void run() {
-        String cname = params.get(CoreAdminParams.CORE);
+        String cname = coreName;
         if (cname == null) {
           cname = "";
         }
