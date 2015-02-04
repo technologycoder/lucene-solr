@@ -176,6 +176,7 @@ public final class ConjunctionIntervalIterator extends IntervalIterator {
 
   @Override
   public int matchDistance() {
-    return (rightExtremeBegin) - (queue.currentTopEnd) -1; // align the match if pos are adjacent
+    int d = (rightExtremeBegin) - (queue.currentTopEnd) -1; // align the match if pos are adjacent
+    return (d > 0 ? d : 0);
   }
 }
