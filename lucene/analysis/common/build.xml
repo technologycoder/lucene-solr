@@ -68,6 +68,7 @@
   <target name="-jflex-StandardAnalyzer" depends="init,-install-jflex">
     <run-jflex dir="src/java/org/apache/lucene/analysis/standard" name="StandardTokenizerImpl"/>
     <run-jflex dir="src/java/org/apache/lucene/analysis/standard" name="ClassicTokenizerImpl"/>
+    <run-jflex dir="src/java/org/apache/lucene/analysis/standard" name="BBStandardTokenizerImpl"/>
     <run-jflex dir="src/java/org/apache/lucene/analysis/standard/std31" name="StandardTokenizerImpl31"/>
     <run-jflex dir="src/java/org/apache/lucene/analysis/standard/std34" name="StandardTokenizerImpl34"/>
     <run-jflex dir="src/java/org/apache/lucene/analysis/standard/std40" name="StandardTokenizerImpl40"/>
