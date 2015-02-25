@@ -271,10 +271,10 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
     private class HostComparator implements Comparator<String> {
       @Override
       public int compare(String lhs, String rhs) {
-        final int no_priority = Integer.MAX_VALUE;
+        final int no_priority = 0;
         final int lhs_priority = (hostPrioritiesMap.containsKey(lhs) ? hostPrioritiesMap.get(lhs).intValue() : no_priority);
         final int rhs_priority = (hostPrioritiesMap.containsKey(rhs) ? hostPrioritiesMap.get(rhs).intValue() : no_priority);
-        return (lhs_priority - rhs_priority);
+        return (rhs_priority - lhs_priority); // descending order
       }
     };
     
