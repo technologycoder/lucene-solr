@@ -24,7 +24,7 @@
 	</Clause>
 	<Clause occurs="mustnot">
 		<NearFirstQuery fieldName="contents" end='8'>
-			<ComplexPhraseNearQuery>KEIHANSHIN REAL ESTATE WARRANT</ComplexPhraseNearQuery>
+			<KeywordNearQuery>KEIHANSHIN REAL ESTATE WARRANT</KeywordNearQuery>
 		</NearFirstQuery>
 	</Clause>
 </BooleanQuery>

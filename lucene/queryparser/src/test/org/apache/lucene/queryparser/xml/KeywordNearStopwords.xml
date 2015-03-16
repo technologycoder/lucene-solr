@@ -15,15 +15,9 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<!-- Testing IntervalQuery to check two phrase occurrence in the first 8 positions(9 words) of the text-->
- 
-<NearFirstQuery fieldName="contents" end='8'>
-<BooleanQuery fieldName="contents">
-	<Clause occurs="should">
-		<KeywordNearQuery>Toronto Dominion Bank</KeywordNearQuery>
-	</Clause>
-	<Clause occurs="should">
-		<KeywordNearQuery>OFFERS BOND REDEMPTION Banque de Financement</KeywordNearQuery>
-	</Clause>
-</BooleanQuery>
-</NearFirstQuery> 
+<!-- complex phrase with stopwords and wildcards -->
+
+<NearQuery fieldName="contents" slop='0'>
+<KeywordNearQuery>They said the mar?et must have misinterpreted Baker's commen* because he was referring to the do*ar's fall since the Plaza agreement in September 1985*</KeywordNearQuery>
+<KeywordNearQuery>over a long-time spa* not the currency's rece* movements.</KeywordNearQuery> 
+</NearQuery>

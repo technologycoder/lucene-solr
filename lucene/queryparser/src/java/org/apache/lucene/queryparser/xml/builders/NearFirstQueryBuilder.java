@@ -7,6 +7,7 @@ import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.FieldedQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -47,7 +48,10 @@ public class NearFirstQueryBuilder implements QueryBuilder{
   public Query getQuery(Element e) throws ParserException {
     int end = DOMUtils.getAttribute(e, "end", 1);
     Element child = DOMUtils.getFirstChildElement(e);
-    FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(factory.getQuery((Element) child));
+    Query q = factory.getQuery((Element) child);
+    if (q instanceof MatchAllDocsQuery)
+      return q;
+    FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(q);
     return new IntervalFilterQuery( fq, new RangeIntervalFilter(0, end) );
   }
   

@@ -22,5 +22,5 @@
 		<TermQuery>COUPON</TermQuery>
 		<TermQuery>BANK</TermQuery>
 	</NearQuery>
-	<ComplexPhraseNearQuery>DOLLAR CONVERTIBLE</ComplexPhraseNearQuery>
+	<KeywordNearQuery>DOLLAR CONVERTIBLE</KeywordNearQuery>
 </NearQuery>

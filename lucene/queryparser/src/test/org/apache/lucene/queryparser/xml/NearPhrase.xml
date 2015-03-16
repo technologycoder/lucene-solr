@@ -18,6 +18,6 @@
 <!-- Testing IntervalQuery with phrases-->
 
 <NearQuery fieldName="contents" slop='5' inOrder='true'>
-<ComplexPhraseNearQuery>COUPON CUT</ComplexPhraseNearQuery> 
-<ComplexPhraseNearQuery>tokyo dollar</ComplexPhraseNearQuery>
+<KeywordNearQuery>COUPON CUT</KeywordNearQuery> 
+<KeywordNearQuery>tokyo dollar</KeywordNearQuery>
 </NearQuery>

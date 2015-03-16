@@ -102,7 +102,8 @@ public class CoreParser implements QueryBuilder {
     
     queryFactory.addBuilder("NearQuery", new NearQueryBuilder(queryFactory));
     queryFactory.addBuilder("NearFirstQuery", new NearFirstQueryBuilder(queryFactory));
-    queryFactory.addBuilder("ComplexPhraseNearQuery", new ComplexPhraseNearQueryBuilder(analyzer));
+    queryFactory.addBuilder("ComplexPhraseNearQuery", new ComplexPhraseNearQueryBuilder(analyzer));//deprecate this in favour of KeywordNearQueryBuilder
+    queryFactory.addBuilder("KeywordNearQuery", new KeywordNearQueryBuilder(analyzer));
 
     filterFactory.addBuilder("CachedFilter", new CachedFilterBuilder(queryFactory,
         filterFactory, maxNumCachedFilters));

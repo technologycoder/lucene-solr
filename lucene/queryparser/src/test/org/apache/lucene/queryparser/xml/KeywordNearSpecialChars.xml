@@ -15,15 +15,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<!-- Testing IntervalQuery to check two phrase occurrence in the first 8 positions(9 words) of the text-->
- 
-<NearFirstQuery fieldName="contents" end='8'>
-<BooleanQuery fieldName="contents">
-	<Clause occurs="should">
-		<KeywordNearQuery>Toronto Dominion Bank</KeywordNearQuery>
-	</Clause>
-	<Clause occurs="should">
-		<KeywordNearQuery>OFFERS BOND REDEMPTION Banque de Financement</KeywordNearQuery>
-	</Clause>
-</BooleanQuery>
-</NearFirstQuery> 
+<!-- Testing IntervalQuery with tokens having non-alphabet characters-->
+<NearQuery fieldName="contents" slop='5' inOrder='true'>
+	<KeywordNearQuery>1,000 bu: 4/08/87</KeywordNearQuery> 
+	<KeywordNearQuery>4/01/87  YEAR-AGO   Illinois</KeywordNearQuery>
+</NearQuery>

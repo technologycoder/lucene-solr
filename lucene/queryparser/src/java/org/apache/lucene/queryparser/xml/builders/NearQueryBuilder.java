@@ -7,6 +7,7 @@ import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.FieldedQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -49,16 +50,27 @@ public class NearQueryBuilder implements QueryBuilder{
     List<Query> subQueriesList = new ArrayList<>();
     for (Node kid = e.getFirstChild(); kid != null; kid = kid.getNextSibling()) {
       if (kid.getNodeType() == Node.ELEMENT_NODE) {
-        FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(factory.getQuery((Element) kid));
-        subQueriesList.add(fq);
+        Query q = factory.getQuery((Element) kid);
+        if (!(q instanceof MatchAllDocsQuery)) {
+          FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(factory.getQuery((Element) kid));
+          subQueriesList.add(fq);
+        }
+        
       }
     }
-    FieldedQuery[] subQueries = subQueriesList.toArray(new FieldedQuery[subQueriesList.size()]);
-    
-    if (inOrder)
-      return new OrderedNearQuery(slop, subQueries);
-    else
-      return new UnorderedNearQuery(slop, subQueries);
+    switch (subQueriesList.size())
+    {
+      case 0:
+        return new MatchAllDocsQuery();
+      case 1:
+        return subQueriesList.get(0);
+        default:
+          FieldedQuery[] subQueries = subQueriesList.toArray(new FieldedQuery[subQueriesList.size()]);
+          if (inOrder)
+            return new OrderedNearQuery(slop, subQueries);
+          else
+            return new UnorderedNearQuery(slop, subQueries);
+    }
   }
   
 }

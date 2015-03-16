@@ -10,8 +10,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.function.BoostedQuery;
 import org.apache.lucene.queries.function.valuesource.ConstValueSource;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.complexPhrase.ComplexPhraseNearQueryParser;
 import org.apache.lucene.queryparser.complexPhrase.ComplexPhraseQueryParser;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
@@ -54,13 +52,9 @@ public class GenericTextQueryBuilder implements QueryBuilder {
   private static final char WILDCARD_STRING = '*';
   private static final char WILDCARD_CHAR = '?';
   private static final char WILDCARD_ESCAPE = '\\';
-  private static final String ENV_GTQB_USE_NEAR_QUERY = "GenericTextQueryBuilder.useNearQuery";
-  private boolean useNearQueryForComplexText = false;
-  
   
   public GenericTextQueryBuilder(Analyzer analyzer) {
     this.analyzer = analyzer;
-    useNearQueryForComplexText = java.lang.Boolean.getBoolean(ENV_GTQB_USE_NEAR_QUERY);
   }
   
    
@@ -70,30 +64,32 @@ public class GenericTextQueryBuilder implements QueryBuilder {
               "fieldName");
       String text = DOMUtils.getText(e);
 
+      Query q = null;
       if (containsWildcard(text))
       {
-        //send all wildcard queries to either ComplexPhraseNearQueryParser or ComplexPhraseQueryParser
-        //ComplexPhraseNearQueryParser is supposed to yield in Ordered Interval queries where as  ComplexPhraseQueryParser can result in SpanQuery queries.
-        QueryParser parser = null;
+        //send all wildcard queries to either KeywordNearQueryBuilder or ComplexPhraseQueryParser
+        //KeywordNearQueryBuilder is supposed to yield in Ordered Interval queries where as  ComplexPhraseQueryParser can result in SpanQuery queries.
+        boolean useIntervalQuery = DOMUtils.getAttribute(e, "iq", false);//purposely shortened the name. this will go away once the transition is done. 
         
-        if(useNearQueryForComplexText)
+        if(useIntervalQuery)
         {
-          parser = new ComplexPhraseNearQueryParser(Version.LUCENE_CURRENT, field, analyzer);
+          KeywordNearQueryParser p = new KeywordNearQueryParser(field, analyzer);
+          q = p.parse(text);
         }
         else
         {
           ComplexPhraseQueryParser p = new ComplexPhraseQueryParser(Version.LUCENE_CURRENT, field, analyzer);
           p.setInOrder(DOMUtils.getAttribute(e, "inOrder", true));
           text = "\"" + text + "\"";
-          parser = p;
+          p.setAllowLeadingWildcard(true);
+          
+          try {
+              q = p.parse(text);
+          } catch (ParseException pe){
+              throw new ParserException("GenericTextQueryBuilder error parsing ComplexPhraseQuery: " + text, pe);
+          }
         }
-        parser.setAllowLeadingWildcard(true);
-        Query q = null;
-        try {
-            q = parser.parse(text);
-        } catch (ParseException pe){
-            throw new ParserException("GenericTextQueryBuilder error parsing ComplexPhraseQuery: " + text, pe);
-        }
+        
         
         float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
         if (boost != 1.0f) {

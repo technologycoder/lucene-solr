@@ -30,6 +30,7 @@
   <path id="classpath">
     <pathelement path="${queries.jar}"/>
     <pathelement path="${sandbox.jar}"/>
+  	 <pathelement path="${analyzers-common.jar}"/>
     <path refid="base.classpath"/>
   </path>
 

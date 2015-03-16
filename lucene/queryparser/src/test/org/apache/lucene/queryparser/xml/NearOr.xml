@@ -20,11 +20,11 @@
 <NearFirstQuery fieldName="contents" end='16'>
 <NearQuery slop='10' inOrder='true'>
 	<BooleanQuery>
-		<Clause occurs="should"><ComplexPhraseNearQuery>TORON* DOMIN*</ComplexPhraseNearQuery></Clause>
-		<Clause occurs="should"><ComplexPhraseNearQuery>AUSTRA*</ComplexPhraseNearQuery></Clause>
+		<Clause occurs="should"><KeywordNearQuery>TORON* DOMIN*</KeywordNearQuery></Clause>
+		<Clause occurs="should"><KeywordNearQuery>AUSTRA*</KeywordNearQuery></Clause>
 	</BooleanQuery>
 	<BooleanQuery>
-		<Clause occurs="should"><ComplexPhraseNearQuery>Nass*</ComplexPhraseNearQuery></Clause>
+		<Clause occurs="should"><KeywordNearQuery>Nass*</KeywordNearQuery></Clause>
 		<Clause occurs="should"><TermQuery>bank</TermQuery></Clause>
 	</BooleanQuery>
 </NearQuery>

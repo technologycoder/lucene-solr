@@ -30,6 +30,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.xml.builders.KeywordNearQueryParser;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.FieldedQuery;
@@ -42,10 +43,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.WildcardQuery;
-import org.apache.lucene.search.intervals.FieldedBooleanQuery;
 import org.apache.lucene.search.intervals.OrderedNearQuery;
-import org.apache.lucene.search.intervals.UnorderedNearQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
@@ -358,6 +356,53 @@ public class TestParser extends LuceneTestCase {
     Query q = parse("ComplexPhraseNearQuery.xml");
     dumpResults("ComplexPhraseNearQuery", q, 5);
   }
+  
+  /* test cases for keyword near query */
+  public void testKWNearQuery() throws Exception {
+    Query q = parse("KeywordNear.xml");
+    dumpResults("KeywordNear query", q, 5);
+  }
+  
+  public void testKWNearQueryWildcard() throws Exception {
+    Query q = parse("KeywordNearWildcard.xml");
+    dumpResults("KeywordNear with wildcard terms", q, 5);
+  }
+  
+  public void testKWNearQuerySpecialChar() throws Exception {
+    Query q = parse("KeywordNearSpecialChars.xml");
+    dumpResults("KeywordNear with special characters", q, 5);
+  }
+  
+  public void testKWNearQuerywithStopwords() throws Exception {
+    Query q = parse("KeywordNearStopwords.xml");
+    dumpResults("KeywordNear with stopwords", q, 5);
+  }
+  
+  public void testKWNearViaGenericTextQuery() throws Exception {
+    Query q = parse("KeywordNearThroughGenericTextQuery.xml");
+    dumpResults("GenericTextQuery with multiple terms containing wildcards", q, 5);
+  }
+  
+  public void testKWNearQuerywithEmptytokens() throws Exception {
+    Query q = parse("KeywordNearEmptyQuery.xml");
+    dumpResults("Keyword Near with empty tokens", q, 5);
+  }
+  
+  //TODO: move this test along with the KeywordNearQueryParser to an appropriate parser names space
+  public void testKeywordNearQueryParser() throws Exception {
+    
+    KeywordNearQueryParser p = new KeywordNearQueryParser("contents", builder.analyzer);
+    Query q = p.parse("to");
+    dumpResults("KeywordNearQueryParser stop word", q, 5);
+    q = p.parse("<TRUMP PLAZA>");
+    dumpResults("KeywordNearQueryParser special char1", q, 5);
+    q = p.parse("7/8");
+    dumpResults("KeywordNearQueryParser special char2", q, 5);
+    q = p.parse("ACQUIR* BY ZENEX <Zenex Oil Pty Ltd> said it acquired the interests of E?so S*h Africa, the local subsidiary");
+    dumpResults("KeywordNearQueryParser wildcard", q, 5);
+  }
+  
+  /* end of keyword near query test cases*/
 
   public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
     Query q = parse("MatchAllDocsQuery.xml");
