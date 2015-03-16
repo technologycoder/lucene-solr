@@ -15,15 +15,4 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<!-- Testing IntervalQuery to check two phrase occurrence in the first 8 positions(9 words) of the text-->
- 
-<NearFirstQuery fieldName="contents" end='8'>
-<BooleanQuery fieldName="contents">
-	<Clause occurs="should">
-		<KeywordNearQuery>Toronto Dominion Bank</KeywordNearQuery>
-	</Clause>
-	<Clause occurs="should">
-		<KeywordNearQuery>OFFERS BOND REDEMPTION Banque de Financement</KeywordNearQuery>
-	</Clause>
-</BooleanQuery>
-</NearFirstQuery> 
+<GenericTextQuery fieldName="contents" iq="true">eu* curr* mark*</GenericTextQuery>

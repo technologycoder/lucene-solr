@@ -1,17 +1,11 @@
 package org.apache.lucene.queryparser.xml.builders;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.lucene.queryparser.xml.DOMUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.apache.lucene.search.spans.SpanFirstQuery;
-import org.apache.lucene.search.spans.SpanQuery;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -30,23 +24,24 @@ import org.apache.lucene.search.spans.SpanQuery;
  * limitations under the License.
  */
 
-public class NearFirstQueryBuilder implements QueryBuilder{
-  final private QueryBuilder factory;
+/* Builder for keyword phrases specially for wildcarded multi term queries.
+ * Text phrases can be thrown into this builder to get tokenized to form OrderedNearQuery of sub queries of individual tokens. 
+ * Currently this can result in WildcardQuery,PrefixQuery and TermQuery as its sub queries. */
 
-  public NearFirstQueryBuilder(QueryBuilder factory) {
-    super();
-    this.factory = factory;
+public class KeywordNearQueryBuilder implements QueryBuilder {
+  
+  protected Analyzer analyzer;
+  
+  public KeywordNearQueryBuilder(Analyzer analyzer) {
+    this.analyzer = analyzer;
   }
   
   @Override
   public Query getQuery(Element e) throws ParserException {
-    int end = DOMUtils.getAttribute(e, "end", 1);
-    Element child = DOMUtils.getFirstChildElement(e);
-    Query q = factory.getQuery((Element) child);
-    if (q instanceof MatchAllDocsQuery)
-      return q;
-    FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(q);
-    return new IntervalFilterQuery( fq, new RangeIntervalFilter(0, end) );
+    String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
+    String text = DOMUtils.getNonBlankTextOrFail(e);
+    KeywordNearQueryParser p = new KeywordNearQueryParser(field, analyzer);
+    return p.parse(text);
   }
-  
+    
 }
