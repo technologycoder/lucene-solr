@@ -87,6 +87,7 @@
     <pathelement location="${analyzers-common.jar}"/>
     <pathelement location="${analyzers-kuromoji.jar}"/>
     <pathelement location="${analyzers-phonetic.jar}"/>
+  	<pathelement location="${analyzers-icu.jar}"/>
     <pathelement location="${codecs.jar}"/>
     <pathelement location="${highlighter.jar}"/>
     <pathelement location="${memory.jar}"/>
