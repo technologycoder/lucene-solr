@@ -114,7 +114,7 @@ public class IntervalFilterQuery extends FieldedQuery implements Cloneable {
         termStats[i] = searcher.termStatistics(term, state);
         i++;
       }
-      final String field = terms.first().field(); // nocommit - should we be checking all filtered terms
+      final String field = terms.first().field(); // noc0mmit - should we be checking all filtered terms
                                                   // are on the same field?
       return similarity.computeWeight(query.getBoost(), searcher.collectionStatistics(field), termStats);
 
@@ -344,7 +344,7 @@ public class IntervalFilterQuery extends FieldedQuery implements Cloneable {
 
     @Override
     public int freq() throws IOException {
-      return 1; // nocommit
+      return 1; // why this was a n0commit?
     }
 
     public float sloppyFreq() throws IOException {
