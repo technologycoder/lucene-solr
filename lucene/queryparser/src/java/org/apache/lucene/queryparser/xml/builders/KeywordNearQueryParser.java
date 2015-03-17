@@ -2,6 +2,7 @@ package org.apache.lucene.queryparser.xml.builders;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
@@ -96,7 +97,7 @@ public class KeywordNearQueryParser {
           WildcardState wcs = checkWildcard(token);
           switch (wcs) {
             case TRAILING_WILDCARD:
-              token = token.toLowerCase();
+              token = token.toLowerCase(Locale.getDefault());
               PrefixQuery pq = new PrefixQuery(new Term(field, token.substring(0,
                   token.length() - 1)));
               ((MultiTermQuery)pq).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
@@ -104,7 +105,7 @@ public class KeywordNearQueryParser {
               positions.add(++position);
               break;
             case NON_TRAILING_WILDCARD:
-              token = token.toLowerCase();
+              token = token.toLowerCase(Locale.getDefault());
               WildcardQuery wq = new WildcardQuery(new Term(field, token));
               ((MultiTermQuery)wq).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
               queries.add(wq);
