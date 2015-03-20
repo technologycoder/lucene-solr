@@ -394,6 +394,9 @@ public class TestParser extends LuceneTestCase {
     KeywordNearQueryParser p = new KeywordNearQueryParser("contents", builder.analyzer);
     Query q = p.parse("to");
     dumpResults("KeywordNearQueryParser stop word", q, 5);
+    q = p.parse("");
+    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
+    dumpResults("KeywordNearQueryParser empty query", q, 5);
     q = p.parse("<TRUMP PLAZA>");
     dumpResults("KeywordNearQueryParser special char1", q, 5);
     q = p.parse("7/8");

@@ -19,5 +19,5 @@
 
 <NearQuery fieldName="contents" slop='0'>
 <KeywordNearQuery>to</KeywordNearQuery>
-<KeywordNearQuery>proposal</KeywordNearQuery> 
+<KeywordNearQuery></KeywordNearQuery> 
 </NearQuery>
