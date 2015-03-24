@@ -43,6 +43,8 @@ public class TestNestedIntervalFilterQueries extends IntervalTestBase {
     "w1 w3 w4 w5 w6 w7 w8", //1
     "w1 w3 w10 w4 w5 w6 w7 w8", //2
     "w1 w3 w2 w4 w5 w6 w7 w8", //3
+    "x1 x2 x3", //4
+    "x1 x2 x3 x4 x2", //5
   };
 
   public void testOrderedDisjunctionQueries() throws IOException {
@@ -118,6 +120,15 @@ public class TestNestedIntervalFilterQueries extends IntervalTestBase {
     wrapper.add(bq, BooleanClause.Occur.MUST);
     wrapper.add(makeTermQuery("foo"), BooleanClause.Occur.MUST_NOT);
     checkIntervals(wrapper, searcher, new int[][]{});
+  }
+
+  public void testOrderedWithinUnordered() throws IOException {
+    FieldedQuery near1 = new OrderedNearQuery(0, false, makeTermQuery("x1"), makeTermQuery("x2"));
+    Query near2 = new UnorderedNearQuery(10, false, near1, makeTermQuery("x2"));
+
+    checkIntervals(near2, searcher, new int[][]{
+        { 5, 0, 4 }
+    });
   }
 
 }

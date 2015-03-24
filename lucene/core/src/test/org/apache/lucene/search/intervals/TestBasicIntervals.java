@@ -54,6 +54,38 @@ public class TestBasicIntervals extends IntervalTestBase {
       "t1 t2 t1 t3 t2 t3",
       "a b x x c"};//11
 
+  public void testRepeatsOrdered() throws Exception {
+    Query q = new OrderedNearQuery(10, false, makeTermQuery("u1"), makeTermQuery("u1"));
+    checkIntervals(q, searcher, new int[][]{});
+
+    checkIntervals(new OrderedNearQuery(10, false, makeTermQuery("u2"), makeTermQuery("u2")), searcher, new int[][]{
+        { 4, 0, 1 },
+        { 5, 0, 2 },
+        { 6, 0, 1 },
+        { 7, 0, 2 },
+        { 8, 0, 3 },
+        { 9, 1, 3 },
+        { 10, 0, 3 }
+    });
+  }
+
+  public void testRepeatsUnordered() throws Exception {
+
+    checkIntervals(new UnorderedNearQuery(10, false, makeTermQuery("u2"), makeTermQuery("u2")), searcher, new int[][]{
+        { 4, 0, 1 },
+        { 5, 0, 2 },
+        { 6, 0, 1 },
+        { 7, 0, 2 },
+        { 8, 0, 3 },
+        { 9, 1, 3 },
+        { 10, 0, 3 }
+    });
+
+    Query q = new UnorderedNearQuery(10, false, makeTermQuery("u1"), makeTermQuery("u1"));
+    checkIntervals(q, searcher, new int[][]{});
+
+  }
+
   public void testOverlappingWithinDisjunctions() throws Exception {
     Query q = makeOrQuery(
         new UnorderedNearQuery(6, false, makeTermQuery("a"), makeTermQuery("c")),

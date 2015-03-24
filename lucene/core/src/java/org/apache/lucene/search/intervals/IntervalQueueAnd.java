@@ -61,6 +61,10 @@ final class IntervalQueueAnd extends IntervalQueue {
     }
   }
 
+  public int width() {
+    return rightExtremeBegin - currentTopEnd - 1;
+  }
+
   @Override
   void updateCurrentCandidate() {
     final IntervalRef top = top();
@@ -82,9 +86,11 @@ final class IntervalQueueAnd extends IntervalQueue {
       return true;
     if (b.field == null)
       return false;
-    if (a.field.equals(b.field))
-      return a.begin < b.begin || (a.begin == b.begin && a.end > b.end) || a.offsetBegin < b.offsetBegin;
-    return (a.field.compareTo(b.field)) < 0;
+    if (!a.field.equals(b.field))
+      return (a.field.compareTo(b.field)) < 0;
+
+    return (a.begin < b.begin && a.end < b.begin) || (a.begin == b.begin && a.end > b.end) || a.end <= b.end;
+
   }
 
 }

@@ -71,7 +71,8 @@ public class WithinIntervalFilter implements IntervalFilter {
     @Override
     public Interval next() throws IOException {
       while ((interval = iterator.next()) != null) {
-        if((iterator.matchDistance()) <= slop){
+        int distance = iterator.matchDistance();
+        if (distance <= slop && distance >= 0){
           return interval;
         }
       }

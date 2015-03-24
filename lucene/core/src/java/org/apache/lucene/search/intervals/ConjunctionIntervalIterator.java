@@ -92,9 +92,12 @@ public final class ConjunctionIntervalIterator extends IntervalIterator {
   @Override
   public Interval next() throws IOException {
 
+    int distance = queue.width();
     while (queue.size() >= nrMustMatch //&& queue.top().interval.field.equals(queue.currentCandidate.field)
+        && distance < 0
         && queue.top().interval.begin == queue.currentCandidate.begin) {
       advance();
+      distance = queue.width();
     }
     if (queue.size() < nrMustMatch) {
       return null;
@@ -106,13 +109,13 @@ public final class ConjunctionIntervalIterator extends IntervalIterator {
         snapShotSubPositions(); // this looks odd? -> see SnapShotCollector below for
                                 // details!
       }
+      rightExtremeBegin = queue.rightExtremeBegin;
       if (queue.currentCandidate.begin == top.begin //&& queue.currentCandidate.field.equals(top.field)
           && queue.currentCandidate.end == top.end) {
         return queue.currentCandidate;
       }
-      rightExtremeBegin = queue.rightExtremeBegin;
       advance();
-    } while (queue.size() >= nrMustMatch && queue.currentCandidate.end == queue.rightExtreme);
+    } while (queue.size() >= nrMustMatch && queue.currentCandidate.end == queue.rightExtreme && queue.width() < 0);
     return queue.currentCandidate; // TODO support payloads
   }
 
