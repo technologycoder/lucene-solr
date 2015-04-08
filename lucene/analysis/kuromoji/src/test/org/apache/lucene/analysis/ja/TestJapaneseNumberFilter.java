@@ -32,6 +32,7 @@ import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.miscellaneous.SetKeywordMarkerFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.util.CharArraySet;
+import org.apache.lucene.util.Version;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,8 +40,8 @@ public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
 
   private Analyzer analyzer = new Analyzer() {
     @Override
-    protected TokenStreamComponents createComponents(String fieldName) {
-      Tokenizer tokenizer = new JapaneseTokenizer(newAttributeFactory(), null, false, JapaneseTokenizer.Mode.SEARCH);
+    protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+      Tokenizer tokenizer = new JapaneseTokenizer(reader, null, false, JapaneseTokenizer.Mode.SEARCH);
       return new TokenStreamComponents(tokenizer, new JapaneseNumberFilter(tokenizer));
     }
   };
@@ -173,11 +174,11 @@ public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
     // An analyzer that marks 京一 as a keyword
     Analyzer keywordMarkingAnalyzer = new Analyzer() {
       @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        CharArraySet set = new CharArraySet(1, false);
+      protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+        CharArraySet set = new CharArraySet(Version.LUCENE_48, 1, false);
         set.add("京一");
 
-        Tokenizer tokenizer = new JapaneseTokenizer(newAttributeFactory(), null, false, JapaneseTokenizer.Mode.SEARCH);
+        Tokenizer tokenizer = new JapaneseTokenizer(reader, null, false, JapaneseTokenizer.Mode.SEARCH);
         return new TokenStreamComponents(tokenizer, new JapaneseNumberFilter(new SetKeywordMarkerFilter(tokenizer, set)));
       }
     };
@@ -268,8 +269,8 @@ public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
 
     Analyzer plainAnalyzer = new Analyzer() {
       @Override
-      protected TokenStreamComponents createComponents(String fieldName) {
-        Tokenizer tokenizer = new JapaneseTokenizer(newAttributeFactory(), null, false, JapaneseTokenizer.Mode.SEARCH);
+      protected TokenStreamComponents createComponents(String fieldName, Reader reader) {
+        Tokenizer tokenizer = new JapaneseTokenizer(reader, null, false, JapaneseTokenizer.Mode.SEARCH);
         return new TokenStreamComponents(tokenizer);
       }
     };

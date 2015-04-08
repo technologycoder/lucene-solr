@@ -32,16 +32,15 @@ import org.apache.lucene.analysis.Tokenizer;
 public class TestJapaneseNumberFilterFactory extends BaseTokenStreamTestCase {
   public void testBasics() throws IOException {
 
-    Map<String, String> args = new HashMap<>();
+    Map<String, String> args = new HashMap<String, String>();
     args.put("discardPunctuation", "false");
 
     JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(args);
 
     tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream tokenStream = tokenizerFactory.create(newAttributeFactory());
-    ((Tokenizer)tokenStream).setReader(new StringReader("昨日のお寿司は1０万円でした。"));
+    TokenStream tokenStream = tokenizerFactory.create(new StringReader("昨日のお寿司は1０万円でした。"));
 
-    JapaneseNumberFilterFactory factory = new JapaneseNumberFilterFactory(new HashMap<>());
+    JapaneseNumberFilterFactory factory = new JapaneseNumberFilterFactory(new HashMap<String, String>());
     tokenStream = factory.create(tokenStream);
     assertTokenStreamContents(tokenStream,
         new String[] { "昨日", "の", "お", "寿司", "は", "100000", "円", "でし", "た", "。" }
