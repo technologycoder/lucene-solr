@@ -64,6 +64,10 @@ public class KeywordNearQueryParser {
   }
   
   public Query parse(String text) throws ParserException {
+    return parse(text,false);
+  }
+  
+  public Query parse(String text, boolean ignoreWildcard) throws ParserException {
     // to hold the sub queries until we generate the NearQuery
     ArrayList<FieldedQuery> queries = new ArrayList<>();
     ArrayList<Integer> positions = new ArrayList<>();
@@ -74,7 +78,7 @@ public class KeywordNearQueryParser {
     
     // TODO: this would have been much nicer if we could chain the whitespacetokenizer 
     // to the main analyser chain just before the tokenizer of the main chain and breaking out of the analysis on finding wildcards.
-    if (checkWildcard(text) != WildcardState.NON_WILDCARD) {
+    if (!ignoreWildcard && checkWildcard(text) != WildcardState.NON_WILDCARD) {
       WhitespaceAnalyzer wa = new WhitespaceAnalyzer(
           org.apache.lucene.util.Version.LUCENE_CURRENT);
       TokenStream source = null;

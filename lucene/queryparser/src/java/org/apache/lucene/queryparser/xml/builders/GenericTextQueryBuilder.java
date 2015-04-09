@@ -63,9 +63,10 @@ public class GenericTextQueryBuilder implements QueryBuilder {
       String field = DOMUtils.getAttributeWithInheritanceOrFail(e,
               "fieldName");
       String text = DOMUtils.getText(e);
+      boolean ignoreWildcard = DOMUtils.getAttribute(e, "ignoreWC", false);
 
       Query q = null;
-      if (containsWildcard(text))
+      if (!ignoreWildcard && containsWildcard(text))
       {
         //send all wildcard queries to either KeywordNearQueryBuilder or ComplexPhraseQueryParser
         //KeywordNearQueryBuilder is supposed to yield in Ordered Interval queries where as  ComplexPhraseQueryParser can result in SpanQuery queries.
