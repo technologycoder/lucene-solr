@@ -40,8 +40,9 @@ public class KeywordNearQueryBuilder implements QueryBuilder {
   public Query getQuery(Element e) throws ParserException {
     String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
     String text = DOMUtils.getText(e);
+    boolean ignoreWildcard = DOMUtils.getAttribute(e, "ignoreWC", false);
     KeywordNearQueryParser p = new KeywordNearQueryParser(field, analyzer);
-    return p.parse(text);
+    return p.parse(text,ignoreWildcard);
   }
     
 }
