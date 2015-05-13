@@ -204,6 +204,8 @@ public class SyncStrategy {
       if (srsp.getException() != null) {
         SolrException.log(log, "Sync request error: " + srsp.getException());
       }
+
+      log.debug("shard response = " + srsp);
       
       if (!success) {
          try {
@@ -252,6 +254,7 @@ public class SyncStrategy {
     sreq.params.set("getVersions",Integer.toString(100));
     sreq.params.set("sync",leaderUrl);
     
+    log.debug("Sending sync request, replica = " + replica);
     shardHandler.submit(sreq, replica, sreq.params);
   }
   

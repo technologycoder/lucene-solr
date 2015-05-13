@@ -38,6 +38,9 @@ public final class ShardResponse {
             +"\n\trequest=" + req
             +"\n\tresponse=" + rsp
             + (exception==null ? "" : "\n\texception="+ SolrException.toStr(exception))
+            + (getSubmitWaitingTime()==null ? "" : "\n\tsubmit waiting time=" + getSubmitWaitingTime())
+            + (getTakeWaitingTime()==null ? "" : "\n\ttake waiting time=" + getSubmitWaitingTime())
+            + "\n\telapsed time=" + rsp.getElapsedTime()
             +"\n}";
   }
 
