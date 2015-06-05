@@ -90,8 +90,8 @@ public class NumericRangeQueryBuilder implements QueryBuilder {
   @Override
   public Query getQuery(Element e) throws ParserException {
     String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    String lowerTerm = DOMUtils.getAttributeOrFail(e, "lowerTerm");
-    String upperTerm = DOMUtils.getAttributeOrFail(e, "upperTerm");
+    String lowerTerm = DOMUtils.getAttribute(e, "lowerTerm", null);
+    String upperTerm = DOMUtils.getAttribute(e, "upperTerm", null);
     boolean lowerInclusive = DOMUtils.getAttribute(e, "includeLower", true);
     boolean upperInclusive = DOMUtils.getAttribute(e, "includeUpper", true);
     int precisionStep = DOMUtils.getAttribute(e, "precisionStep", NumericUtils.PRECISION_STEP_DEFAULT);
@@ -100,20 +100,20 @@ public class NumericRangeQueryBuilder implements QueryBuilder {
     try {
       Query filter;
       if (type.equalsIgnoreCase("int")) {
-        filter = NumericRangeQuery.newIntRange(field, precisionStep, Integer
-            .valueOf(lowerTerm), Integer.valueOf(upperTerm), lowerInclusive,
+        filter = NumericRangeQuery.newIntRange(field, precisionStep, (lowerTerm == null ? null :Integer
+            .valueOf(lowerTerm)), (upperTerm == null ? null :Integer.valueOf(upperTerm)), lowerInclusive,
             upperInclusive);
       } else if (type.equalsIgnoreCase("long")) {
-        filter = NumericRangeQuery.newLongRange(field, precisionStep, Long
-            .valueOf(lowerTerm), Long.valueOf(upperTerm), lowerInclusive,
+        filter = NumericRangeQuery.newLongRange(field, precisionStep, (lowerTerm == null ? null :Long
+            .valueOf(lowerTerm)), (upperTerm == null ? null :Long.valueOf(upperTerm)), lowerInclusive,
             upperInclusive);
       } else if (type.equalsIgnoreCase("double")) {
-        filter = NumericRangeQuery.newDoubleRange(field, precisionStep, Double
-            .valueOf(lowerTerm), Double.valueOf(upperTerm), lowerInclusive,
+        filter = NumericRangeQuery.newDoubleRange(field, precisionStep, (lowerTerm == null ? null :Double
+            .valueOf(lowerTerm)), (upperTerm == null ? null :Double.valueOf(upperTerm)), lowerInclusive,
             upperInclusive);
       } else if (type.equalsIgnoreCase("float")) {
-        filter = NumericRangeQuery.newFloatRange(field, precisionStep, Float
-            .valueOf(lowerTerm), Float.valueOf(upperTerm), lowerInclusive,
+        filter = NumericRangeQuery.newFloatRange(field, precisionStep, (lowerTerm == null ? null :Float
+            .valueOf(lowerTerm)), (upperTerm == null ? null :Float.valueOf(upperTerm)), lowerInclusive,
             upperInclusive);
       } else {
         throw new ParserException("type attribute must be one of: [long, int, double, float]");
