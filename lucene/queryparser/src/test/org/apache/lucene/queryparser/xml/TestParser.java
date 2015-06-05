@@ -51,6 +51,7 @@ import org.junit.Assume;
 import org.junit.BeforeClass;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -96,7 +97,7 @@ public class TestParser extends LuceneTestCase {
       Document doc = new Document();
       doc.add(newTextField("date", date, Field.Store.YES));
       doc.add(newTextField("contents", content, Field.Store.YES));
-      doc.add(new IntField("date2", Integer.valueOf(date), Field.Store.NO));
+      doc.add(new IntField("date2", Integer.valueOf(date), Field.Store.YES));
       writer.addDocument(doc);
       line = d.readLine();
     }
@@ -439,10 +440,29 @@ public class TestParser extends LuceneTestCase {
     Query q = parse("NumericRangeFilterQuery.xml");
     dumpResults("NumericRangeFilter", q, 5);
   }
-
-  public void testNumericRangeQueryQueryXML() throws ParserException, IOException {
-    Query q = parse("NumericRangeQueryQuery.xml");
-    dumpResults("NumericRangeQuery", q, 5);
+  
+  public void testNumericRangeQuery() throws IOException {
+    String text = "<NumericRangeQuery fieldName='date2' lowerTerm='19870409' upperTerm='19870412'/>";
+    Query q = parseText(text, false);
+    dumpResults("NumericRangeQuery1", q, 5);
+    text = "<NumericRangeQuery fieldName='date2' lowerTerm='19870602' />";
+    q = parseText(text, false);
+    dumpResults("NumericRangeQuery2", q, 5);
+    text = "<NumericRangeQuery fieldName='date2' upperTerm='19870408'/>";
+    q = parseText(text, false);
+    dumpResults("NumericRangeQuery3", q, 5);
+  }
+  
+  public void testNumericRangeFilter() throws IOException {
+    String text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' lowerTerm='19870410' upperTerm='19870531'/></ConstantScoreQuery>";
+    Query q = parseText(text, false);
+    dumpResults("NumericRangeFilter1", q, 5);
+    text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' lowerTerm='19870601' /></ConstantScoreQuery>";
+    q = parseText(text, false);
+    dumpResults("NumericRangeFilter2", q, 5);
+    text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' upperTerm='19870408'/></ConstantScoreQuery>";
+    q = parseText(text, false);
+    dumpResults("NumericRangeFilter3", q, 5);
   }
   
   public void testNearFirstXML() throws ParserException, IOException {
@@ -497,12 +517,25 @@ public class TestParser extends LuceneTestCase {
 
   //================= Helper methods ===================================
 
-  private Query parse(String xmlFileName) throws ParserException, IOException {
+  private Query parse(String xmlFileName) throws IOException {
     return parse(xmlFileName, false);
   }
-  private Query parse(String xmlFileName, Boolean shouldFail) throws ParserException, IOException {
+  
+  private Query parse(String xmlFileName, Boolean shouldFail) throws IOException {
     InputStream xmlStream = TestParser.class.getResourceAsStream(xmlFileName);
     assertTrue("Test XML file " + xmlFileName + " cannot be found", xmlStream != null);
+    Query result = parse(xmlStream, shouldFail);
+    xmlStream.close();
+    return result;
+  }
+  private Query parseText(String text, Boolean shouldFail) 
+  {
+    InputStream xmlStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+    return parse(xmlStream, shouldFail);
+  }
+  
+  private Query parse(InputStream xmlStream, Boolean shouldFail)
+  {
     Query result = null;
     try {
       result = builder.parse(xmlStream);
@@ -511,7 +544,6 @@ public class TestParser extends LuceneTestCase {
     }
     if (shouldFail && result != null)
       assertTrue("Expected to fail. But resulted in query: " + result.getClass() + " with value: " + result, false);
-    xmlStream.close();
     return result;
   }
 
