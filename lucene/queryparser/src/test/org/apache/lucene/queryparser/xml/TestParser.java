@@ -30,11 +30,15 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.BooleanFilter;
+import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queryparser.xml.builders.KeywordNearQueryParser;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.FieldedQuery;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsFilter;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -43,12 +47,14 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.intervals.IntervalFilterQuery;
 import org.apache.lucene.search.intervals.OrderedNearQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
+import org.w3c.dom.Element;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -57,6 +63,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 
 public class TestParser extends LuceneTestCase {
@@ -84,6 +93,16 @@ public class TestParser extends LuceneTestCase {
       analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
     }
     builder = new CorePlusExtensionsParser("contents", analyzer);
+    
+    //MatchAllDocsFilter is not yet in side the builderFactory
+    //Remove this when we have MatchAllDocsFilter within CorePlusExtensionsParser
+    builder.filterFactory.addBuilder("MatchAllDocsFilter", new FilterBuilder() {
+      
+      @Override
+      public Filter getFilter(Element e) throws ParserException {
+        return new MatchAllDocsFilter();
+      }
+    });
 
     BufferedReader d = new BufferedReader(new InputStreamReader(
         TestParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
@@ -465,6 +484,56 @@ public class TestParser extends LuceneTestCase {
     dumpResults("NumericRangeFilter3", q, 5);
   }
   
+  public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
+    String text = "<BooleanQuery fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='should'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery>s</KeywordNearQuery></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+    Query q = parseText(text, false);
+    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
+  
+    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery>summit</KeywordNearQuery></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+    q = parseText(text, false);
+    assertTrue("Expecting a IntervalFilterQuery, but resulted in " + q.getClass(), q instanceof IntervalFilterQuery);
+    
+    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
+        + "<Clause occurs='must'><KeywordNearQuery>summit</KeywordNearQuery></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+    q = parseText(text, false);
+    assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
+    
+  }
+  
+  public void testBooleanFilterwithMatchAllDocsFilter() throws ParserException, IOException {
+    
+    String text = "<BooleanFilter fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='should'><TermFilter>janeiro</TermFilter></Clause>"
+        + "<Clause occurs='should'><TermFilter>s</TermFilter></Clause>"
+        + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
+    
+    Filter f = builder.filterFactory.getFilter(parseXML(text));
+    assertTrue("Expecting a MatchAllDocsFilter, but resulted in " + f.getClass(), f instanceof MatchAllDocsFilter);
+  
+    text = "<BooleanFilter fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><TermFilter>rio</TermFilter></Clause>"
+        + "<Clause occurs='should'><TermFilter>summit</TermFilter></Clause>"
+        + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
+    f = builder.filterFactory.getFilter(parseXML(text));
+    assertTrue("Expecting a TermFilter, but resulted in " + f.getClass(), f instanceof TermFilter);
+    
+    text = "<BooleanFilter fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><TermFilter>rio</TermFilter></Clause>"
+        + "<Clause occurs='must'><TermFilter>summit</TermFilter></Clause>"
+        + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
+    f = builder.filterFactory.getFilter(parseXML(text));
+    assertTrue("Expecting a BooleanFilter, but resulted in " + f.getClass(), f instanceof BooleanFilter);
+    
+  }
+  
   public void testNearFirstXML() throws ParserException, IOException {
     Query q = parse("NearFirst.xml");
     dumpResults("Near First (Interval)", q, 5);
@@ -562,5 +631,26 @@ public class TestParser extends LuceneTestCase {
       }
       System.out.println();
     }
+  }
+  
+  //helper
+  private static Element parseXML(String text) throws ParserException {
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db = null;
+    try {
+      db = dbf.newDocumentBuilder();
+    }
+    catch (Exception se) {
+      throw new ParserException("XML Parser configuration error", se);
+    }
+    org.w3c.dom.Document doc = null;
+    InputStream xmlStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
+    try {
+      doc = db.parse(xmlStream);
+    }
+    catch (Exception se) {
+      throw new ParserException("Error parsing XML stream:" + se, se);
+    }
+    return doc.getDocumentElement();
   }
 }

@@ -4,6 +4,10 @@
 package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsFilter;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.queries.FilterClause;
@@ -45,8 +49,12 @@ public class BooleanFilterBuilder implements FilterBuilder {
   @Override
   public Filter getFilter(Element e) throws ParserException {
     BooleanFilter bf = new BooleanFilter();
-    NodeList nl = e.getChildNodes();
 
+    boolean matchAllDocsExists = false; 
+    boolean shouldClauseExists = false;
+    boolean mustClauseExists = false;
+    
+    NodeList nl = e.getChildNodes();
     final int nl_len = nl.getLength();
     for (int i = 0; i < nl_len; i++) {
       Node node = nl.item(i);
@@ -56,9 +64,39 @@ public class BooleanFilterBuilder implements FilterBuilder {
 
         Element clauseFilter = DOMUtils.getFirstChildOrFail(clauseElem);
         Filter f = factory.getFilter(clauseFilter);
+        
+        //trace for any MatchAllDocsFilter and dedupe them and check for the existence of must or should clause
+        if (f instanceof MatchAllDocsFilter) {
+          if (matchAllDocsExists) continue;
+          matchAllDocsExists = true;
+        }
+        else {
+          shouldClauseExists |= (occurs == BooleanClause.Occur.SHOULD);
+          mustClauseExists   |= (occurs == BooleanClause.Occur.MUST);
+        }
         bf.add(new FilterClause(f, occurs));
       }
     }
+    //if there is MatchAllDocsFilter
+    //all should clauses should be removed
+    //if there is a must clause then MatchAllDocsFilter clauses will be removed
+    if (matchAllDocsExists && (mustClauseExists || shouldClauseExists)) {
+        BooleanFilter bfRewritten = new BooleanFilter();
+        for(int i = 0; i < bf.clauses().size();i++) {
+          FilterClause fc = bf.clauses().get(i);
+          Filter f = fc.getFilter();
+          if (f instanceof MatchAllDocsFilter) {
+            if (mustClauseExists) continue;
+          } else if (fc.getOccur() == BooleanClause.Occur.SHOULD)
+            continue;
+          
+          bfRewritten.add(fc);
+        }
+        bf = bfRewritten;
+    }
+    if(bf.clauses().size() == 1)
+      return bf.clauses().get(0).getFilter();
+    else
 
     return bf;
   }

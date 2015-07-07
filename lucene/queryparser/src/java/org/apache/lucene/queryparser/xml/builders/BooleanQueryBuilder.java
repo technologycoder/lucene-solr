@@ -5,6 +5,7 @@ package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
@@ -52,6 +53,11 @@ public class BooleanQueryBuilder implements QueryBuilder {
 
     NodeList nl = e.getChildNodes();
     final int nl_len = nl.getLength();
+    
+    boolean matchAllDocsExists = false; 
+    boolean shouldClauseExists = false;
+    boolean mustClauseExists = false;
+    
     for (int i = 0; i < nl_len; i++) {
       Node node = nl.item(i);
       if (node.getNodeName().equals("Clause")) {
@@ -60,11 +66,41 @@ public class BooleanQueryBuilder implements QueryBuilder {
 
         Element clauseQuery = DOMUtils.getFirstChildOrFail(clauseElem);
         Query q = factory.getQuery(clauseQuery);
+        //trace for any MatchAllDocsQuery and dedupe them and check for the existence of must or should clause
+        if (q instanceof MatchAllDocsQuery) {
+          if (matchAllDocsExists) continue;
+          matchAllDocsExists = true;
+        }
+        else {
+          shouldClauseExists |= (occurs == BooleanClause.Occur.SHOULD);
+          mustClauseExists   |= (occurs == BooleanClause.Occur.MUST);
+        }
         bq.add(new BooleanClause(q, occurs));
       }
     }
-
-    return bq;
+    //if there is matchalldocs query
+    //all should clauses should be removed
+    //if there is a must clause then matchalldocs query clauses will be removed
+    if (matchAllDocsExists && (mustClauseExists || shouldClauseExists)) {
+        BooleanQuery bqRewritten = new BooleanQuery(bq.isCoordDisabled());
+        bqRewritten.setMinimumNumberShouldMatch(bq.getMinimumNumberShouldMatch());
+        bqRewritten.setBoost(bq.getBoost());
+        for(int i = 0; i < bq.clauses().size();i++) {
+          BooleanClause bc = bq.clauses().get(i);
+          Query q = bc.getQuery();
+          if (q instanceof MatchAllDocsQuery) {
+            if (mustClauseExists) continue;
+          } else if (bc.getOccur() == BooleanClause.Occur.SHOULD)
+            continue;
+          
+          bqRewritten.add(bc);
+        }
+        bq = bqRewritten;
+    }
+    if(bq.clauses().size() == 1)
+      return bq.clauses().get(0).getQuery();
+    else
+      return bq;
   }
 
   static BooleanClause.Occur getOccursValue(Element clauseElem) throws ParserException {
