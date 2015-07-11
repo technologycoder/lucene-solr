@@ -775,11 +775,28 @@ public class SolrDispatchFilter extends BaseSolrFilter {
       throw e;
     }
   }
+
+  private void addAttributeFromServletRequest( final String attributeName, HttpServletRequest req, SolrQueryRequest sreq) {
+    Object attributeValue = req.getAttribute(attributeName);
+    if (attributeValue != null) {
+        sreq.getContext().put( attributeName, attributeValue );
+    }
+  }
   
   protected void execute( HttpServletRequest req, SolrRequestHandler handler, SolrQueryRequest sreq, SolrQueryResponse rsp) {
     // a custom filter could add more stuff to the request before passing it on.
     // for example: sreq.getContext().put( "HttpServletRequest", req );
     // used for logging query stats in SolrCore.execute()
+
+    // store the time (ms since epoch) that the connection was offered by the acceptor thread to the jetty thread pool
+    addAttributeFromServletRequest( "connectionAcceptedTimestamp", req, sreq );
+
+    // store the time in ms that this request was waiting to be picked up by the current thread in the jetty thread pool
+    addAttributeFromServletRequest( "jettyThreadPoolWaitTime", req, sreq );
+
+    // store the time in ms for the request to be read from the socket and passed to the request handlers
+    addAttributeFromServletRequest( "requestCreateTime", req, sreq );
+
     sreq.getContext().put( "webapp", req.getContextPath() );
     sreq.getCore().execute( handler, sreq, rsp );
   }

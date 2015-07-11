@@ -538,7 +538,20 @@ public class RealTimeGetComponent extends SearchComponent
 
   
   public void processSync(ResponseBuilder rb, int nVersions, String sync) {
-    
+
+    final String connectionAcceptedTimestamp = String.valueOf(rb.req.getContext().get("connectionAcceptedTimestamp"));
+
+    final String jettyWaitTime = String.valueOf(rb.req.getContext().get("jettyThreadPoolWaitTime"));
+
+    final String requestCreateTime = String.valueOf(rb.req.getContext().get("requestCreateTime"));
+
+    log.info("Connection offered to jetty threadpool @ {}, sync thread waited for {}"
+             + "ms in jetty thread pool, " + " thread spent {}"
+             + "ms reading the request from the socket",
+             connectionAcceptedTimestamp,
+             jettyWaitTime,
+             requestCreateTime);
+
     boolean onlyIfActive = rb.req.getParams().getBool("onlyIfActive", false);
     
     if (onlyIfActive) {
