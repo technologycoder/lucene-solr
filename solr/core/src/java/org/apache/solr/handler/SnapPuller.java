@@ -761,16 +761,19 @@ public class SnapPuller {
     }
     long bytesDownloaded = 0;
     for (Map<String,Object> file : filesToDownload) {
-      if (!slowFileExists(indexDir, (String) file.get(NAME))
-          || downloadCompleteIndex) {
+      final String filename = (String) file.get(NAME);
+      if (downloadCompleteIndex
+          || filename.endsWith(".si")
+          || filename.endsWith(".del")
+          || !slowFileExists(indexDir, filename)) {
         dirFileFetcher = new DirectoryFileFetcher(tmpIndexDir, file,
-            (String) file.get(NAME), false, latestGeneration);
+            filename, false, latestGeneration);
         currentFile = file;
         dirFileFetcher.fetchFile();
         bytesDownloaded += dirFileFetcher.getBytesDownloaded();
         filesDownloaded.add(new HashMap<>(file));
       } else {
-        LOG.info("Skipping download for " + file.get(NAME)
+        LOG.info("Skipping download for " + filename
             + " because it already exists");
       }
     }
