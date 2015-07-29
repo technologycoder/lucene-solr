@@ -272,7 +272,7 @@ public class IntervalFilterQuery extends FieldedQuery implements Cloneable {
         public int scorerAdvanced(int docId) throws IOException {
           buffered = true;
           assert docId == filter.docID();
-          return docId;
+          return filter.docID();
         }
 
         @Override
