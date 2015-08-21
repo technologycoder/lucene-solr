@@ -31,8 +31,10 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.BooleanFilter;
+import org.apache.lucene.queries.FilterClause;
 import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queryparser.xml.builders.KeywordNearQueryParser;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.FieldedQuery;
@@ -487,14 +489,19 @@ public class TestParser extends LuceneTestCase {
   public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
     String text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='should'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery>s</KeywordNearQuery></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery>summit</KeywordNearQuery></Clause>"
         + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
     Query q = parseText(text, false);
-    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
+    int size = ((BooleanQuery)q).clauses().size();
+    assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
+    BooleanQuery bq = (BooleanQuery)q;
+    for(BooleanClause bc : bq.clauses())
+    {
+      assertFalse("Not expecting MatchAllDocsQuery ",bc.getQuery() instanceof MatchAllDocsQuery);
+    }
   
     text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery>summit</KeywordNearQuery></Clause>"
         + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a IntervalFilterQuery, but resulted in " + q.getClass(), q instanceof IntervalFilterQuery);
@@ -505,6 +512,34 @@ public class TestParser extends LuceneTestCase {
         + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
+    bq = (BooleanQuery)q;
+    size = bq.clauses().size();
+    assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
+    for(BooleanClause bc : bq.clauses())
+    {
+      assertFalse("Not expecting MatchAllDocsQuery ", bc.getQuery() instanceof MatchAllDocsQuery);
+    }
+    
+    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><MatchAllDocsQuery/></Clause>"
+        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+    q = parseText(text, false);
+    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
+    
+    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><MatchAllDocsQuery/></Clause>"
+        + "<Clause occurs='mustnot'><TermQuery>summit</TermQuery></Clause></BooleanQuery>";
+    q = parseText(text, false);
+    assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
+    bq = (BooleanQuery)q;
+    size = bq.clauses().size();
+    assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
+    boolean bMatchAllDocsFound = false;
+    for(BooleanClause bc : bq.clauses())
+    {
+      bMatchAllDocsFound |= bc.getQuery() instanceof MatchAllDocsQuery;
+    }
+    assertTrue("Expecting MatchAllDocsQuery ", bMatchAllDocsFound);
     
   }
   
@@ -512,25 +547,52 @@ public class TestParser extends LuceneTestCase {
     
     String text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='should'><TermFilter>janeiro</TermFilter></Clause>"
-        + "<Clause occurs='should'><TermFilter>s</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
     
     Filter f = builder.filterFactory.getFilter(parseXML(text));
-    assertTrue("Expecting a MatchAllDocsFilter, but resulted in " + f.getClass(), f instanceof MatchAllDocsFilter);
+    assertTrue("Expecting a TermFilter, but resulted in " + f.getClass(), f instanceof TermFilter);
   
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><TermFilter>rio</TermFilter></Clause>"
-        + "<Clause occurs='should'><TermFilter>summit</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
     f = builder.filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a TermFilter, but resulted in " + f.getClass(), f instanceof TermFilter);
     
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><TermFilter>rio</TermFilter></Clause>"
+        + "<Clause occurs='must'><TermFilter>janeiro</TermFilter></Clause>"
         + "<Clause occurs='must'><TermFilter>summit</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
     f = builder.filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a BooleanFilter, but resulted in " + f.getClass(), f instanceof BooleanFilter);
+    BooleanFilter bf = (BooleanFilter)f;
+    int size = bf.clauses().size();
+    assertTrue("Expecting 3 clauses, but resulted in " + size, size == 3);
+    for(FilterClause fc : bf.clauses())
+    {
+      assertFalse("Not expecting MatchAllDocsQuery ", fc.getFilter() instanceof MatchAllDocsFilter);
+    }
+    
+    text = "<BooleanFilter fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><MatchAllDocsFilter/></Clause>"
+        + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
+    f = builder.filterFactory.getFilter(parseXML(text));
+    assertTrue("Expecting a MatchAllDocsFilter, but resulted in " + f.getClass(), f instanceof MatchAllDocsFilter);
+    
+    text = "<BooleanFilter fieldName='content' disableCoord='true'>"
+        + "<Clause occurs='must'><MatchAllDocsFilter/></Clause>"
+        + "<Clause occurs='mustnot'><TermFilter>summit</TermFilter></Clause></BooleanFilter>";
+    f = builder.filterFactory.getFilter(parseXML(text));
+    assertTrue("Expecting a BooleanFilter, but resulted in " + f.getClass(), f instanceof BooleanFilter);
+    bf = (BooleanFilter)f;
+    size = bf.clauses().size();
+    assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
+    boolean bMatchAllDocsFound = false;
+    for(FilterClause fc : bf.clauses())
+    {
+      bMatchAllDocsFound |= fc.getFilter() instanceof MatchAllDocsFilter;
+    }
+    assertTrue("Expecting MatchAllDocsFilter ", bMatchAllDocsFound);
     
   }
   
