@@ -55,47 +55,29 @@ public class BooleanQueryBuilder implements QueryBuilder {
     final int nl_len = nl.getLength();
     
     boolean matchAllDocsExists = false; 
-    boolean shouldClauseExists = false;
-    boolean mustClauseExists = false;
+    boolean shouldOrMustExists = false;
     
     for (int i = 0; i < nl_len; i++) {
       Node node = nl.item(i);
       if (node.getNodeName().equals("Clause")) {
         Element clauseElem = (Element) node;
         BooleanClause.Occur occurs = getOccursValue(clauseElem);
-
         Element clauseQuery = DOMUtils.getFirstChildOrFail(clauseElem);
         Query q = factory.getQuery(clauseQuery);
-        //trace for any MatchAllDocsQuery and dedupe them and check for the existence of must or should clause
         if (q instanceof MatchAllDocsQuery) {
-          if (matchAllDocsExists) continue;
           matchAllDocsExists = true;
+          continue;// we will add this MAD query later if necessary
         }
-        else {
-          shouldClauseExists |= (occurs == BooleanClause.Occur.SHOULD);
-          mustClauseExists   |= (occurs == BooleanClause.Occur.MUST);
+        else if ((occurs == BooleanClause.Occur.SHOULD) || (occurs == BooleanClause.Occur.MUST)){
+          shouldOrMustExists = true;
         }
         bq.add(new BooleanClause(q, occurs));
       }
     }
-    //if there is matchalldocs query
-    //all should clauses should be removed
-    //if there is a must clause then matchalldocs query clauses will be removed
-    if (matchAllDocsExists && (mustClauseExists || shouldClauseExists)) {
-        BooleanQuery bqRewritten = new BooleanQuery(bq.isCoordDisabled());
-        bqRewritten.setMinimumNumberShouldMatch(bq.getMinimumNumberShouldMatch());
-        bqRewritten.setBoost(bq.getBoost());
-        for(int i = 0; i < bq.clauses().size();i++) {
-          BooleanClause bc = bq.clauses().get(i);
-          Query q = bc.getQuery();
-          if (q instanceof MatchAllDocsQuery) {
-            if (mustClauseExists) continue;
-          } else if (bc.getOccur() == BooleanClause.Occur.SHOULD)
-            continue;
-          
-          bqRewritten.add(bc);
-        }
-        bq = bqRewritten;
+    //MatchallDocs query needs to be added only if there is no other must or should clauses in the query.
+    //At least we prerserve the users intention to execute the rest of the query. instead of flooding him with all the documents.
+    if (matchAllDocsExists && !shouldOrMustExists) {
+      bq.add(new BooleanClause(new MatchAllDocsQuery(), BooleanClause.Occur.MUST));
     }
     if(bq.clauses().size() == 1)
       return bq.clauses().get(0).getQuery();

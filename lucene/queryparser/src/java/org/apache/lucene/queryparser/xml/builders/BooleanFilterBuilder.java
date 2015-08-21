@@ -51,8 +51,7 @@ public class BooleanFilterBuilder implements FilterBuilder {
     BooleanFilter bf = new BooleanFilter();
 
     boolean matchAllDocsExists = false; 
-    boolean shouldClauseExists = false;
-    boolean mustClauseExists = false;
+    boolean shouldOrMustExists = false;
     
     NodeList nl = e.getChildNodes();
     final int nl_len = nl.getLength();
@@ -65,34 +64,21 @@ public class BooleanFilterBuilder implements FilterBuilder {
         Element clauseFilter = DOMUtils.getFirstChildOrFail(clauseElem);
         Filter f = factory.getFilter(clauseFilter);
         
-        //trace for any MatchAllDocsFilter and dedupe them and check for the existence of must or should clause
+        //MatchAllDocs needs to be added back only if there is no other should or must clause and there is no need to have duplicates of them.
         if (f instanceof MatchAllDocsFilter) {
-          if (matchAllDocsExists) continue;
           matchAllDocsExists = true;
+          continue;
         }
-        else {
-          shouldClauseExists |= (occurs == BooleanClause.Occur.SHOULD);
-          mustClauseExists   |= (occurs == BooleanClause.Occur.MUST);
+        else if ((occurs == BooleanClause.Occur.SHOULD) || (occurs == BooleanClause.Occur.MUST)){
+          shouldOrMustExists = true;
         }
         bf.add(new FilterClause(f, occurs));
       }
     }
-    //if there is MatchAllDocsFilter
-    //all should clauses should be removed
-    //if there is a must clause then MatchAllDocsFilter clauses will be removed
-    if (matchAllDocsExists && (mustClauseExists || shouldClauseExists)) {
-        BooleanFilter bfRewritten = new BooleanFilter();
-        for(int i = 0; i < bf.clauses().size();i++) {
-          FilterClause fc = bf.clauses().get(i);
-          Filter f = fc.getFilter();
-          if (f instanceof MatchAllDocsFilter) {
-            if (mustClauseExists) continue;
-          } else if (fc.getOccur() == BooleanClause.Occur.SHOULD)
-            continue;
-          
-          bfRewritten.add(fc);
-        }
-        bf = bfRewritten;
+    //MatchallDocs query needs to be added only if there is no other must or should clauses in the query.
+    //At least we preserve the users intention to execute the rest of the query. instead of flooding him with all the documents.
+    if (matchAllDocsExists && !shouldOrMustExists) {  
+      bf.add(new FilterClause(new MatchAllDocsFilter(), BooleanClause.Occur.MUST));
     }
     if(bf.clauses().size() == 1)
       return bf.clauses().get(0).getFilter();
