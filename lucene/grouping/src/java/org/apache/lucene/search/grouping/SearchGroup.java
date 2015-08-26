@@ -204,7 +204,7 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
     }
 
     @SuppressWarnings({"unchecked","rawtypes"})
-    private void updateNextGroup(int topN, ShardIter<T> shard) {
+    private void updateNextGroup(ShardIter<T> shard) {
       while(shard.iter.hasNext()) {
         final SearchGroup<T> group = shard.next();
         MergedGroup<T> mergedGroup = groupsSeen.get(group.groupValue);
@@ -262,7 +262,9 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
         mergedGroup.shards.add(shard);
         break;
       }
+    }
 
+    private void pruneGroups(int topN) {
       // Prune un-competitive groups:
       while(queue.size() > topN) {
         final MergedGroup<T> group = queue.pollLast();
@@ -281,7 +283,8 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
         final Collection<SearchGroup<T>> shard = shards.get(shardIDX);
         if (!shard.isEmpty()) {
           //System.out.println("  insert shard=" + shardIDX);
-          updateNextGroup(maxQueueSize, new ShardIter<>(shard, shardIDX));
+          updateNextGroup(new ShardIter<>(shard, shardIDX));
+          pruneGroups(maxQueueSize);
         }
       }
 
@@ -308,7 +311,8 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
 
         // Advance all iters in this group:
         for(ShardIter<T> shardIter : group.shards) {
-          updateNextGroup(maxQueueSize, shardIter);
+          updateNextGroup(shardIter);
+          pruneGroups(maxQueueSize);
         }
       }
 
