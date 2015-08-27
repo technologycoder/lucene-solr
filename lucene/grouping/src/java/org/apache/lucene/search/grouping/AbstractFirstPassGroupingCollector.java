@@ -214,21 +214,21 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
 
       // We already tested that the document is competitive, so replace
       // the bottom group with this new group.
-      final CollectedSearchGroup<GROUP_VALUE_TYPE> bottomGroup = orderedGroups.pollLast();
+      final CollectedSearchGroup<GROUP_VALUE_TYPE> removedGroup = orderedGroups.pollLast();
       assert orderedGroups.size() == topNGroups -1;
 
-      groupMap.remove(bottomGroup.groupValue);
+      groupMap.remove(removedGroup.groupValue);
 
       // reuse the removed CollectedSearchGroup
-      bottomGroup.groupValue = copyDocGroupValue(groupValue, bottomGroup.groupValue);
-      bottomGroup.topDoc = docBase + doc;
+      removedGroup.groupValue = copyDocGroupValue(groupValue, removedGroup.groupValue);
+      removedGroup.topDoc = docBase + doc;
 
       for (FieldComparator<?> fc : comparators) {
-        fc.copy(bottomGroup.comparatorSlot, doc);
+        fc.copy(removedGroup.comparatorSlot, doc);
       }
 
-      groupMap.put(bottomGroup.groupValue, bottomGroup);
-      orderedGroups.add(bottomGroup);
+      groupMap.put(removedGroup.groupValue, removedGroup);
+      orderedGroups.add(removedGroup);
       assert orderedGroups.size() == topNGroups;
 
       final int lastComparatorSlot = orderedGroups.last().comparatorSlot;
