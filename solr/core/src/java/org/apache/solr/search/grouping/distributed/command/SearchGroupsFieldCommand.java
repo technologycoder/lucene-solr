@@ -88,7 +88,7 @@ public class SearchGroupsFieldCommand implements Command<SearchGroupsFieldComman
 
   @Override
   public List<Collector> create() throws IOException {
-    List<Collector> collectors = new ArrayList<>();
+    final List<Collector> collectors = new ArrayList<>(2);
     if (topNGroups > 0) {
       firstPassGroupingCollector = new TermFirstPassGroupingCollector(field.getName(), groupSort, topNGroups);
       collectors.add(firstPassGroupingCollector);
@@ -103,13 +103,13 @@ public class SearchGroupsFieldCommand implements Command<SearchGroupsFieldComman
   @Override
   public SearchGroupsFieldCommandResult result() {
     final Collection<SearchGroup<BytesRef>> topGroups;
-    if (topNGroups > 0) {
+    if (firstPassGroupingCollector != null) {
       topGroups = firstPassGroupingCollector.getTopGroups(0, true);
     } else {
       topGroups = Collections.emptyList();
     }
     final Integer groupCount;
-    if (includeGroupCount) {
+    if (allGroupsCollector != null) {
       groupCount = allGroupsCollector.getGroupCount();
     } else {
       groupCount = null;
