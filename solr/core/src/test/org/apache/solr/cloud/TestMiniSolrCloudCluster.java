@@ -134,14 +134,16 @@ public class TestMiniSolrCloudCluster extends LuceneTestCase {
       // modify/query collection
       cloudSolrServer.setDefaultCollection(collectionName);
       SolrInputDocument doc = new SolrInputDocument();
-      doc.setField("id", "1");
-
-      cloudSolrServer.add(doc);
+      final int numDocs = 1+random().nextInt(10);
+      for (int ii=1; ii <= numDocs; ++ii) {
+        doc.setField("id", ""+ii);
+        cloudSolrServer.add(doc);
+      }
       cloudSolrServer.commit();
       SolrQuery query = new SolrQuery();
       query.setQuery("*:*");
       QueryResponse rsp = cloudSolrServer.query(query);
-      assertEquals(1, rsp.getResults().getNumFound());
+      assertEquals(numDocs, rsp.getResults().getNumFound());
 
       // remove a server not hosting any replicas
       ZkStateReader zkStateReader = new ZkStateReader(zkClient);
@@ -186,7 +188,7 @@ public class TestMiniSolrCloudCluster extends LuceneTestCase {
     System.setProperty("solr.tests.ramBufferSizeMB", "100");
     // use non-test classes so RandomizedRunner isn't necessary
     System.setProperty("solr.tests.mergeScheduler", "org.apache.lucene.index.ConcurrentMergeScheduler");
-    System.setProperty("solr.directoryFactory", "solr.RAMDirectoryFactory");
+    System.setProperty("solr.directoryFactory", "solr.StandardDirectoryFactory");
 
     SolrZkClient zkClient = null;
     try {
