@@ -35,7 +35,6 @@ import java.util.*;
  */
 abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> extends Collector {
 
-  private final Sort groupSort;
   private final FieldComparator<?>[] comparators;
   private final int[] reversed;
   private final int topNGroups;
@@ -68,7 +67,6 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
 
     // TODO: allow null groupSort to mean "by relevance",
     // and specialize it?
-    this.groupSort = groupSort;
 
     this.topNGroups = topNGroups;
 
@@ -115,7 +113,7 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
 
     final Collection<SearchGroup<GROUP_VALUE_TYPE>> result = new ArrayList<>();
     int upto = 0;
-    final int sortFieldCount = groupSort.getSort().length;
+    final int sortFieldCount = comparators.length;
     for(CollectedSearchGroup<GROUP_VALUE_TYPE> group : orderedGroups) {
       if (upto++ < groupOffset) {
         continue;
