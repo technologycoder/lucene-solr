@@ -289,11 +289,11 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
       }
 
       // Pull merged topN groups:
-      final List<SearchGroup<T>> newTopGroups = new ArrayList<>();
+      final List<SearchGroup<T>> newTopGroups = new ArrayList<>(topN);
 
       int count = 0;
 
-      while(queue.size() != 0) {
+      while(!queue.isEmpty()) {
         final MergedGroup<T> group = queue.pollFirst();
         group.processed = true;
         //System.out.println("  pop: shards=" + group.shards + " group=" + (group.groupValue == null ? "null" : (((BytesRef) group.groupValue).utf8ToString())) + " sortValues=" + Arrays.toString(group.topValues));
@@ -316,7 +316,7 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
         }
       }
 
-      if (newTopGroups.size() == 0) {
+      if (newTopGroups.isEmpty()) {
         return null;
       } else {
         return newTopGroups;
@@ -335,7 +335,7 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
    */
   public static <T> Collection<SearchGroup<T>> merge(List<Collection<SearchGroup<T>>> topGroups, int offset, int topN, Sort groupSort)
     throws IOException {
-    if (topGroups.size() == 0) {
+    if (topGroups.isEmpty()) {
       return null;
     } else {
       return new GroupMerger<T>(groupSort).merge(topGroups, offset, topN);
