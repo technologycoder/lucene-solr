@@ -23,20 +23,7 @@ import org.apache.lucene.search.*;
 import java.io.IOException;
 import java.util.*;
 
-/** FirstPassGroupingCollector is the first of two passes necessary
- *  to collect grouped hits.  This pass gathers the top N sorted
- *  groups. Concrete subclasses define what a group is and how it
- *  is internally collected.
- *
- *  <p>See {@link org.apache.lucene.search.grouping} for more
- *  details including a full code example.</p>
- *
- * @lucene.experimental
- */
-// note: AbstractFirstPassGroupingCollector will shortly use
-//       AbstractFirstPassGroupingCollectorData
-//       in its implementation
-abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> extends Collector {
+abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Collector {
 
   private final FieldComparator<?>[] comparators;
   private final int[] reversed;
@@ -50,20 +37,8 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
   private int docBase;
   private int spareSlot;
 
-  /**
-   * Create the first pass collector.
-   *
-   *  @param groupSort The {@link Sort} used to sort the
-   *    groups.  The top sorted document within each group
-   *    according to groupSort, determines how that group
-   *    sorts against other groups.  This must be non-null,
-   *    ie, if you want to groupSort by relevance use
-   *    Sort.RELEVANCE.
-   *  @param topNGroups How many top groups to keep.
-   *  @throws IOException If I/O related errors occur
-   */
   @SuppressWarnings({"unchecked","rawtypes"})
-  public AbstractFirstPassGroupingCollector(Sort groupSort, int topNGroups) throws IOException {
+  public AbstractFirstPassGroupingCollectorData(Sort groupSort, int topNGroups) throws IOException {
     if (topNGroups < 1) {
       throw new IllegalArgumentException("topNGroups must be >= 1 (got " + topNGroups + ")");
     }
