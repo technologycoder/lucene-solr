@@ -23,6 +23,11 @@ import org.apache.lucene.search.*;
 import java.io.IOException;
 import java.util.*;
 
+/** AbstractFirstPassGroupingCollectorData abstractly represents the data
+ *  used by a AbstractFirstPassGroupingCollector.
+ *
+ * @lucene.experimental
+ */
 abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Collector {
 
   private final FieldComparator<?>[] comparators;
@@ -33,7 +38,7 @@ abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> e
 
   // Set once we reach topNGroups unique groups:
   /** @lucene.internal */
-  protected TreeSet<CollectedSearchGroup<GROUP_VALUE_TYPE>> orderedGroups;
+  TreeSet<CollectedSearchGroup<GROUP_VALUE_TYPE>> orderedGroups;
   private int docBase;
   private int spareSlot;
 
