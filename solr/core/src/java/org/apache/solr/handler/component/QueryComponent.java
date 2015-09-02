@@ -208,14 +208,13 @@ public class QueryComponent extends SearchComponent
                               CursorMarkParams.CURSOR_MARK_PARAM);
     }
  
+    SolrIndexSearcher.QueryCommand cmd = rb.getQueryCommand();
     SolrIndexSearcher searcher = rb.req.getSearcher();
     GroupingSpecification groupingSpec = new GroupingSpecification();
     rb.setGroupingSpec(groupingSpec);
 
-    final SortSpec sortSpec = rb.getSortSpec();
-
     //TODO: move weighting of sort
-    Sort groupSort = searcher.weightSort(sortSpec.getSort());
+    Sort groupSort = searcher.weightSort(cmd.getSort());
     if (groupSort == null) {
       groupSort = Sort.RELEVANCE;
     }
@@ -245,11 +244,11 @@ public class QueryComponent extends SearchComponent
     groupingSpec.setFunctions(params.getParams(GroupParams.GROUP_FUNC));
     groupingSpec.setGroupOffset(params.getInt(GroupParams.GROUP_OFFSET, 0));
     groupingSpec.setGroupLimit(params.getInt(GroupParams.GROUP_LIMIT, 1));
-    groupingSpec.setOffset(sortSpec.getOffset());
-    groupingSpec.setLimit(sortSpec.getCount());
+    groupingSpec.setOffset(rb.getSortSpec().getOffset());
+    groupingSpec.setLimit(rb.getSortSpec().getCount());
     groupingSpec.setIncludeGroupCount(params.getBool(GroupParams.GROUP_TOTAL_COUNT, false));
     groupingSpec.setMain(params.getBool(GroupParams.GROUP_MAIN, false));
-    groupingSpec.setNeedScore((rb.getFieldFlags() & SolrIndexSearcher.GET_SCORES) != 0);
+    groupingSpec.setNeedScore((cmd.getFlags() & SolrIndexSearcher.GET_SCORES) != 0);
     groupingSpec.setTruncateGroups(params.getBool(GroupParams.GROUP_TRUNCATE, false));
   }
 
@@ -305,6 +304,10 @@ public class QueryComponent extends SearchComponent
       return;
     }
 
+    if (rb.getQueryCommand().getOffset() < 0) {
+      throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "'start' parameter cannot be negative");
+    }
+
     // -1 as flag if not set.
     long timeAllowed = (long)params.getInt( CommonParams.TIME_ALLOWED, -1 );
     if (null != rb.getCursorMark() && 0 < timeAllowed) {
@@ -313,14 +316,10 @@ public class QueryComponent extends SearchComponent
                               CursorMarkParams.CURSOR_MARK_PARAM + " and " + CommonParams.TIME_ALLOWED);
     }
 
-    final SolrIndexSearcher.QueryCommand cmd = rb.getQueryCommand();
+    SolrIndexSearcher.QueryCommand cmd = rb.getQueryCommand();
     cmd.setTimeAllowed(timeAllowed);
     cmd.setTimeLuceneSearch(rb.isDebugTimings());
     SolrIndexSearcher.QueryResult result = new SolrIndexSearcher.QueryResult();
-
-    if (cmd.getOffset() < 0) {
-      throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "'start' parameter cannot be negative");
-    }
 
     //
     // grouping / field collapsing
