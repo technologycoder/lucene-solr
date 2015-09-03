@@ -28,7 +28,7 @@ import java.util.*;
  *
  * @lucene.experimental
  */
-abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Collector {
+public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Collector {
 
   private final FieldComparator<?>[] comparators;
   private final int[] reversed;
@@ -125,6 +125,10 @@ abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> e
 
   @Override
   public void collect(int doc) throws IOException {
+    throw new UnsupportedOperationException("AbstractFirstPassGroupingCollectorData.collect(doc="+doc+")");
+  }
+
+  public void collect(int doc, AbstractFirstPassGroupingCollectorDataSource<GROUP_VALUE_TYPE> dataSource) throws IOException {
     //System.out.println("FP.collect doc=" + doc);
 
     // If orderedGroups != null we already have collected N groups and
@@ -157,7 +161,7 @@ abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> e
     // TODO: should we add option to mean "ignore docs that
     // don't have the group field" (instead of stuffing them
     // under null group)?
-    final GROUP_VALUE_TYPE groupValue = getDocGroupValue(doc);
+    final GROUP_VALUE_TYPE groupValue = dataSource.getDocGroupValue(doc);
 
     final CollectedSearchGroup<GROUP_VALUE_TYPE> group = groupMap.get(groupValue);
 
@@ -175,7 +179,7 @@ abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> e
 
         // Add a new CollectedSearchGroup:
         CollectedSearchGroup<GROUP_VALUE_TYPE> sg = new CollectedSearchGroup<>();
-        sg.groupValue = copyDocGroupValue(groupValue, null);
+        sg.groupValue = dataSource.copyDocGroupValue(groupValue, null);
         sg.comparatorSlot = groupMap.size();
         sg.topDoc = docBase + doc;
         for (FieldComparator<?> fc : comparators) {
@@ -201,7 +205,7 @@ abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> e
       groupMap.remove(removedGroup.groupValue);
 
       // reuse the removed CollectedSearchGroup
-      removedGroup.groupValue = copyDocGroupValue(groupValue, removedGroup.groupValue);
+      removedGroup.groupValue = dataSource.copyDocGroupValue(groupValue, removedGroup.groupValue);
       removedGroup.topDoc = docBase + doc;
 
       for (FieldComparator<?> fc : comparators) {
@@ -313,24 +317,6 @@ abstract public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> e
       comparators[i] = comparators[i].setNextReader(readerContext);
     }
   }
-
-  /**
-   * Returns the group value for the specified doc.
-   *
-   * @param doc The specified doc
-   * @return the group value for the specified doc
-   */
-  protected abstract GROUP_VALUE_TYPE getDocGroupValue(int doc);
-
-  /**
-   * Returns a copy of the specified group value by creating a new instance and copying the value from the specified
-   * groupValue in the new instance. Or optionally the reuse argument can be used to copy the group value in.
-   *
-   * @param groupValue The group value to copy
-   * @param reuse Optionally a reuse instance to prevent a new instance creation
-   * @return a copy of the specified group value
-   */
-  protected abstract GROUP_VALUE_TYPE copyDocGroupValue(GROUP_VALUE_TYPE groupValue, GROUP_VALUE_TYPE reuse);
 
 }
 

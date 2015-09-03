@@ -17,23 +17,7 @@ package org.apache.lucene.search.grouping;
  * limitations under the License.
  */
 
-import org.apache.lucene.search.*;
-
-import java.io.IOException;
-
-/** FirstPassGroupingCollectorData concretely represents the data
- *  used by a AbstractFirstPassGroupingCollector.
- *
- * @lucene.experimental
- */
-public class FirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> {
-
-  private final AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> owner;
-
-  public FirstPassGroupingCollectorData(Sort groupSort, int topNGroups, AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> owner) throws IOException {
-    super(groupSort, topNGroups);
-    this.owner = owner;
-  }
+abstract interface AbstractFirstPassGroupingCollectorDataSource<GROUP_VALUE_TYPE> {
 
   /**
    * Returns the group value for the specified doc.
@@ -41,10 +25,7 @@ public class FirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends AbstractFi
    * @param doc The specified doc
    * @return the group value for the specified doc
    */
-  @Override
-  protected GROUP_VALUE_TYPE getDocGroupValue(int doc) {
-    return owner.getDocGroupValue(doc);
-  }
+  GROUP_VALUE_TYPE getDocGroupValue(int doc);
 
   /**
    * Returns a copy of the specified group value by creating a new instance and copying the value from the specified
@@ -54,10 +35,6 @@ public class FirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends AbstractFi
    * @param reuse Optionally a reuse instance to prevent a new instance creation
    * @return a copy of the specified group value
    */
-  @Override
-  protected GROUP_VALUE_TYPE copyDocGroupValue(GROUP_VALUE_TYPE groupValue, GROUP_VALUE_TYPE reuse) {
-    return owner.copyDocGroupValue(groupValue, reuse);
-  }
+  GROUP_VALUE_TYPE copyDocGroupValue(GROUP_VALUE_TYPE groupValue, GROUP_VALUE_TYPE reuse);
 
 }
-

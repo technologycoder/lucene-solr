@@ -35,6 +35,20 @@ import java.util.*;
  */
 abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> extends Collector {
 
+  private class AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE> implements AbstractFirstPassGroupingCollectorDataSource<GROUP_VALUE_TYPE> {
+    private final AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> ds;
+    AbstractFirstPassGroupingCollectorAsDataSource(AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> ds) {
+      this.ds = ds;
+    }
+    public GROUP_VALUE_TYPE getDocGroupValue(int doc) {
+      return ds.getDocGroupValue(doc);
+    }
+    public GROUP_VALUE_TYPE copyDocGroupValue(GROUP_VALUE_TYPE groupValue, GROUP_VALUE_TYPE reuse) {
+      return ds.copyDocGroupValue(groupValue, reuse);
+    }
+  }
+  private final AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE> thisAsDataSource;
+
   protected final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> data;
 
   /**
@@ -50,7 +64,8 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
    *  @throws IOException If I/O related errors occur
    */
   public AbstractFirstPassGroupingCollector(Sort groupSort, int topNGroups) throws IOException {
-    this.data = new FirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, topNGroups, this);
+    this.thisAsDataSource = new AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE>(this);
+    this.data = new AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, topNGroups);
   }
 
   /**
@@ -73,7 +88,7 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
 
   @Override
   public void collect(int doc) throws IOException {
-    data.collect(doc);
+    data.collect(doc, thisAsDataSource);
   }
 
   @Override
