@@ -47,7 +47,7 @@ class BytesStore extends DataOutput implements Accountable {
   private ByteBuffer current;
 
   @SuppressWarnings("FieldCanBeLocal")
-  private final boolean allocateDirect = true;
+  private final boolean allocateDirect = Boolean.valueOf(System.getProperty("lucene.directByteBuffer", "true"));
 
   public BytesStore(int blockBits) {
     this.blockBits = blockBits;
