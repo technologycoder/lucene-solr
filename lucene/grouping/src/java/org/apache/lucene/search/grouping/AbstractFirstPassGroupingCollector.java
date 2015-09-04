@@ -50,6 +50,9 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
   private final AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE> thisAsDataSource;
 
   protected final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> data;
+  private final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> aboveAnchorData;
+  private final AnchorComparator anchor;
+  private final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> belowAnchorData;
 
   /**
    * Create the first pass collector.
@@ -64,8 +67,47 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
    *  @throws IOException If I/O related errors occur
    */
   public AbstractFirstPassGroupingCollector(Sort groupSort, int topNGroups) throws IOException {
+    this(groupSort, topNGroups, true, 0, null, 0);
+  }
+  /**
+   * Create the first pass collector.
+   *
+   *  @param groupSort The {@link Sort} used to sort the
+   *    groups.  The top sorted document within each group
+   *    according to groupSort, determines how that group
+   *    sorts against other groups.  This must be non-null,
+   *    ie, if you want to groupSort by relevance use
+   *    Sort.RELEVANCE.
+   *  @param topNGroups How many top groups to keep.
+   *  @param forward Direction i.e. true for forward/top results and false for backward/tail results
+   *  @param aboveAnchorNGroups How many extra above-the-anchor groups to keep
+   *  @param anchor Threshold delineating top and above-the-anchor groups
+   *  @param belowAnchorNGroups How many extra below-the-anchor groups to keep
+   *  @throws IOException If I/O related errors occur
+   */
+  public AbstractFirstPassGroupingCollector(Sort groupSort, int topNGroups,
+      boolean forward, int aboveAnchorNGroups, AnchorComparator anchor, int belowAnchorNGroups) throws IOException {
     this.thisAsDataSource = new AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE>(this);
-    this.data = new AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, topNGroups);
+    this.anchor = anchor;
+    if (anchor == null) {
+      if (forward) {
+        this.data = new AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, topNGroups, false, true);
+        this.aboveAnchorData = null;
+        this.belowAnchorData = null;
+      } else {
+        throw new IllegalArgumentException("not-forward direction requires an anchor");
+      }
+    } else {
+      if (forward) {
+        this.data = null;
+        this.aboveAnchorData = new AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, aboveAnchorNGroups, false, false);
+        this.belowAnchorData = new AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, topNGroups + belowAnchorNGroups, true, true);
+      } else {
+        this.data = null;
+        this.aboveAnchorData = new AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE>(groupSort, topNGroups + aboveAnchorNGroups, false, false);
+        this.belowAnchorData = null;
+      }
+    }
   }
 
   /**
@@ -78,27 +120,67 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
    * @return top groups, starting from offset
    */
   public Collection<SearchGroup<GROUP_VALUE_TYPE>> getTopGroups(int groupOffset, boolean fillFields) {
-    return data.getTopGroups(groupOffset, fillFields);
+    return (data == null ? null : data.getTopGroups(groupOffset, fillFields));
+  }
+
+  public Collection<SearchGroup<GROUP_VALUE_TYPE>> getAboveAnchorGroups(boolean fillFields) {
+    return (aboveAnchorData == null ? null : aboveAnchorData.getTopGroups(0, fillFields));
+  }
+
+  public Collection<SearchGroup<GROUP_VALUE_TYPE>> getBelowAnchorGroups(boolean fillFields) {
+    return (belowAnchorData == null ? null : belowAnchorData.getTopGroups(0, fillFields));
   }
 
   @Override
   public void setScorer(Scorer scorer) throws IOException {
-    data.setScorer(scorer);
+    if (data != null) data.setScorer(scorer);
+    if (aboveAnchorData != null) aboveAnchorData.setScorer(scorer);
+    if (anchor != null) anchor.setScorer(scorer);
+    if (belowAnchorData != null) belowAnchorData.setScorer(scorer);
   }
 
   @Override
   public void collect(int doc) throws IOException {
-    data.collect(doc, thisAsDataSource);
+    if (data != null) {
+      data.collect(doc, thisAsDataSource);
+    }
+
+    if (anchor != null) {
+      final int cc = anchor.compare(doc);
+      if (cc < 0) { // < means 'anchor < doc' i.e. below anchor
+        if (belowAnchorData != null) {
+          belowAnchorData.collect(doc, thisAsDataSource);
+        }
+      } else if (cc > 0) { // > means 'anchor > doc' i.e. 'doc < anchor' i.e. above anchor
+        if (aboveAnchorData != null) {
+          aboveAnchorData.collect(doc, thisAsDataSource);
+        }
+        if (belowAnchorData != null) {
+          // groups bubble to the top i.e. if the group is now above the anchor
+          // then any document in the group below the anchor must be uncollected
+          belowAnchorData.uncollect(doc, thisAsDataSource);
+        }
+      } else { // == means 'anchor == doc' i.e. below anchor
+        if (belowAnchorData != null) {
+          belowAnchorData.collect(doc, thisAsDataSource);
+        } else if (aboveAnchorData != null) {
+          aboveAnchorData.collect(doc, thisAsDataSource);
+        }
+      }
+    }
   }
 
   @Override
   public boolean acceptsDocsOutOfOrder() {
-    return data.acceptsDocsOutOfOrder();
+    return false;
   }
 
   @Override
   public void setNextReader(AtomicReaderContext readerContext) throws IOException {
-    data.setNextReader(readerContext);
+    if (data != null) data.setNextReader(readerContext);
+    if (aboveAnchorData != null) aboveAnchorData.setNextReader(readerContext);
+    if (anchor != null) anchor.setNextReader(readerContext);
+    if (belowAnchorData != null) belowAnchorData.setNextReader(readerContext);
   }
 
   /**

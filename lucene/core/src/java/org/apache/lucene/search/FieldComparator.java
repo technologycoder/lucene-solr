@@ -126,6 +126,14 @@ public abstract class FieldComparator<T> {
   public abstract void setTopValue(T value);
 
   /**
+   * Update the top value, for future calls to {@link #compareTop}
+   * by copying the value currently in <code>slot</code>.
+   */
+  public void setTopValueBySlot(final int slot) {
+    throw new UnsupportedOperationException("FieldComparator.setTopValueBySlot(slot="+slot+")");
+  }
+
+  /**
    * Compare the bottom of the queue with this doc.  This will
    * only invoked after setBottom has been called.  This
    * should return the same result as {@link
@@ -631,6 +639,11 @@ public abstract class FieldComparator<T> {
     }
 
     @Override
+    public void setTopValueBySlot(final int slot) {
+      topValue = values[slot];
+    }
+
+    @Override
     public Integer value(int slot) {
       return Integer.valueOf(values[slot]);
     }
@@ -709,6 +722,11 @@ public abstract class FieldComparator<T> {
     @Override
     public void setTopValue(Long value) {
       topValue = value;
+    }
+
+    @Override
+    public void setTopValueBySlot(final int slot) {
+      topValue = values[slot];
     }
 
     @Override

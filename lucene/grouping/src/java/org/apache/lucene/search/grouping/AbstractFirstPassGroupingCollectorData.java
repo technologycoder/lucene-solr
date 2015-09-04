@@ -28,7 +28,7 @@ import java.util.*;
  *
  * @lucene.experimental
  */
-public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Collector {
+public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> {
 
   private final FieldComparator<?>[] comparators;
   private final int[] reversed;
@@ -37,6 +37,7 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
   private final int compIDXEnd;
 
   private final Set<GROUP_VALUE_TYPE> uncollectedGroups;
+  private final boolean pruneBottom;
 
   // Set once we reach topNGroups unique groups:
   /** @lucene.internal */
@@ -44,11 +45,9 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
   private int docBase;
   private int spareSlot;
 
-  public AbstractFirstPassGroupingCollectorData(Sort groupSort, int topNGroups) throws IOException {
-    this(groupSort, topNGroups, false);
-  }
-  @SuppressWarnings({"unchecked","rawtypes"})
-  public AbstractFirstPassGroupingCollectorData(Sort groupSort, int topNGroups, boolean supportUncollect) throws IOException {
+  @SuppressWarnings({"rawtypes"})
+  public AbstractFirstPassGroupingCollectorData(Sort groupSort, int topNGroups, boolean supportUncollect,
+      boolean pruneBottom) throws IOException {
     if (topNGroups < 1) {
       throw new IllegalArgumentException("topNGroups must be >= 1 (got " + topNGroups + ")");
     }
@@ -78,6 +77,8 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     } else {
       uncollectedGroups = null;
     }
+
+    this.pruneBottom = pruneBottom;
   }
 
   /**
@@ -130,7 +131,6 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     return result;
   }
 
-  @Override
   public void setScorer(Scorer scorer) throws IOException {
     for (FieldComparator<?> comparator : comparators) {
       comparator.setScorer(scorer);
@@ -147,11 +147,6 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
         uncollectedGroups.add(dataSource.copyDocGroupValue(groupValue, null));
       }
     }
-  }
-
-  @Override
-  public void collect(int doc) throws IOException {
-    throw new UnsupportedOperationException("AbstractFirstPassGroupingCollectorData.collect(doc="+doc+")");
   }
 
   public void collect(int doc, AbstractFirstPassGroupingCollectorDataSource<GROUP_VALUE_TYPE> dataSource) throws IOException {
@@ -218,19 +213,43 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     // Downside: if the number of unique groups is very low, this is
     // wasted effort as we will most likely be updating an existing group.
     else if (orderedGroups != null) {
-      for (int compIDX = 0;; compIDX++) {
-        final int c = reversed[compIDX] * comparators[compIDX].compareBottom(doc);
-        if (c < 0) {
-          // Definitely not competitive. So don't even bother to continue
-          return;
-        } else if (c > 0) {
-          // Definitely competitive.
-          break;
-        } else if (compIDX == compIDXEnd) {
-          // Here c=0. If we're at the last comparator, this doc is not
-          // competitive, since docs are visited in doc Id order, which means
-          // this doc cannot compete with any other document in the queue.
-          return;
+      if (pruneBottom) {
+        for (int compIDX = 0;; compIDX++) {
+          final int cc = reversed[compIDX] * comparators[compIDX].compareBottom(doc);
+          if (cc < 0) { // < means 'bottom < doc' i.e. 'top <= Bottom < doc'
+            // Definitely not competitive. So don't even bother to continue.
+            return;
+          } else if (cc > 0) {  // > means 'bottom > doc' i.e. 'doc < Bottom'
+            // Definitely competitive.
+            break;
+          } else if (compIDX == compIDXEnd) {
+            // 'bottom == doc' combined with 'docid(bottom) < docid(doc)'
+            // means 'bottom+docid(bottom) < doc+docid(doc)' i.e. not competitive
+            //
+            // Here cc=0. If we're at the last comparator, this doc is not
+            // competitive, since docs are visited in doc Id order, which means
+            // this doc cannot compete with any other document in the queue.
+            return;
+          }
+        }
+      } else {
+        for (int compIDX = 0;; compIDX++) {
+          final int cc = reversed[compIDX] * comparators[compIDX].compareTop(doc);
+          if (cc > 0) { // > means 'top > doc' i.e. 'doc < Top <= bottom'
+            // Definitely not competitive. So don't even bother to continue.
+            return;
+          } else if (cc < 0) { // < means 'top < doc'
+            // Definitely competitive.
+            break;
+          } else if (compIDX == compIDXEnd) {
+            // 'top == doc' combined with 'docid(top) < docid(doc)'
+            // means 'top+docid(top) < doc+docid(doc)' i.e. competitive.
+            //
+            // Here cc=0. If we're at the last comparator, this doc is
+            // competitive, since docs are visited in doc Id order, which means
+            // this doc can compete with any other document in the queue.
+            break;
+          }
         }
       }
       groupValue = dataSource.getDocGroupValue(doc);
@@ -277,8 +296,9 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
       }
 
       // We already tested that the document is competitive, so replace
-      // the bottom group with this new group.
-      final CollectedSearchGroup<GROUP_VALUE_TYPE> removedGroup = orderedGroups.pollLast();
+      // the prunable group with this new group.
+      final CollectedSearchGroup<GROUP_VALUE_TYPE> removedGroup =
+          (pruneBottom ? orderedGroups.pollLast() : orderedGroups.pollFirst());
       assert orderedGroups.size() == topNGroups -1;
 
       groupMap.remove(removedGroup.groupValue);
@@ -295,9 +315,16 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
       orderedGroups.add(removedGroup);
       assert orderedGroups.size() == topNGroups;
 
-      final int lastComparatorSlot = orderedGroups.last().comparatorSlot;
-      for (FieldComparator<?> fc : comparators) {
-        fc.setBottom(lastComparatorSlot);
+      if (pruneBottom) {
+        final int lastComparatorSlot = orderedGroups.last().comparatorSlot;
+        for (FieldComparator<?> fc : comparators) {
+          fc.setBottom(lastComparatorSlot);
+        }
+      } else {
+        final int firstComparatorSlot = orderedGroups.first().comparatorSlot;
+        for (FieldComparator<?> fc : comparators) {
+          fc.setTopValueBySlot(firstComparatorSlot);
+        }
       }
 
       return;
@@ -329,12 +356,20 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     // Remove before updating the group since lookup is done via comparators
     // TODO: optimize this
 
+    final CollectedSearchGroup<GROUP_VALUE_TYPE> prevFirst;
     final CollectedSearchGroup<GROUP_VALUE_TYPE> prevLast;
     if (orderedGroups != null) {
-      prevLast = orderedGroups.last();
+      if (pruneBottom) {
+        prevFirst = null;
+        prevLast = orderedGroups.last();
+      } else {
+        prevFirst = orderedGroups.first();
+        prevLast = null;
+      }
       orderedGroups.remove(group);
       assert orderedGroups.size() == topNGroups-1;
     } else {
+      prevFirst = null;
       prevLast = null;
     }
 
@@ -349,11 +384,21 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     if (orderedGroups != null) {
       orderedGroups.add(group);
       assert orderedGroups.size() == topNGroups;
-      final CollectedSearchGroup<?> newLast = orderedGroups.last();
-      // If we changed the value of the last group, or changed which group was last, then update bottom:
-      if (group == newLast || prevLast != newLast) {
-        for (FieldComparator<?> fc : comparators) {
-          fc.setBottom(newLast.comparatorSlot);
+      if (pruneBottom) {
+        final CollectedSearchGroup<?> newLast = orderedGroups.last();
+        // If we changed the value of the last group, or changed which group was last, then update bottom:
+        if (group == newLast || prevLast != newLast) {
+          for (FieldComparator<?> fc : comparators) {
+            fc.setBottom(newLast.comparatorSlot);
+          }
+        }
+      } else {
+        final CollectedSearchGroup<?> newFirst = orderedGroups.first();
+        // If we changed the value of the first group, or changed which group was first, then update top:
+        if (group == newFirst || prevFirst != newFirst) {
+          for (FieldComparator<?> fc : comparators) {
+            fc.setTopValueBySlot(newFirst.comparatorSlot);
+          }
         }
       }
     }
@@ -384,12 +429,6 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     }
   }
 
-  @Override
-  public boolean acceptsDocsOutOfOrder() {
-    return false;
-  }
-
-  @Override
   public void setNextReader(AtomicReaderContext readerContext) throws IOException {
     docBase = readerContext.docBase;
     for (int i=0; i<comparators.length; i++) {

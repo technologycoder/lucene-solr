@@ -46,12 +46,22 @@ public abstract class AbstractSecondPassGroupingCollector<GROUP_VALUE_TYPE> exte
   private final Sort withinGroupSort;
   private final Sort groupSort;
 
+  private final boolean forward;
+  private final AnchorComparator anchor;
+
   private int totalHitCount;
   private int totalGroupedHitCount;
 
   public AbstractSecondPassGroupingCollector(Collection<SearchGroup<GROUP_VALUE_TYPE>> groups, Sort groupSort, Sort withinGroupSort,
                                              int maxDocsPerGroup, boolean getScores, boolean getMaxScores, boolean fillSortFields)
     throws IOException {
+    this(groups, groupSort, withinGroupSort, maxDocsPerGroup, getScores, getMaxScores, fillSortFields, true, null);
+  }
+
+  public AbstractSecondPassGroupingCollector(Collection<SearchGroup<GROUP_VALUE_TYPE>> groups, Sort groupSort, Sort withinGroupSort,
+                                             int maxDocsPerGroup, boolean getScores, boolean getMaxScores, boolean fillSortFields,
+                                             boolean forward, AnchorComparator anchor)
+          throws IOException {
 
     //System.out.println("SP init");
     if (groups.size() == 0) {
@@ -78,10 +88,17 @@ public abstract class AbstractSecondPassGroupingCollector<GROUP_VALUE_TYPE> exte
           new SearchGroupDocs<>(group.groupValue,
               collector));
     }
+
+    this.forward = forward;
+    this.anchor = anchor;
+    if (!forward && anchor == null) {
+      throw new IllegalArgumentException("not-forward direction requires an anchor");
+    }
   }
 
   @Override
   public void setScorer(Scorer scorer) throws IOException {
+    if (anchor != null) anchor.setScorer(scorer);
     for (SearchGroupDocs<GROUP_VALUE_TYPE> group : groupMap.values()) {
       group.collector.setScorer(scorer);
     }
@@ -89,6 +106,18 @@ public abstract class AbstractSecondPassGroupingCollector<GROUP_VALUE_TYPE> exte
 
   @Override
   public void collect(int doc) throws IOException {
+    if (anchor != null) {
+      final int cc = anchor.compare(doc);
+      if (forward) {
+        if (cc > 0) { // > means 'anchor > doc' i.e. 'doc < anchor' i.e. above anchor
+          return;
+        }
+      } else {
+        if (cc < 0) { // < means 'anchor < doc' below anchor
+          return;
+        }
+      }
+    }
     totalHitCount++;
     SearchGroupDocs<GROUP_VALUE_TYPE> group = retrieveGroup(doc);
     if (group != null) {
@@ -109,6 +138,7 @@ public abstract class AbstractSecondPassGroupingCollector<GROUP_VALUE_TYPE> exte
   @Override
   public void setNextReader(AtomicReaderContext readerContext) throws IOException {
     //System.out.println("SP.setNextReader");
+    if (anchor != null) anchor.setNextReader(readerContext);
     for (SearchGroupDocs<GROUP_VALUE_TYPE> group : groupMap.values()) {
       group.collector.setNextReader(readerContext);
     }
