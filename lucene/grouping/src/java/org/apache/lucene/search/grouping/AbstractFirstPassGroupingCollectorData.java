@@ -36,14 +36,19 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
   private final HashMap<GROUP_VALUE_TYPE, CollectedSearchGroup<GROUP_VALUE_TYPE>> groupMap;
   private final int compIDXEnd;
 
+  private final Set<GROUP_VALUE_TYPE> uncollectedGroups;
+
   // Set once we reach topNGroups unique groups:
   /** @lucene.internal */
   TreeSet<CollectedSearchGroup<GROUP_VALUE_TYPE>> orderedGroups;
   private int docBase;
   private int spareSlot;
 
-  @SuppressWarnings({"unchecked","rawtypes"})
   public AbstractFirstPassGroupingCollectorData(Sort groupSort, int topNGroups) throws IOException {
+    this(groupSort, topNGroups, false);
+  }
+  @SuppressWarnings({"unchecked","rawtypes"})
+  public AbstractFirstPassGroupingCollectorData(Sort groupSort, int topNGroups, boolean supportUncollect) throws IOException {
     if (topNGroups < 1) {
       throw new IllegalArgumentException("topNGroups must be >= 1 (got " + topNGroups + ")");
     }
@@ -67,6 +72,12 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
 
     spareSlot = topNGroups;
     groupMap = new HashMap<>(topNGroups);
+
+    if (supportUncollect) {
+      uncollectedGroups = new HashSet<GROUP_VALUE_TYPE>();
+    } else {
+      uncollectedGroups = null;
+    }
   }
 
   /**
@@ -98,6 +109,9 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     int upto = 0;
     final int sortFieldCount = comparators.length;
     for(CollectedSearchGroup<GROUP_VALUE_TYPE> group : orderedGroups) {
+      if (uncollectedGroups != null && uncollectedGroups.contains(group.groupValue)) {
+        continue;
+      }
       if (upto++ < groupOffset) {
         continue;
       }
@@ -123,6 +137,18 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
     }
   }
 
+  public void uncollect(int doc, AbstractFirstPassGroupingCollectorDataSource<GROUP_VALUE_TYPE> dataSource) throws IOException {
+    if (uncollectedGroups == null) {
+      throw new UnsupportedOperationException("AbstractFirstPassGroupingCollectorData.uncollect(doc="+doc+")");
+    } else {
+      final GROUP_VALUE_TYPE groupValue = dataSource.getDocGroupValue(doc);
+      final CollectedSearchGroup<GROUP_VALUE_TYPE> group = groupMap.get(groupValue);
+      if (group != null) {
+        uncollectedGroups.add(dataSource.copyDocGroupValue(groupValue, null));
+      }
+    }
+  }
+
   @Override
   public void collect(int doc) throws IOException {
     throw new UnsupportedOperationException("AbstractFirstPassGroupingCollectorData.collect(doc="+doc+")");
@@ -131,6 +157,57 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
   public void collect(int doc, AbstractFirstPassGroupingCollectorDataSource<GROUP_VALUE_TYPE> dataSource) throws IOException {
     //System.out.println("FP.collect doc=" + doc);
 
+    final GROUP_VALUE_TYPE groupValue;
+    final CollectedSearchGroup<GROUP_VALUE_TYPE> group;
+
+    // we have groups whose places in the map and tree we wish to recycle
+    if (uncollectedGroups != null && !uncollectedGroups.isEmpty()) {
+      groupValue = dataSource.getDocGroupValue(doc);
+      group = groupMap.get(groupValue);
+      if (group == null) { // this is a new group ...
+        // ... that should displace an existing uncollected group
+        final Iterator<GROUP_VALUE_TYPE> uncollectedGroupIterator = uncollectedGroups.iterator();
+
+        final CollectedSearchGroup<GROUP_VALUE_TYPE> removedGroup = groupMap.remove(uncollectedGroupIterator.next());
+        assert removedGroup != null;
+
+        final CollectedSearchGroup<GROUP_VALUE_TYPE> oldLast;
+        if (orderedGroups != null) {
+          oldLast = orderedGroups.last();
+          final boolean removed = orderedGroups.remove(removedGroup.groupValue);
+          assert removed == true;
+        } else {
+          oldLast = null;
+        }
+
+        // reuse the removed CollectedSearchGroup
+        removedGroup.groupValue = dataSource.copyDocGroupValue(groupValue, removedGroup.groupValue);
+        removedGroup.topDoc = docBase + doc;
+
+        for (FieldComparator<?> fc : comparators) {
+          fc.copy(removedGroup.comparatorSlot, doc);
+        }
+
+        groupMap.put(removedGroup.groupValue, removedGroup);
+
+        if (orderedGroups != null) {
+          final CollectedSearchGroup<?> interimLast = orderedGroups.isEmpty() ? null : orderedGroups.last();
+          final boolean added = orderedGroups.add(removedGroup);
+          assert added == true;
+          final CollectedSearchGroup<?> newLast = orderedGroups.last();
+          if (newLast != oldLast || interimLast != oldLast) {
+            for (FieldComparator<?> fc : comparators) {
+              fc.setBottom(newLast.comparatorSlot);
+            }
+          }
+        }
+
+        uncollectedGroupIterator.remove();
+        return;
+      } else { // there is an existing group ...
+        // ... so proceed to consider this new doc with respect to the existing group
+      }
+    }
     // If orderedGroups != null we already have collected N groups and
     // can short circuit by comparing this document to the bottom group,
     // without having to find what group this document belongs to.
@@ -140,7 +217,7 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
 
     // Downside: if the number of unique groups is very low, this is
     // wasted effort as we will most likely be updating an existing group.
-    if (orderedGroups != null) {
+    else if (orderedGroups != null) {
       for (int compIDX = 0;; compIDX++) {
         final int c = reversed[compIDX] * comparators[compIDX].compareBottom(doc);
         if (c < 0) {
@@ -156,14 +233,16 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> extends Co
           return;
         }
       }
+      groupValue = dataSource.getDocGroupValue(doc);
+      group = groupMap.get(groupValue);
+    } else {
+      groupValue = dataSource.getDocGroupValue(doc);
+      group = groupMap.get(groupValue);
     }
 
     // TODO: should we add option to mean "ignore docs that
     // don't have the group field" (instead of stuffing them
     // under null group)?
-    final GROUP_VALUE_TYPE groupValue = dataSource.getDocGroupValue(doc);
-
-    final CollectedSearchGroup<GROUP_VALUE_TYPE> group = groupMap.get(groupValue);
 
     if (group == null) {
 
