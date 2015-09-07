@@ -20,6 +20,7 @@ package org.apache.solr.search;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -35,14 +36,24 @@ public final class QueryResultKey {
 
   private final int hc;  // cached hashCode
 
+  final boolean anchorForward;
+  final int aboveAnchorCount;
+  final Object anchorValue;
+  final int belowAnchorCount;
+
   private static SortField[] defaultSort = new SortField[0];
 
 
-  public QueryResultKey(Query query, List<Query> filters, Sort sort, int nc_flags) {
+  public QueryResultKey(Query query, List<Query> filters, Sort sort, int nc_flags,
+      boolean anchorForward, int aboveAnchorCount, Object anchorValue, int belowAnchorCount) {
     this.query = query;
     this.sort = sort;
     this.filters = filters;
     this.nc_flags = nc_flags;
+    this.anchorForward = anchorForward;
+    this.aboveAnchorCount = aboveAnchorCount;
+    this.anchorValue = anchorValue;
+    this.belowAnchorCount = belowAnchorCount;
 
     int h = query.hashCode();
 
@@ -57,6 +68,11 @@ public final class QueryResultKey {
     for (SortField sf : sfields) {
       h = h*29 + sf.hashCode();
     }
+
+    h = h*(this.anchorForward ? 2 : 3)
+        + this.aboveAnchorCount
+        + (this.anchorValue == null ? 0 : this.anchorValue.hashCode())
+        + this.belowAnchorCount;
 
     hc = h;
   }
@@ -87,6 +103,16 @@ public final class QueryResultKey {
       SortField sf1 = this.sfields[i];
       SortField sf2 = other.sfields[i];
       if (!sf1.equals(sf2)) return false;
+    }
+
+    if (this.anchorForward != other.anchorForward) return false;
+    if (this.aboveAnchorCount != other.aboveAnchorCount) return false;
+    if (this.belowAnchorCount != other.belowAnchorCount) return false;
+    if (this.anchorValue != null) {
+      return this.anchorValue.equals(other.anchorValue);
+    }
+    if (other.anchorValue != null) {
+      return other.anchorValue.equals(this.anchorValue);
     }
 
     return true;

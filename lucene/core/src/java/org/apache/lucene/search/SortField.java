@@ -455,4 +455,17 @@ public class SortField {
   public boolean needsScores() {
     return type == Type.SCORE;
   }
+  public Object defaultAnchorValue() {
+    switch (type) {
+      case INT:
+        return new Integer(0);
+
+      case LONG:
+        return new Long(0);
+
+      default:
+        return null;
+    }
+  }
+
 }

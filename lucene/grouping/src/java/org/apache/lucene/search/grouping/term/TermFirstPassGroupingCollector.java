@@ -24,6 +24,7 @@ import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.grouping.AbstractFirstPassGroupingCollector;
+import org.apache.lucene.search.grouping.AnchorComparator;
 import org.apache.lucene.util.BytesRef;
 
 /**
@@ -57,7 +58,11 @@ public class TermFirstPassGroupingCollector extends AbstractFirstPassGroupingCol
    *  @throws IOException When I/O related errors occur
    */
   public TermFirstPassGroupingCollector(String groupField, Sort groupSort, int topNGroups) throws IOException {
-    super(groupSort, topNGroups);
+    this(groupField, groupSort, topNGroups, true, 0, null, 0);
+  }
+  public TermFirstPassGroupingCollector(String groupField, Sort groupSort, int topNGroups,
+      boolean forward, int aboveAnchorNGroups, AnchorComparator anchor, int belowAnchorNGroups) throws IOException {
+    super(groupSort, topNGroups, forward, aboveAnchorNGroups, anchor, belowAnchorNGroups);
     this.groupField = groupField;
   }
 

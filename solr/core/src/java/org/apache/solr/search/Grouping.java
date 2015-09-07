@@ -54,6 +54,7 @@ import org.apache.lucene.search.grouping.function.FunctionAllGroupHeadsCollector
 import org.apache.lucene.search.grouping.function.FunctionAllGroupsCollector;
 import org.apache.lucene.search.grouping.function.FunctionFirstPassGroupingCollector;
 import org.apache.lucene.search.grouping.function.FunctionSecondPassGroupingCollector;
+import org.apache.lucene.search.grouping.term.FieldAnchorComparator;
 import org.apache.lucene.search.grouping.term.TermAllGroupHeadsCollector;
 import org.apache.lucene.search.grouping.term.TermAllGroupsCollector;
 import org.apache.lucene.search.grouping.term.TermFirstPassGroupingCollector;
@@ -88,6 +89,11 @@ public class Grouping {
   private final boolean main;
   private final boolean cacheSecondPassSearch;
   private final int maxDocsPercentageToCache;
+
+  private final boolean anchorForward;
+  private final int aboveAnchorCount;
+  private final Object anchorValue;
+  private final int belowAnchorCount;
 
   private Sort groupSort;
   private Sort withinGroupSort;
@@ -124,17 +130,33 @@ public class Grouping {
    *                                 the cache is not used in the second pass search.
    */
   public Grouping(SolrIndexSearcher searcher,
+      SolrIndexSearcher.QueryResult qr,
+      SolrIndexSearcher.QueryCommand cmd,
+      boolean cacheSecondPassSearch,
+      int maxDocsPercentageToCache,
+      boolean main) {
+    this(searcher, qr, cmd, cacheSecondPassSearch, maxDocsPercentageToCache, main, true, 0, null, 0);
+  }
+  public Grouping(SolrIndexSearcher searcher,
                   SolrIndexSearcher.QueryResult qr,
                   SolrIndexSearcher.QueryCommand cmd,
                   boolean cacheSecondPassSearch,
                   int maxDocsPercentageToCache,
-                  boolean main) {
+                  boolean main,
+                  boolean anchorForward,
+                  int aboveAnchorCount,
+                  Object anchorValue,
+                  int belowAnchorCount) {
     this.searcher = searcher;
     this.qr = qr;
     this.cmd = cmd;
     this.cacheSecondPassSearch = cacheSecondPassSearch;
     this.maxDocsPercentageToCache = maxDocsPercentageToCache;
     this.main = main;
+    this.anchorForward = anchorForward;
+    this.aboveAnchorCount = aboveAnchorCount;
+    this.anchorValue = anchorValue;
+    this.belowAnchorCount = belowAnchorCount;
   }
 
   public void add(Grouping.Command groupingCommand) {
@@ -733,7 +755,12 @@ public class Grouping {
       }
 
       groupSort = groupSort == null ? Sort.RELEVANCE : groupSort;
-      firstPass = new TermFirstPassGroupingCollector(groupBy, groupSort, actualGroupsToFind);
+      if (anchorValue == null) {
+        firstPass = new TermFirstPassGroupingCollector(groupBy, groupSort, actualGroupsToFind);
+      } else {
+        firstPass = new TermFirstPassGroupingCollector(groupBy, groupSort, actualGroupsToFind,
+            anchorForward, aboveAnchorCount, FieldAnchorComparator.create(groupSort, anchorValue), belowAnchorCount);
+      }
       return firstPass;
     }
 
@@ -747,7 +774,11 @@ public class Grouping {
         return totalCount == TotalCount.grouped ? allGroupsCollector : null;
       }
 
-      topGroups = format == Format.grouped ? firstPass.getTopGroups(offset, false) : firstPass.getTopGroups(0, false);
+      if (anchorValue == null) {
+        topGroups = format == Format.grouped ? firstPass.getTopGroups(offset, false) : firstPass.getTopGroups(0, false);
+      } else {
+        topGroups = format == Format.grouped ? firstPass.getGroups(offset, false) : firstPass.getGroups(0, false);
+      }
       if (topGroups == null) {
         if (totalCount == TotalCount.grouped) {
           allGroupsCollector = new TermAllGroupsCollector(groupBy);
@@ -761,9 +792,14 @@ public class Grouping {
 
       int groupedDocsToCollect = getMax(groupOffset, docsPerGroup, maxDoc);
       groupedDocsToCollect = Math.max(groupedDocsToCollect, 1);
-      secondPass = new TermSecondPassGroupingCollector(
-          groupBy, topGroups, groupSort, withinGroupSort, groupedDocsToCollect, needScores, needScores, false
-      );
+      if (anchorValue == null) {
+        secondPass = new TermSecondPassGroupingCollector(
+            groupBy, topGroups, groupSort, withinGroupSort, groupedDocsToCollect, needScores, needScores, false);
+      } else {
+        secondPass = new TermSecondPassGroupingCollector(
+            groupBy, topGroups, groupSort, withinGroupSort, groupedDocsToCollect, needScores, needScores, false,
+            anchorForward, FieldAnchorComparator.create(groupSort, anchorValue));
+      }
 
       if (totalCount == TotalCount.grouped) {
         allGroupsCollector = new TermAllGroupsCollector(groupBy);

@@ -1350,7 +1350,8 @@ public class SolrIndexSearcher extends IndexSearcher implements Closeable,SolrIn
     {
         // all of the current flags can be reused during warming,
         // so set all of them on the cache key.
-        key = new QueryResultKey(q, cmd.getFilterList(), cmd.getSort(), flags);
+        key = new QueryResultKey(q, cmd.getFilterList(), cmd.getSort(), flags,
+            cmd.anchorForward, cmd.aboveAnchorCount, cmd.anchorValue, cmd.belowAnchorCount);
         if ((flags & NO_CHECK_QCACHE)==0) {
           superset = queryResultCache.get(key);
 
@@ -2234,6 +2235,10 @@ public class SolrIndexSearcher extends IndexSearcher implements Closeable,SolrIn
     private Sort sort;
     private int offset;
     private int len;
+    private boolean anchorForward = true;
+    private int aboveAnchorCount;
+    private Object anchorValue = null;
+    private int belowAnchorCount;
     private int supersetMaxDoc;
     private int flags;
     private long timeAllowed = -1;
@@ -2322,6 +2327,30 @@ public class SolrIndexSearcher extends IndexSearcher implements Closeable,SolrIn
       return this;
     }
     
+    public boolean getAnchorForward() { return anchorForward; }
+    public QueryCommand setAnchorForward(boolean anchorForward) {
+      this.anchorForward = anchorForward;
+      return this;
+    }
+
+    public int getAboveAnchorCount() { return aboveAnchorCount; }
+    public QueryCommand setAboveAnchorCount(int aboveAnchorCount) {
+      this.aboveAnchorCount = aboveAnchorCount;
+      return this;
+    }
+
+    public Object getAnchorValue() { return anchorValue; }
+    public QueryCommand setAnchorValue(Object anchorValue) {
+      this.anchorValue = anchorValue;
+      return this;
+    }
+
+    public int getBelowAnchorCount() { return belowAnchorCount; }
+    public QueryCommand setBelowAnchorCount(int belowAnchorCount) {
+      this.belowAnchorCount = belowAnchorCount;
+      return this;
+    }
+
     public int getSupersetMaxDoc() { return supersetMaxDoc; }
     public QueryCommand setSupersetMaxDoc(int supersetMaxDoc) {
       this.supersetMaxDoc = supersetMaxDoc;

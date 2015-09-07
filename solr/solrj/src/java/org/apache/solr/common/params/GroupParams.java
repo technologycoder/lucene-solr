@@ -23,6 +23,11 @@ package org.apache.solr.common.params;
 public interface GroupParams {
   public static final String GROUP = "group";
 
+  public static final String ANCHOR_FORWARD  = "anchor.forward";
+  public static final String ANCHOR_ABOVE  = "anchor.above";
+  public static final String ANCHOR_VALUE  = "anchor.value";
+  public static final String ANCHOR_BELOW  = "anchor.below";
+
   public static final String GROUP_QUERY = GROUP + ".query";
   public static final String GROUP_FIELD = GROUP + ".field";
   public static final String GROUP_FUNC = GROUP + ".func";

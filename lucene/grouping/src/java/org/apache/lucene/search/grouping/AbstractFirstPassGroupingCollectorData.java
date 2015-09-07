@@ -109,7 +109,10 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> {
     final Collection<SearchGroup<GROUP_VALUE_TYPE>> result = new ArrayList<>();
     int upto = 0;
     final int sortFieldCount = comparators.length;
-    for(CollectedSearchGroup<GROUP_VALUE_TYPE> group : orderedGroups) {
+    final Iterator<CollectedSearchGroup<GROUP_VALUE_TYPE>> orderedGroupsIterator =
+        (pruneBottom ? orderedGroups.iterator() : orderedGroups.descendingIterator());
+    while (orderedGroupsIterator.hasNext()) {
+      final CollectedSearchGroup<GROUP_VALUE_TYPE> group = orderedGroupsIterator.next();
       if (uncollectedGroups != null && uncollectedGroups.contains(group.groupValue)) {
         continue;
       }
@@ -128,6 +131,14 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> {
       result.add(searchGroup);
     }
     //System.out.println("  return " + result.size() + " groups");
+    return result;
+  }
+
+  public Set<GROUP_VALUE_TYPE> getGroupValues() {
+    final Set<GROUP_VALUE_TYPE> result = new HashSet<>(groupMap.keySet());
+    if (uncollectedGroups != null) {
+      result.removeAll(uncollectedGroups);
+    }
     return result;
   }
 

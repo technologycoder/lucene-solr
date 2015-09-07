@@ -74,6 +74,20 @@ public class ResponseBuilder
   private CursorMark cursorMark;
   private CursorMark nextCursorMark;
 
+  public static class Anchor {
+    public final boolean forward;
+    public final int above;
+    public final Object value;
+    public final int below;
+    public Anchor(boolean forward, int above, Object value, int below) {
+      this.forward = forward;
+      this.above = above;
+      this.value = value;
+      this.below = below;
+    }
+  }
+  private Anchor anchor = null;
+
   private DocListAndSet results = null;
   private NamedList<Object> debugInfo = null;
   private RTimer timer = null;
@@ -408,6 +422,14 @@ public class ResponseBuilder
             .setFlags(getFieldFlags())
             .setNeedDocSet(isNeedDocSet())
             .setCursorMark(getCursorMark());
+    final Anchor anchor = getAnchor();
+    if (anchor != null) {
+      cmd = cmd
+          .setAnchorForward(anchor.forward)
+          .setAboveAnchorCount(anchor.above)
+          .setAnchorValue(anchor.value)
+          .setBelowAnchorCount(anchor.below);
+    }
     return cmd;
   }
 
@@ -447,5 +469,12 @@ public class ResponseBuilder
   }
   public void setNextCursorMark(CursorMark nextCursorMark) {
     this.nextCursorMark = nextCursorMark;
+  }
+
+  public Anchor getAnchor() {
+    return anchor;
+  }
+  public void setAnchor(Anchor anchor) {
+    this.anchor = anchor;
   }
 }

@@ -50,6 +50,7 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
   private final AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE> thisAsDataSource;
 
   protected final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> data;
+  private final boolean forward;
   private final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> aboveAnchorData;
   private final AnchorComparator anchor;
   private final AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> belowAnchorData;
@@ -88,6 +89,7 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
   public AbstractFirstPassGroupingCollector(Sort groupSort, int topNGroups,
       boolean forward, int aboveAnchorNGroups, AnchorComparator anchor, int belowAnchorNGroups) throws IOException {
     this.thisAsDataSource = new AbstractFirstPassGroupingCollectorAsDataSource<GROUP_VALUE_TYPE>(this);
+    this.forward = forward;
     this.anchor = anchor;
     if (anchor == null) {
       if (forward) {
@@ -123,12 +125,20 @@ abstract public class AbstractFirstPassGroupingCollector<GROUP_VALUE_TYPE> exten
     return (data == null ? null : data.getTopGroups(groupOffset, fillFields));
   }
 
-  public Collection<SearchGroup<GROUP_VALUE_TYPE>> getAboveAnchorGroups(boolean fillFields) {
-    return (aboveAnchorData == null ? null : aboveAnchorData.getTopGroups(0, fillFields));
+  public Set<GROUP_VALUE_TYPE> getExcludedGroupValues() {
+    if (forward) {
+      return (aboveAnchorData == null ? null : aboveAnchorData.getGroupValues());
+    } else {
+      return (belowAnchorData == null ? null : belowAnchorData.getGroupValues());
+    }
   }
 
-  public Collection<SearchGroup<GROUP_VALUE_TYPE>> getBelowAnchorGroups(boolean fillFields) {
-    return (belowAnchorData == null ? null : belowAnchorData.getTopGroups(0, fillFields));
+  public Collection<SearchGroup<GROUP_VALUE_TYPE>> getGroups(int groupOffset, boolean fillFields) {
+    if (forward) {
+      return (belowAnchorData == null ? null : belowAnchorData.getTopGroups(groupOffset, fillFields));
+    } else {
+      return (aboveAnchorData == null ? null : aboveAnchorData.getTopGroups(groupOffset, fillFields));
+    }
   }
 
   @Override

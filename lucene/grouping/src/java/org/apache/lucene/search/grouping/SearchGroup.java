@@ -273,9 +273,15 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
       }
     }
 
-    public Collection<SearchGroup<T>> merge(List<Collection<SearchGroup<T>>> shards, int offset, int topN) {
+    public List<SearchGroup<T>> merge(List<Collection<SearchGroup<T>>> shards, int offset, Integer topN, Boolean returnSortedList) {
 
-      final int maxQueueSize = offset + topN;
+      final Integer maxQueueSize;
+      if (topN != null) {
+        maxQueueSize = offset + topN.intValue();
+      } else {
+        // no maximum queue since what is in the queue might subsequently be excluded
+        maxQueueSize = null;
+      }
 
       //System.out.println("merge");
       // Init queue:
@@ -284,12 +290,19 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
         if (!shard.isEmpty()) {
           //System.out.println("  insert shard=" + shardIDX);
           updateNextGroup(new ShardIter<>(shard, shardIDX));
-          pruneGroups(maxQueueSize);
+          if (maxQueueSize != null) {
+            pruneGroups(maxQueueSize.intValue());
+          }
         }
       }
 
       // Pull merged topN groups:
-      final List<SearchGroup<T>> newTopGroups = new ArrayList<>(topN);
+      final List<SearchGroup<T>> newTopGroups;
+      if (topN != null) {
+        newTopGroups = new ArrayList<>(topN.intValue());
+      } else {
+        newTopGroups = new ArrayList<>();
+      }
 
       int count = 0;
 
@@ -302,7 +315,7 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
           newGroup.groupValue = group.groupValue;
           newGroup.sortValues = group.topValues;
           newTopGroups.add(newGroup);
-          if (newTopGroups.size() == topN) {
+          if (topN != null && newTopGroups.size() == topN.intValue()) {
             break;
           }
         //} else {
@@ -312,15 +325,39 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
         // Advance all iters in this group:
         for(ShardIter<T> shardIter : group.shards) {
           updateNextGroup(shardIter);
-          pruneGroups(maxQueueSize);
+          if (maxQueueSize != null) {
+            pruneGroups(maxQueueSize.intValue());
+          }
         }
       }
 
       if (newTopGroups.isEmpty()) {
         return null;
-      } else {
+      } else if (returnSortedList == null) {
         return newTopGroups;
+      } else {
+        return sortList(newTopGroups, returnSortedList.booleanValue());
       }
+    }
+
+    private List<SearchGroup<T>> sortList(List<SearchGroup<T>> list, boolean reverse) {
+      final int ff = (reverse ? -1 : +1);
+      final Comparator<SearchGroup<T>> comparator = new Comparator<SearchGroup<T>>() {
+        @Override
+        public int compare(SearchGroup<T> lhs, SearchGroup<T> rhs) {
+          for(int compIDX=0;compIDX<groupComp.comparators.length;compIDX++) {
+            @SuppressWarnings("unchecked")
+            final int cmp = groupComp.reversed[compIDX] * groupComp.comparators[compIDX].compareValues(lhs.sortValues[compIDX],
+                                                                                                       rhs.sortValues[compIDX]);
+            if (cmp != 0) {
+              return cmp * ff;
+            }
+          }
+          return (lhs.hashCode() - rhs.hashCode())*ff;
+        }
+      };
+      Collections.sort(list, comparator);
+      return list;
     }
   }
 
@@ -333,12 +370,12 @@ public class SearchGroup<GROUP_VALUE_TYPE> {
    *
    * <p>NOTE: this returns null if the topGroups is empty.
    */
-  public static <T> Collection<SearchGroup<T>> merge(List<Collection<SearchGroup<T>>> topGroups, int offset, int topN, Sort groupSort)
+  public static <T> List<SearchGroup<T>> merge(List<Collection<SearchGroup<T>>> topGroups, int offset, Integer topN, Sort groupSort, Boolean returnSortedList)
     throws IOException {
     if (topGroups.isEmpty()) {
       return null;
     } else {
-      return new GroupMerger<T>(groupSort).merge(topGroups, offset, topN);
+      return new GroupMerger<T>(groupSort).merge(topGroups, offset, topN, returnSortedList);
     }
   }
 }

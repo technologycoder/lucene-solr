@@ -43,13 +43,18 @@ public class QueryResultKeyTest extends SolrTestCaseJ4 {
     BooleanQuery query = new BooleanQuery();
     query.add(new TermQuery(new Term("test", "field")), Occur.MUST);
     
+    final boolean anchorForward = random().nextBoolean();
+    final int anchorAboveCount = 5*random().nextInt(3);
+    final Object anchorValue = (random().nextBoolean() ? new Integer(42) : null);
+    final int anchorBelowCount = 5*random().nextInt(3);
+    
     List<Query> filters = Arrays.<Query>asList(new TermQuery(new Term("test", "field")),
                                                new TermQuery(new Term("test2", "field2")));
-    QueryResultKey qrk1 = new QueryResultKey(query , filters, sort, 1);
+    QueryResultKey qrk1 = new QueryResultKey(query , filters, sort, 1, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
     
     List<Query> filters2 = Arrays.<Query>asList(new TermQuery(new Term("test2", "field2")),
                                                 new TermQuery(new Term("test", "field")));
-    QueryResultKey qrk2 = new QueryResultKey(query , filters2, sort, 1);
+    QueryResultKey qrk2 = new QueryResultKey(query , filters2, sort, 1, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
     assertKeyEquals(qrk1, qrk2);
   }
 
@@ -61,10 +66,15 @@ public class QueryResultKeyTest extends SolrTestCaseJ4 {
     Query query = new TermQuery(new Term("test3", "field3"));
     List<Query> filters = Arrays.asList(fq1, fq2);
 
-    QueryResultKey key = new QueryResultKey(query, filters, null, 0);
+    final boolean anchorForward = random().nextBoolean();
+    final int anchorAboveCount = 5*random().nextInt(3);
+    final Object anchorValue = (random().nextBoolean() ? new Integer(42) : null);
+    final int anchorBelowCount = 5*random().nextInt(3);
+
+    QueryResultKey key = new QueryResultKey(query, filters, null, 0, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
 
     List<Query> newFilters = Arrays.asList(fq2, fq1);
-    QueryResultKey newKey = new QueryResultKey(query, newFilters, null, 0);
+    QueryResultKey newKey = new QueryResultKey(query, newFilters, null, 0, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
 
     assertKeyEquals(key, newKey);
   }
@@ -100,8 +110,13 @@ public class QueryResultKeyTest extends SolrTestCaseJ4 {
     List<Query> filters1 = Arrays.asList(fq_aa, fq_ab);
     List<Query> filters2 = Arrays.asList(fq_zz, fq_ac);
 
-    QueryResultKey key1 = new QueryResultKey(query, filters1, null, 0);
-    QueryResultKey key2 = new QueryResultKey(query, filters2, null, 0);
+    final boolean anchorForward = random().nextBoolean();
+    final int anchorAboveCount = 5*random().nextInt(3);
+    final Object anchorValue = (random().nextBoolean() ? new Integer(42) : null);
+    final int anchorBelowCount = 5*random().nextInt(3);
+
+    QueryResultKey key1 = new QueryResultKey(query, filters1, null, 0, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
+    QueryResultKey key2 = new QueryResultKey(query, filters2, null, 0, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
     
     assertEquals(key1.hashCode(), key2.hashCode());
 
@@ -122,8 +137,14 @@ public class QueryResultKeyTest extends SolrTestCaseJ4 {
       iter++;
       int[] numsA = smallArrayOfRandomNumbers();
       int[] numsB = smallArrayOfRandomNumbers();
-      QueryResultKey aa = new QueryResultKey(base, buildFiltersFromNumbers(numsA), null, 0);
-      QueryResultKey bb = new QueryResultKey(base, buildFiltersFromNumbers(numsB), null, 0);
+
+      final boolean anchorForward = random().nextBoolean();
+      final int anchorAboveCount = 5*random().nextInt(3);
+      final Object anchorValue = (random().nextBoolean() ? new Integer(42) : null);
+      final int anchorBelowCount = 5*random().nextInt(3);
+
+      QueryResultKey aa = new QueryResultKey(base, buildFiltersFromNumbers(numsA), null, 0, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
+      QueryResultKey bb = new QueryResultKey(base, buildFiltersFromNumbers(numsB), null, 0, anchorForward, anchorAboveCount, anchorValue, anchorBelowCount);
       // now that we have our keys, sort the numbers so we know what to expect
       Arrays.sort(numsA);
       Arrays.sort(numsB);

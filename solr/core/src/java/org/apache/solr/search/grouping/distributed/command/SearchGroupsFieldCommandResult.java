@@ -18,6 +18,7 @@ package org.apache.solr.search.grouping.distributed.command;
  */
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.apache.lucene.search.grouping.SearchGroup;
 import org.apache.lucene.util.BytesRef;
@@ -29,10 +30,16 @@ public class SearchGroupsFieldCommandResult {
 
   private final Integer groupCount;
   private final Collection<SearchGroup<BytesRef>> searchGroups;
+  private final Collection<SearchGroup<BytesRef>> groups;
+  private final Set<BytesRef> excludedGroupValues;
 
-  public SearchGroupsFieldCommandResult(Integer groupCount, Collection<SearchGroup<BytesRef>> searchGroups) {
+  public SearchGroupsFieldCommandResult(Integer groupCount, Collection<SearchGroup<BytesRef>> searchGroups,
+      Collection<SearchGroup<BytesRef>> groups,
+      Set<BytesRef> excludedGroupValues) {
     this.groupCount = groupCount;
     this.searchGroups = searchGroups;
+    this.groups = groups;
+    this.excludedGroupValues = excludedGroupValues;
   }
 
   public Integer getGroupCount() {
@@ -41,5 +48,13 @@ public class SearchGroupsFieldCommandResult {
 
   public Collection<SearchGroup<BytesRef>> getSearchGroups() {
     return searchGroups;
+  }
+
+  public Collection<SearchGroup<BytesRef>> getGroups() {
+    return groups;
+  }
+
+  public Set<BytesRef> getExcludedGroupValues() {
+    return excludedGroupValues;
   }
 }

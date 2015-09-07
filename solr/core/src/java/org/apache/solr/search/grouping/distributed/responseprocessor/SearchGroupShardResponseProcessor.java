@@ -52,9 +52,11 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
     Sort groupSort = rb.getGroupingSpec().getGroupSort();
     final String[] fields = rb.getGroupingSpec().getFields();
 
+    final Map<String, Set<BytesRef>> commandExcludedGroups = new HashMap<>(fields.length);
     final Map<String, List<Collection<SearchGroup<BytesRef>>>> commandSearchGroups = new HashMap<>(fields.length);
     final Map<String, Map<SearchGroup<BytesRef>, Set<String>>> tempSearchGroupToShards = new HashMap<>(fields.length);
     for (String field : fields) {
+      commandExcludedGroups.put(field, new HashSet<BytesRef>());
       commandSearchGroups.put(field, new ArrayList<Collection<SearchGroup<BytesRef>>>(shardRequest.responses.size()));
       tempSearchGroupToShards.put(field, new HashMap<SearchGroup<BytesRef>, Set<String>>());
       if (!rb.searchGroupToShards.containsKey(field)) {
@@ -62,6 +64,7 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
       }
     }
 
+    final ResponseBuilder.Anchor anchor = rb.getAnchor();
     SearchGroupsResultTransformer serializer = new SearchGroupsResultTransformer(rb.req.getSearcher());
     try {
       int maxElapsedTime = 0;
@@ -110,6 +113,11 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
         for (String field : commandSearchGroups.keySet()) {
           final SearchGroupsFieldCommandResult firstPhaseCommandResult = result.get(field);
 
+          final Set<BytesRef> excludedGroupValues = firstPhaseCommandResult.getExcludedGroupValues();
+          if (excludedGroupValues != null) {
+            commandExcludedGroups.get(field).addAll(excludedGroupValues);
+          }
+
           final Integer groupCount = firstPhaseCommandResult.getGroupCount();
           if (groupCount != null) {
             Integer existingGroupCount = rb.mergedGroupCounts.get(field);
@@ -117,7 +125,7 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
             rb.mergedGroupCounts.put(field, existingGroupCount != null ? existingGroupCount + groupCount : groupCount);
           }
 
-          final Collection<SearchGroup<BytesRef>> searchGroups = firstPhaseCommandResult.getSearchGroups();
+          final Collection<SearchGroup<BytesRef>> searchGroups = (anchor != null ? firstPhaseCommandResult.getGroups() : firstPhaseCommandResult.getSearchGroups());
           if (searchGroups == null) {
             continue;
           }
@@ -139,7 +147,56 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
       rb.firstPhaseElapsedTime = maxElapsedTime;
       for (String groupField : commandSearchGroups.keySet()) {
         List<Collection<SearchGroup<BytesRef>>> topGroups = commandSearchGroups.get(groupField);
-        Collection<SearchGroup<BytesRef>> mergedTopGroups = SearchGroup.merge(topGroups, ss.getOffset(), ss.getCount(), groupSort);
+        final Set<BytesRef> excludedGroups = commandExcludedGroups.get(groupField);
+        final List<SearchGroup<BytesRef>> mergedTopGroups;
+        if (anchor == null) {
+          mergedTopGroups = SearchGroup.merge(topGroups, ss.getOffset(), ss.getCount(), groupSort, null);
+        } else {
+          final Boolean reverseSortList = (anchor.forward ? Boolean.FALSE : Boolean.TRUE);
+          final List<SearchGroup<BytesRef>> mergedGroups = SearchGroup.merge(topGroups, 0, null, groupSort, reverseSortList);
+          if (mergedGroups == null || mergedGroups.isEmpty()) {
+            mergedTopGroups = null;
+          } else {
+            mergedTopGroups = new ArrayList<>(ss.getCount());
+
+            final List<SearchGroup<BytesRef>> filteredMergedGroups = new ArrayList<>(mergedGroups.size());
+            for (SearchGroup<BytesRef> group : mergedGroups) {
+              if (excludedGroups == null ||
+                  !excludedGroups.contains(group.groupValue)) {
+                filteredMergedGroups.add(group);
+              }
+            }
+            final int numWanted = ss.getOffset() + ss.getCount();
+            if (mergedGroups.size() >= numWanted &&
+                filteredMergedGroups.size() < numWanted) {
+              System.out.println("cpoerschke: "
+                  +" "+(filteredMergedGroups.size() > ss.getOffset() ? "TODO" : "todo")
+                  +" mergedGroups.size="+mergedGroups.size()
+                  +" - excludedGroups.size="+excludedGroups.size()
+                  +" = filteredMergedGroups.size="+filteredMergedGroups.size()
+                  +" vs. numWanted="+numWanted
+                  +" = ss.getOffset()="+ss.getOffset()
+                  +" + ss.getCount()="+ss.getCount()
+                  );
+            }
+
+            int numToSkip = ss.getOffset();
+            int numToAdd = ss.getCount();
+            for (SearchGroup<BytesRef> group : filteredMergedGroups) {
+              if (numToSkip > 0) {
+                --numToSkip;
+              } else if (numToAdd > 0){
+                --numToAdd;
+                mergedTopGroups.add(group);
+              } else {
+                break;
+              }
+            }
+            if (!anchor.forward) {
+              Collections.reverse(mergedTopGroups);
+            }
+          }
+        }
         if (mergedTopGroups == null) {
           continue;
         }

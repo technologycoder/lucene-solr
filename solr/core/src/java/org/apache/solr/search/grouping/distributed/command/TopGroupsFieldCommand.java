@@ -22,6 +22,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.grouping.GroupDocs;
 import org.apache.lucene.search.grouping.SearchGroup;
 import org.apache.lucene.search.grouping.TopGroups;
+import org.apache.lucene.search.grouping.term.FieldAnchorComparator;
 import org.apache.lucene.search.grouping.term.TermSecondPassGroupingCollector;
 import org.apache.lucene.util.BytesRef;
 import org.apache.solr.schema.SchemaField;
@@ -47,6 +48,8 @@ public class TopGroupsFieldCommand implements Command<TopGroups<BytesRef>> {
     private Integer maxDocPerGroup;
     private boolean needScores = false;
     private boolean needMaxScore = false;
+    private boolean anchorForward = true;
+    private Object anchorValue = null;
 
     public Builder setField(SchemaField field) {
       this.field = field;
@@ -83,13 +86,24 @@ public class TopGroupsFieldCommand implements Command<TopGroups<BytesRef>> {
       return this;
     }
 
+    public Builder setAnchorForward(Boolean anchorForward) {
+      this.anchorForward = anchorForward;
+      return this;
+    }
+
+    public Builder setAnchorValue(Object anchorValue) {
+      this.anchorValue = anchorValue;
+      return this;
+    }
+
     public TopGroupsFieldCommand build() {
       if (field == null || groupSort == null ||  sortWithinGroup == null || firstPhaseGroups == null ||
           maxDocPerGroup == null) {
         throw new IllegalStateException("All required fields must be set");
       }
 
-      return new TopGroupsFieldCommand(field, groupSort, sortWithinGroup, firstPhaseGroups, maxDocPerGroup, needScores, needMaxScore);
+      return new TopGroupsFieldCommand(field, groupSort, sortWithinGroup, firstPhaseGroups, maxDocPerGroup, needScores, needMaxScore,
+          anchorForward, anchorValue);
     }
 
   }
@@ -101,6 +115,8 @@ public class TopGroupsFieldCommand implements Command<TopGroups<BytesRef>> {
   private final int maxDocPerGroup;
   private final boolean needScores;
   private final boolean needMaxScore;
+  private boolean anchorForward = true;
+  private final Object anchorValue;
   private TermSecondPassGroupingCollector secondPassCollector;
 
   private TopGroupsFieldCommand(SchemaField field,
@@ -109,7 +125,9 @@ public class TopGroupsFieldCommand implements Command<TopGroups<BytesRef>> {
                                 Collection<SearchGroup<BytesRef>> firstPhaseGroups,
                                 int maxDocPerGroup,
                                 boolean needScores,
-                                boolean needMaxScore) {
+                                boolean needMaxScore,
+                                boolean anchorForward,
+                                Object anchorValue) {
     this.field = field;
     this.groupSort = groupSort;
     this.sortWithinGroup = sortWithinGroup;
@@ -117,6 +135,8 @@ public class TopGroupsFieldCommand implements Command<TopGroups<BytesRef>> {
     this.maxDocPerGroup = maxDocPerGroup;
     this.needScores = needScores;
     this.needMaxScore = needMaxScore;
+    this.anchorForward = anchorForward;
+    this.anchorValue = anchorValue;
   }
 
   @Override
@@ -126,9 +146,14 @@ public class TopGroupsFieldCommand implements Command<TopGroups<BytesRef>> {
     }
 
     List<Collector> collectors = new ArrayList<>(1);
-    secondPassCollector = new TermSecondPassGroupingCollector(
-          field.getName(), firstPhaseGroups, groupSort, sortWithinGroup, maxDocPerGroup, needScores, needMaxScore, true
-    );
+    if (anchorValue == null) {
+      secondPassCollector = new TermSecondPassGroupingCollector(
+          field.getName(), firstPhaseGroups, groupSort, sortWithinGroup, maxDocPerGroup, needScores, needMaxScore, true);
+    } else {
+      secondPassCollector = new TermSecondPassGroupingCollector(
+          field.getName(), firstPhaseGroups, groupSort, sortWithinGroup, maxDocPerGroup, needScores, needMaxScore, true,
+          anchorForward, FieldAnchorComparator.create(groupSort, anchorValue));
+    }
     collectors.add(secondPassCollector);
     return collectors;
   }

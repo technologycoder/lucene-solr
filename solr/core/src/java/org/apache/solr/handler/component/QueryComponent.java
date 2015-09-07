@@ -192,9 +192,47 @@ public class QueryComponent extends SearchComponent
     }
 
     if (params.getBool(GroupParams.GROUP, false)) {
+      rb.setAnchor(prepareAnchor(rb));
       prepareGrouping(rb);
     }
   }
+
+  private static ResponseBuilder.Anchor prepareAnchor(ResponseBuilder rb) throws IOException {
+    final SolrParams params = rb.req.getParams();
+    final String anchorValueString = params.get(GroupParams.ANCHOR_VALUE);
+    if (anchorValueString == null) return null; // no anchor, that's fine
+
+    final SortField[] sortFields = rb.getSortSpec().getSort().getSort();
+    if (1 != sortFields.length) {
+      throw new SolrException(SolrException.ErrorCode.BAD_REQUEST,
+          "Only a single field "+CommonParams.SORT+" can be combined with "+GroupParams.ANCHOR_VALUE+".");
+    }
+    final SortField sortField0 = sortFields[0];
+    final Object defaultAnchorValue = sortField0.defaultAnchorValue();
+
+    if (defaultAnchorValue != null) {
+      final Object anchorValue;
+      if (defaultAnchorValue instanceof Integer) {
+        anchorValue = params.getInt(GroupParams.ANCHOR_VALUE);
+      }
+      else if (defaultAnchorValue instanceof Long) {
+        anchorValue = params.getLong(GroupParams.ANCHOR_VALUE);
+      } else {
+        anchorValue = null;
+        throw new SolrException(SolrException.ErrorCode.BAD_REQUEST,
+            "Type "+defaultAnchorValue.getClass().getName()+" "+GroupParams.ANCHOR_VALUE+" is not supported.");
+      }
+      return new ResponseBuilder.Anchor(
+          params.getBool(GroupParams.ANCHOR_FORWARD, true),
+          params.getInt(GroupParams.ANCHOR_ABOVE, 0),
+          anchorValue,
+          params.getInt(GroupParams.ANCHOR_BELOW, 0)
+          );
+    } else {
+      throw new SolrException(SolrException.ErrorCode.BAD_REQUEST,
+          CommonParams.SORT+" "+sortField0+" combined with "+GroupParams.ANCHOR_VALUE+" is not supported.");
+    }
+}
 
   private void prepareGrouping(ResponseBuilder rb) throws IOException {
 
@@ -342,6 +380,10 @@ public class QueryComponent extends SearchComponent
                 .setGroupSort(groupingSpec.getGroupSort())
                 .setTopNGroups(cmd.getOffset() + cmd.getLen())
                 .setIncludeGroupCount(groupingSpec.isIncludeGroupCount())
+                .setAnchorForward(cmd.getAnchorForward())
+                .setAboveAnchorCount(cmd.getAboveAnchorCount())
+                .setAnchorValue(cmd.getAnchorValue())
+                .setBelowAnchorCount(cmd.getBelowAnchorCount())
                 .build()
             );
           }
@@ -383,6 +425,8 @@ public class QueryComponent extends SearchComponent
                     .setMaxDocPerGroup(groupingSpec.getGroupOffset() + groupingSpec.getGroupLimit())
                     .setNeedScores(needScores)
                     .setNeedMaxScore(needScores)
+                    .setAnchorForward(cmd.getAnchorForward())
+                    .setAnchorValue(cmd.getAnchorValue())
                     .build()
             );
           }
@@ -411,7 +455,11 @@ public class QueryComponent extends SearchComponent
             Grouping.TotalCount.grouped : Grouping.TotalCount.ungrouped;
         int limitDefault = cmd.getLen(); // this is normally from "rows"
         Grouping grouping =
-            new Grouping(searcher, result, cmd, cacheSecondPassSearch, maxDocsPercentageToCache, groupingSpec.isMain());
+            new Grouping(searcher, result, cmd, cacheSecondPassSearch, maxDocsPercentageToCache, groupingSpec.isMain(),
+                cmd.getAnchorForward(),
+                cmd.getAboveAnchorCount(),
+                cmd.getAnchorValue(),
+                cmd.getBelowAnchorCount());
         grouping.setGroupSort(groupingSpec.getGroupSort())
             .setWithinGroupSort(groupingSpec.getSortWithinGroup())
             .setDefaultFormat(groupingSpec.getResponseFormat())
