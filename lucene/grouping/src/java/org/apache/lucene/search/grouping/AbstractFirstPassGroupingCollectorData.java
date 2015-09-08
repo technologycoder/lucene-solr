@@ -180,7 +180,7 @@ public class AbstractFirstPassGroupingCollectorData<GROUP_VALUE_TYPE> {
         final CollectedSearchGroup<GROUP_VALUE_TYPE> oldLast;
         if (orderedGroups != null) {
           oldLast = orderedGroups.last();
-          final boolean removed = orderedGroups.remove(removedGroup.groupValue);
+          final boolean removed = orderedGroups.remove(removedGroup);
           assert removed == true;
         } else {
           oldLast = null;
