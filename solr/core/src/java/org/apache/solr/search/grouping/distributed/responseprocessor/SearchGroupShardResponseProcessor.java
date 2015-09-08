@@ -159,11 +159,15 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
           } else {
             mergedTopGroups = new ArrayList<>(ss.getCount());
 
-            final List<SearchGroup<BytesRef>> filteredMergedGroups = new ArrayList<>(mergedGroups.size());
-            for (SearchGroup<BytesRef> group : mergedGroups) {
-              if (excludedGroups == null ||
-                  !excludedGroups.contains(group.groupValue)) {
-                filteredMergedGroups.add(group);
+            final List<SearchGroup<BytesRef>> filteredMergedGroups;
+            if (excludedGroups == null || excludedGroups.isEmpty()) {
+              filteredMergedGroups = mergedGroups;
+            } else {
+              filteredMergedGroups = new ArrayList<>(mergedGroups.size());
+              for (SearchGroup<BytesRef> group : mergedGroups) {
+                if (!excludedGroups.contains(group.groupValue)) {
+                  filteredMergedGroups.add(group);
+                }
               }
             }
             final int numWanted = ss.getOffset() + ss.getCount();
