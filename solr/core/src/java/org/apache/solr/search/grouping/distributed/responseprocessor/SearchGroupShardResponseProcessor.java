@@ -170,19 +170,6 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
                 }
               }
             }
-            final int numWanted = ss.getOffset() + ss.getCount();
-            if (mergedGroups.size() >= numWanted &&
-                filteredMergedGroups.size() < numWanted) {
-              System.out.println("cpoerschke: "
-                  +" "+(filteredMergedGroups.size() > ss.getOffset() ? "TODO" : "todo")
-                  +" mergedGroups.size="+mergedGroups.size()
-                  +" - excludedGroups.size="+excludedGroups.size()
-                  +" = filteredMergedGroups.size="+filteredMergedGroups.size()
-                  +" vs. numWanted="+numWanted
-                  +" = ss.getOffset()="+ss.getOffset()
-                  +" + ss.getCount()="+ss.getCount()
-                  );
-            }
 
             int numToSkip = ss.getOffset();
             int numToAdd = ss.getCount();
