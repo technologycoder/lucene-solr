@@ -1218,7 +1218,7 @@ public class TestGrouping extends LuceneTestCase {
       }
     }
 
-    final Collection<SearchGroup<BytesRef>> mergedTopGroups = SearchGroup.merge(shardGroups, groupOffset, topNGroups, groupSort);
+    final Collection<SearchGroup<BytesRef>> mergedTopGroups = SearchGroup.merge(shardGroups, groupOffset, topNGroups, groupSort, null);
     if (VERBOSE) {
       System.out.println(" top groups merged:");
       if (mergedTopGroups == null) {
