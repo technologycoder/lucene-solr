@@ -106,17 +106,9 @@ public abstract class AbstractSecondPassGroupingCollector<GROUP_VALUE_TYPE> exte
 
   @Override
   public void collect(int doc) throws IOException {
-    if (anchor != null) {
-      final int cc = anchor.compare(doc);
-      if (forward) {
-        if (cc > 0) { // > means 'anchor > doc' i.e. 'doc < anchor' i.e. above anchor
-          return;
-        }
-      } else {
-        if (cc < 0) { // < means 'anchor < doc' below anchor
-          return;
-        }
-      }
+    // > means 'anchor > doc' i.e. 'doc < anchor' i.e. above anchor
+    if (forward && anchor != null && anchor.compare(doc) > 0) {
+      return;
     }
     totalHitCount++;
     SearchGroupDocs<GROUP_VALUE_TYPE> group = retrieveGroup(doc);

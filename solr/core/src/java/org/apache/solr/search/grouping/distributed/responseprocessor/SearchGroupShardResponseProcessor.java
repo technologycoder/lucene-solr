@@ -147,7 +147,6 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
       rb.firstPhaseElapsedTime = maxElapsedTime;
       for (String groupField : commandSearchGroups.keySet()) {
         List<Collection<SearchGroup<BytesRef>>> topGroups = commandSearchGroups.get(groupField);
-        final Set<BytesRef> excludedGroups = commandExcludedGroups.get(groupField);
         final List<SearchGroup<BytesRef>> mergedTopGroups;
         if (anchor == null) {
           mergedTopGroups = SearchGroup.merge(topGroups, ss.getOffset(), ss.getCount(), groupSort, null);
@@ -157,6 +156,7 @@ public class SearchGroupShardResponseProcessor implements ShardResponseProcessor
           if (mergedGroups == null || mergedGroups.isEmpty()) {
             mergedTopGroups = null;
           } else {
+            final Set<BytesRef> excludedGroups = commandExcludedGroups.get(groupField);
             mergedTopGroups = new ArrayList<>(ss.getCount());
 
             final List<SearchGroup<BytesRef>> filteredMergedGroups;
