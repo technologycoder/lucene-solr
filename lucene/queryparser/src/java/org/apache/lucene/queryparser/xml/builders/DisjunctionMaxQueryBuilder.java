@@ -24,6 +24,7 @@ import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -48,7 +49,8 @@ public class DisjunctionMaxQueryBuilder implements QueryBuilder {
   public Query getQuery(Element e) throws ParserException {
     float tieBreaker = DOMUtils.getAttribute(e, "tieBreaker", 0.0f); 
 
-    List<Query> disjuncts = new ArrayList<>();
+    boolean matchAllDocsExists = false; 
+    boolean anyOtherQueryExists = false;
     NodeList nl = e.getChildNodes();
     final int nl_len = nl.getLength();
     for (int i = 0; i < nl_len; i++) {
@@ -56,15 +58,21 @@ public class DisjunctionMaxQueryBuilder implements QueryBuilder {
       if (node instanceof Element) { // all elements are disjuncts.
         Element queryElem = (Element) node;
         Query q = factory.getQuery(queryElem);
-        disjuncts.add(q);
+        if (q instanceof MatchAllDocsQuery) {
+          matchAllDocsExists = true;
+          continue;// we will add this MAD query later if necessary
+        }
+        else {
+          anyOtherQueryExists = true;
+        }
+        dq.add(q);
       }
     }
-
-    Query q = new DisjunctionMaxQuery(disjuncts, tieBreaker);
-    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
-    if (boost != 1f) {
-      q = new BoostQuery(q, boost);
-    }
-    return q;
+    //MatchallDocs query needs to be added only if there is no other queries inside the DisjunctionMaxQuery.
+    //At least we preserve the users intention to execute the rest of the query. instead of flooding him with all the documents.
+    if (matchAllDocsExists && !anyOtherQueryExists) 
+      return new MatchAllDocsQuery();
+    else
+      return dq;
   }
 }
