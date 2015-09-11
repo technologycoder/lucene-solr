@@ -20,6 +20,7 @@ import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.DisjunctionMaxQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -46,6 +47,8 @@ public class DisjunctionMaxQueryBuilder implements QueryBuilder {
     DisjunctionMaxQuery dq = new DisjunctionMaxQuery(tieBreaker);
     dq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
 
+    boolean matchAllDocsExists = false; 
+    boolean anyOtherQueryExists = false;
     NodeList nl = e.getChildNodes();
     final int nl_len = nl.getLength();
     for (int i = 0; i < nl_len; i++) {
@@ -53,10 +56,21 @@ public class DisjunctionMaxQueryBuilder implements QueryBuilder {
       if (node instanceof Element) { // all elements are disjuncts.
         Element queryElem = (Element) node;
         Query q = factory.getQuery(queryElem);
+        if (q instanceof MatchAllDocsQuery) {
+          matchAllDocsExists = true;
+          continue;// we will add this MAD query later if necessary
+        }
+        else {
+          anyOtherQueryExists = true;
+        }
         dq.add(q);
       }
     }
-
-    return dq;
+    //MatchallDocs query needs to be added only if there is no other queries inside the DisjunctionMaxQuery.
+    //At least we preserve the users intention to execute the rest of the query. instead of flooding him with all the documents.
+    if (matchAllDocsExists && !anyOtherQueryExists) 
+      return new MatchAllDocsQuery();
+    else
+      return dq;
   }
 }

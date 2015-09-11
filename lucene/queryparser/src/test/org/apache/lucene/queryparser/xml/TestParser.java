@@ -486,6 +486,28 @@ public class TestParser extends LuceneTestCase {
     dumpResults("NumericRangeFilter3", q, 5);
   }
   
+  public void testDisjunctionMaxQuery_MatchAllDocsQuery() throws IOException {
+    String text = "<DisjunctionMaxQuery fieldName='content'>"
+        + "<KeywordNearQuery>rio de janeiro</KeywordNearQuery>"
+        + "<KeywordNearQuery>summit</KeywordNearQuery>"
+        + "<KeywordNearQuery> </KeywordNearQuery></DisjunctionMaxQuery>";
+    Query q = parseText(text, false);
+    int size = ((DisjunctionMaxQuery)q).getDisjuncts().size();
+    assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
+    DisjunctionMaxQuery dm = (DisjunctionMaxQuery)q;
+    for(Query q1 : dm.getDisjuncts())
+    {
+      assertFalse("Not expecting MatchAllDocsQuery ",q1 instanceof MatchAllDocsQuery);
+    }
+    
+    text = "<DisjunctionMaxQuery fieldName='content' >"
+        + "<MatchAllDocsQuery/>"
+        + "<KeywordNearQuery> </KeywordNearQuery></DisjunctionMaxQuery>";
+    q = parseText(text, false);
+    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
+
+  }
+  
   public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
     String text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='should'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
