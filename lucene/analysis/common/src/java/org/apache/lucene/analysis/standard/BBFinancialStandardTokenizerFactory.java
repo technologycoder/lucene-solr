@@ -24,17 +24,15 @@ import java.io.Reader;
 import java.util.Map;
 
 /**
- * Custom factory for {@link BBStandardTokenizer}. 
+ * Custom factory for {@link BBFinancialStandardTokenizer}. 
  * Copied and modified from StandardTokenizerFactory
- * @deprecated use {@link #BBFinancialStandardTokenizerFactory} instead.
  */
-@Deprecated
-public class BBStandardTokenizerFactory extends TokenizerFactory {
+public class BBFinancialStandardTokenizerFactory extends TokenizerFactory {
   
   private final int maxTokenLength;
   
   /** Creates a new StandardTokenizerFactory */
-  public BBStandardTokenizerFactory(Map<String,String> args) {
+  public BBFinancialStandardTokenizerFactory(Map<String,String> args) {
     super(args);
     assureMatchVersion();
     maxTokenLength = getInt(args, "maxTokenLength", StandardAnalyzer.DEFAULT_MAX_TOKEN_LENGTH);
@@ -44,8 +42,8 @@ public class BBStandardTokenizerFactory extends TokenizerFactory {
   }
 
   @Override
-  public BBStandardTokenizer create(AttributeFactory factory, Reader input) {
-    BBStandardTokenizer tokenizer = new BBStandardTokenizer(luceneMatchVersion, factory, input); 
+  public BBFinancialStandardTokenizer create(AttributeFactory factory, Reader input) {
+    BBFinancialStandardTokenizer tokenizer = new BBFinancialStandardTokenizer(luceneMatchVersion, factory, input); 
     tokenizer.setMaxTokenLength(maxTokenLength);
     return tokenizer;
   }

@@ -21,7 +21,6 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 /**
  * Custom implementation copied and modified from StandardTokenizerImpl.
- * @deprecated use {@link #BBFinancialStandardTokenizerImpl} instead.
  */
 %%
 
@@ -29,29 +28,30 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 %integer
 %final
 %public
-%class BBStandardTokenizerImpl
+%class BBFinancialStandardTokenizerImpl
 %implements StandardTokenizerInterface
 %function getNextToken
 %char
 %buffer 4096
 
 %include SUPPLEMENTARY.jflex-macro
-ALetter           = (\p{WB:ALetter}  | [&@#$]                           | {ALetterSupp})
-Format            = (\p{WB:Format}                                      | {FormatSupp})
-Numeric           = ([\p{WB:Numeric}[\p{Blk:HalfAndFullForms}&&\p{Nd}]] | {NumericSupp})
-Extend            = (\p{WB:Extend}                                      | {ExtendSupp})
-Katakana          = (\p{WB:Katakana}                                    | {KatakanaSupp})
-MidLetter         = (\p{WB:MidLetter}                                   | {MidLetterSupp})
-MidNum            = (\p{WB:MidNum}                                      | {MidNumSupp})
-MidNumLet         = (\p{WB:MidNumLet}                                   | {MidNumLetSupp})
-ExtendNumLet      = (\p{WB:ExtendNumLet}                                | {ExtendNumLetSupp})
-ComplexContext    = (\p{LB:Complex_Context}                             | {ComplexContextSupp})
-Han               = (\p{Script:Han}                                     | {HanSupp})
-Hiragana          = (\p{Script:Hiragana}                                | {HiraganaSupp})
-SingleQuote       = (\p{WB:Single_Quote}                                | {SingleQuoteSupp})
-DoubleQuote       = (\p{WB:Double_Quote}                                | {DoubleQuoteSupp})
-HebrewLetter      = (\p{WB:Hebrew_Letter}                               | {HebrewLetterSupp})
-RegionalIndicator = (\p{WB:Regional_Indicator}                          | {RegionalIndicatorSupp})
+// 00A3 = pound, 00A5 = yen
+ALetter           = (\p{WB:ALetter} | \p{Block:Currency_Symbols} | [&@#$\u00A3\u00A5] | {ALetterSupp})
+Format            = (\p{WB:Format}                                                    | {FormatSupp})
+Numeric           = ([\p{WB:Numeric}[\p{Blk:HalfAndFullForms}&&\p{Nd}]]               | {NumericSupp})
+Extend            = (\p{WB:Extend}                                                    | {ExtendSupp})
+Katakana          = (\p{WB:Katakana}                                                  | {KatakanaSupp})
+MidLetter         = (\p{WB:MidLetter}                                                 | {MidLetterSupp})
+MidNum            = (\p{WB:MidNum}                                                    | {MidNumSupp})
+MidNumLet         = (\p{WB:MidNumLet}                                                 | {MidNumLetSupp})
+ExtendNumLet      = (\p{WB:ExtendNumLet}                                              | {ExtendNumLetSupp})
+ComplexContext    = (\p{LB:Complex_Context}                                           | {ComplexContextSupp})
+Han               = (\p{Script:Han}                                                   | {HanSupp})
+Hiragana          = (\p{Script:Hiragana}                                              | {HiraganaSupp})
+SingleQuote       = (\p{WB:Single_Quote}                                              | {SingleQuoteSupp})
+DoubleQuote       = (\p{WB:Double_Quote}                                              | {DoubleQuoteSupp})
+HebrewLetter      = (\p{WB:Hebrew_Letter}                                             | {HebrewLetterSupp})
+RegionalIndicator = (\p{WB:Regional_Indicator}                                        | {RegionalIndicatorSupp})
 HebrewOrALetter   = ({HebrewLetter} | {ALetter})
 
 // UAX#29 WB4. X (Extend | Format)* --> X

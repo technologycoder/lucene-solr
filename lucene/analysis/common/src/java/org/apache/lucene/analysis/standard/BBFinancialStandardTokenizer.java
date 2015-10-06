@@ -31,12 +31,10 @@ import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.util.Version;
 
 /** Custom tokenizer copied from StandardTokenizer and modified
- * to use a BBStandardTokenizerImpl scanner. 
+ * to use a BBFinancialStandardTokenizerImpl scanner. 
  * 
- * @deprecated use {@link #BBFinancialStandardTokenizer} instead.
  */
-@Deprecated
-public final class BBStandardTokenizer extends Tokenizer {
+public final class BBFinancialStandardTokenizer extends Tokenizer {
   /** A private instance of the JFlex-constructed scanner */
   private StandardTokenizerInterface scanner;
 
@@ -113,7 +111,7 @@ public final class BBStandardTokenizer extends Tokenizer {
    *
    * See http://issues.apache.org/jira/browse/LUCENE-1068
    */
-  public BBStandardTokenizer(Version matchVersion, Reader input) {
+  public BBFinancialStandardTokenizer(Version matchVersion, Reader input) {
     super(input);
     init(matchVersion);
   }
@@ -121,13 +119,13 @@ public final class BBStandardTokenizer extends Tokenizer {
   /**
    * Creates a new StandardTokenizer with a given {@link org.apache.lucene.util.AttributeSource.AttributeFactory} 
    */
-  public BBStandardTokenizer(Version matchVersion, AttributeFactory factory, Reader input) {
+  public BBFinancialStandardTokenizer(Version matchVersion, AttributeFactory factory, Reader input) {
     super(factory, input);
     init(matchVersion);
   }
 
   private final void init(Version matchVersion) {
-    this.scanner = new BBStandardTokenizerImpl(input);
+    this.scanner = new BBFinancialStandardTokenizerImpl(input);
   }
 
   // this tokenizer generates three attributes:

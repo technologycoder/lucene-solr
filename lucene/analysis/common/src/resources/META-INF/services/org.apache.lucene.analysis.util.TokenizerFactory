@@ -31,3 +31,4 @@ org.apache.lucene.analysis.standard.UAX29URLEmailTokenizerFactory
 org.apache.lucene.analysis.th.ThaiTokenizerFactory
 org.apache.lucene.analysis.wikipedia.WikipediaTokenizerFactory
 org.apache.lucene.analysis.standard.BBStandardTokenizerFactory
+org.apache.lucene.analysis.standard.BBFinancialStandardTokenizerFactory
