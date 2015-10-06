@@ -33,7 +33,7 @@ import org.apache.lucene.util.Version;
 /** Custom tokenizer copied from StandardTokenizer and modified
  * to use a BBStandardTokenizerImpl scanner. 
  * 
- * @deprecated use {@link #BBFinancialStandardTokenizer} instead.
+ * @deprecated use {@link org.apache.lucene.analysis.standard.BBFinancialStandardTokenizer} instead.
  */
 @Deprecated
 public final class BBStandardTokenizer extends Tokenizer {

@@ -23,7 +23,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 /**
  * Custom implementation copied and modified from StandardTokenizerImpl.
- * @deprecated use {@link #BBFinancialStandardTokenizerImpl} instead.
+ * @deprecated use {@link org.apache.lucene.analysis.standard.BBFinancialStandardTokenizerImpl} instead.
  */
 
 public final class BBStandardTokenizerImpl implements StandardTokenizerInterface {

@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * Custom factory for {@link BBStandardTokenizer}. 
  * Copied and modified from StandardTokenizerFactory
- * @deprecated use {@link #BBFinancialStandardTokenizerFactory} instead.
+ * @deprecated use {@link org.apache.lucene.analysis.standard.BBFinancialStandardTokenizerFactory} instead.
  */
 @Deprecated
 public class BBStandardTokenizerFactory extends TokenizerFactory {
