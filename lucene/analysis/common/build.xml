@@ -65,6 +65,8 @@
   <target name="-jflex-StandardAnalyzer" depends="init,-install-jflex">
     <run-jflex-and-disable-buffer-expansion
         dir="src/java/org/apache/lucene/analysis/standard" name="StandardTokenizerImpl"/>
+    <run-jflex-and-disable-buffer-expansion
+        dir="src/java/org/apache/lucene/analysis/standard" name="BBFinancialStandardTokenizerImpl"/>
   </target>
 
   <target name="-jflex-UAX29URLEmailTokenizer" depends="init,-install-jflex">
