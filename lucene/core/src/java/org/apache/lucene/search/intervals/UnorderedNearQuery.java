@@ -61,7 +61,7 @@ public class UnorderedNearQuery extends IntervalFilterQuery {
   }
 
   @Override
-  public String toString() {
+  public String toString(String field) {
     return "UnorderedNear/" + slop + ":" + super.toString("");
   }
 

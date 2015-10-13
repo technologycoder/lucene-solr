@@ -35,6 +35,8 @@ import org.apache.lucene.search.FieldedQuery;
 
 public class OrderedNearQuery extends IntervalFilterQuery {
 
+  private final int slop;
+
   /**
    * Constructs an OrderedNearQuery
    * @param slop the maximum distance between the subquery matches
@@ -56,6 +58,12 @@ public class OrderedNearQuery extends IntervalFilterQuery {
 
   public OrderedNearQuery(int slop, boolean collectLeaves, FieldedConjunctionQuery subqueries) {
     super(subqueries, new WithinOrderedFilter(subqueries.getField(), slop, collectLeaves));
+    this.slop = slop;
+  }
+
+  @Override
+  public String toString(String field) {
+    return "OrderedNear/" + slop + ":" + super.toString("");
   }
 
 }
