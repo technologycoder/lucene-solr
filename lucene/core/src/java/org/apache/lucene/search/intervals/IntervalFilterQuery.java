@@ -128,12 +128,11 @@ public class IntervalFilterQuery extends FieldedQuery implements Cloneable {
       if (scorer != null) {
         int newDoc = scorer.advance(doc);
         if (newDoc == doc) {
-          IntervalFilterScorer ifScorer = (IntervalFilterScorer) scorer;
-          float freq = ifScorer.sloppyFreq();
+          float freq = scorer.freq();
           Similarity.SimScorer docScorer = similarity.simScorer(stats, context);
           ComplexExplanation result = new ComplexExplanation();
           result.setDescription("weight("+getQuery()+" in "+doc+") [" + similarity.getClass().getSimpleName() + "], result of:");
-          Explanation scoreExplanation = docScorer.explain(doc, new Explanation(freq, "sloppyFreq=" + freq));
+          Explanation scoreExplanation = docScorer.explain(doc, new Explanation(freq, "phraseFreq=" + freq));
           result.addDetail(scoreExplanation);
           result.setValue(scoreExplanation.getValue());
           result.setMatch(true);
@@ -211,7 +210,7 @@ public class IntervalFilterQuery extends FieldedQuery implements Cloneable {
 
     @Override
     public float score() throws IOException {
-      return docScorer.score(docID(), sloppyFreq());
+      return docScorer.score(docID(), freq());
     }
 
     @Override
