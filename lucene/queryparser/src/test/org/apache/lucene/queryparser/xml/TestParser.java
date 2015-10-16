@@ -34,6 +34,7 @@ import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.queries.FilterClause;
 import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.queryparser.xml.builders.KeywordNearQueryParser;
+import org.apache.lucene.queryparser.xml.builders.WildcardNearQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
@@ -89,7 +90,7 @@ public class TestParser extends LuceneTestCase {
     Analyzer analyzer =  null;
     if (analyserToUse.equals(STANDARD_ANALYSER))
     {
-      analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT); 
+      analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
     }
     else
     {
@@ -429,8 +430,90 @@ public class TestParser extends LuceneTestCase {
     q = p.parse("ACQUIR* BY ZENEX <Zenex Oil Pty Ltd> said it acquired the interests of E?so S*h Africa, the local subsidiary");
     dumpResults("KeywordNearQueryParser wildcard", q, 5);
   }
-  
+
   /* end of keyword near query test cases*/
+
+  private static void tryQuery(WildcardNearQueryParser p, String s) throws Exception {
+      Query q = p.parse(s);
+      System.out.format("'%s' => '%s'\n", s, q);
+  }
+
+  public void testWildcardNearQueryParser() throws Exception {
+
+    WildcardNearQueryParser p = new WildcardNearQueryParser("contents", builder.analyzer);
+    Query q = p.parse("to");
+    dumpResults("WildcardNearQueryParser stop word", q, 5);
+    q = p.parse("");
+    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
+    dumpResults("WildcardNearQueryParser empty query", q, 5);
+    q = p.parse("<TRUMP PLAZA>");
+    dumpResults("WildcardNearQueryParser special char1", q, 5);
+    q = p.parse("7/8");
+    dumpResults("WildcardNearQueryParser special char2", q, 5);
+
+    // Made up:
+    tryQuery(p, "London-City-Airport");
+    tryQuery(p, "London-Cit*-Airport");
+    tryQuery(p, "London-*ty-Airport");
+    tryQuery(p, "London-*-Airport");
+    tryQuery(p, "London-* Airport");
+    tryQuery(p, "London *-Airport");
+    tryQuery(p, "London * Airport");
+    tryQuery(p, "London City * Airport");
+    tryQuery(p, "London ? Airport");
+    tryQuery(p, "Lon*-* *port");
+    tryQuery(p, "Lon*-* Airport");
+    tryQuery(p, "Lon*-City Airport");
+
+    tryQuery(p, "trick-or-treat");
+    tryQuery(p, "trick-??-treat");
+    tryQuery(p, "trick-?*?-treat");
+    tryQuery(p, "trick-**-treat");
+    tryQuery(p, "trick-??-?????");
+    tryQuery(p, "trick-*-?????");
+    tryQuery(p, "trick-??-* candy");
+    tryQuery(p, "trick-*-treat");
+    tryQuery(p, "trick-*-*-treat");
+    tryQuery(p, "trick * * treat");
+    tryQuery(p, "i love trick-*-treat candy");
+
+    tryQuery(p, "slow up?-side down?");
+    tryQuery(p, "slow up??-side down??");
+    tryQuery(p, "slow-up??side down");
+    tryQuery(p, "slow-up-??side down");
+
+    // Based on real queries:
+    tryQuery(p, "8-k*");
+    tryQuery(p, "re-domesticat*");
+    tryQuery(p, "re-domicile*");
+    tryQuery(p, "ipc-fipe*");
+    tryQuery(p, "leo-mesdag b.v.*");
+    tryQuery(p, "spin-off*");
+    tryQuery(p, "skb-bank*");
+    tryQuery(p, "gonzalez-paramo*");
+    tryQuery(p, "jenaro cardona-fox*");
+    tryQuery(p, "t-note*");
+    tryQuery(p, "non-bank*");
+    tryQuery(p, "conversion to open-end*");
+    tryQuery(p, "estate uk-3*");
+    tryQuery(p, "sc-to-* sec filing");
+    tryQuery(p, "ВСМПО-АВИСМА*");
+    tryQuery(p, "jean-franc* dubos");
+    tryQuery(p, "vietnam-singapore industrial* park*");
+    tryQuery(p, "prorated* or pro-rated");
+
+    // Not great with standard analyzer that throws away stop words:
+
+    // Made up:
+    tryQuery(p, "stopword-fail0 *or-me");
+    tryQuery(p, "stopword-fail1 or*-me");
+
+    // Based on real queries:
+    tryQuery(p, "stopword-fail2 sc-to* sec filing");
+    tryQuery(p, "stopword-fail3 throw-in*");
+  }
+
+
 
   public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
     Query q = parse("MatchAllDocsQuery.xml");
