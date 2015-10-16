@@ -435,7 +435,7 @@ public class TestParser extends LuceneTestCase {
 
   private static void tryQuery(WildcardNearQueryParser p, String s) throws Exception {
       Query q = p.parse(s);
-      System.out.format("'%s' => '%s'\n", s, q);
+      System.out.println("'" + s + "' => '" + q + "'");
   }
 
   public void testWildcardNearQueryParser() throws Exception {
