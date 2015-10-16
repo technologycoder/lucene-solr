@@ -587,6 +587,65 @@ public class TestParser extends LuceneTestCase {
 
   }
   
+  //federal N/3 (credit OR (taxes N/1 income))
+  public void testNearBooleanNear() throws IOException, ParserException {
+    String text = ""
+                  +"<NearQuery fieldName=\"contents\" slop=\"4\" inOrder=\"false\">"
+                  +"<KeywordNearQuery>bank</KeywordNearQuery>"
+                  +"<BooleanQuery disableCoord=\"true\"> "
+                  +"<Clause occurs=\"should\"><TermQuery>quarter</TermQuery></Clause>"
+                  +"<Clause occurs=\"should\">"
+                  +"<NearQuery slop=\"2\" inOrder=\"false\">"
+                  +"<KeywordNearQuery>earlier,</KeywordNearQuery>"
+                  +"<KeywordNearQuery>april</KeywordNearQuery>"
+                  +"</NearQuery>"
+                  +"</Clause>"
+                  +"</BooleanQuery>"
+                  +"</NearQuery>"
+                  ;
+    Query q = parseText(text, false);
+    dumpResults("testNearBooleanNear", q, 5);
+  }
+  
+  
+  //working version of (A OR B) N/5 C
+  public void testNearBoolean() throws IOException {
+    BooleanQuery bq = new BooleanQuery();
+    bq.add(new TermQuery(new Term("contents", "iranian")), BooleanClause.Occur.SHOULD);
+    bq.add(new TermQuery(new Term("contents", "north")), BooleanClause.Occur.SHOULD);
+    
+    FieldedQuery[] subQueries = new FieldedQuery[2];
+    subQueries[0] = FieldedBooleanQuery.toFieldedQuery(bq);
+    subQueries[1] = FieldedBooleanQuery.toFieldedQuery(new TermQuery(new Term("contents", "akbar")));
+    FieldedQuery fq = new UnorderedNearQuery(5, subQueries);
+    dumpResults("testNearBoolean", fq, 5);
+  }
+  
+  public void testNearFirstBooleanMustXml() throws IOException, ParserException {
+    String text = ""
+                  +"<NearFirstQuery fieldName=\"contents\" end=\"5\">"
+                  +"<BooleanQuery disableCoord=\"true\"> "
+                  +"<Clause occurs=\"must\"><TermQuery>customer</TermQuery></Clause>"
+                  +"<Clause occurs=\"must\"><TermQuery>repurchases</TermQuery></Clause>"
+                  +"</BooleanQuery>"
+                  +"</NearFirstQuery>"
+                  ;
+    Query q = parseText(text, false);
+    dumpResults("testNearFirstBooleanMustXml", q, 5);
+  }
+  
+  public void testNearFirstBooleanMust() throws IOException {
+    BooleanQuery bq = new BooleanQuery();
+    bq.add(new TermQuery(new Term("contents", "upholds")), BooleanClause.Occur.MUST);
+    bq.add(new TermQuery(new Term("contents", "building")), BooleanClause.Occur.MUST);
+    
+    FieldedQuery[] subQueries = new FieldedQuery[2];
+    subQueries[0] = FieldedBooleanQuery.toFieldedQuery(bq);
+    subQueries[1] = FieldedBooleanQuery.toFieldedQuery(new TermQuery(new Term("contents", "bank")));
+    FieldedQuery fq = new UnorderedNearQuery(7, subQueries);
+    dumpResults("testNearFirstBooleanMust", fq, 5);
+  }
+  
   public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
     String text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='should'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
