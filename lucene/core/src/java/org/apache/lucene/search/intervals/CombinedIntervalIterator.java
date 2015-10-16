@@ -27,12 +27,19 @@ public class CombinedIntervalIterator extends IntervalIterator {
   private final IntervalPriorityQueue intervalQueue;
   private final IntervalIterator[] children;
 
+  private final int minMatches;
+  
   private final Interval current = new Interval();
 
   private SnapshotPositionCollector snapshot;
 
   public CombinedIntervalIterator(Scorer scorer, boolean collectIntervals, IntervalIterator... children) {
+    this(scorer, collectIntervals, children.length, children);
+  }
+
+  public CombinedIntervalIterator(Scorer scorer, boolean collectIntervals, int minMatches, IntervalIterator... children) {
     super(scorer, collectIntervals);
+    this.minMatches = minMatches;
     this.children = children;
     intervalQueue = new IntervalPriorityQueue(children.length);
   }
@@ -45,7 +52,15 @@ public class CombinedIntervalIterator extends IntervalIterator {
       if (ref.interval != null)
         intervalQueue.add(ref);
     }
-    intervalQueue.updateTop();
+
+    //This is meant to be a short term win to have correct results. 
+    //The hits that are popped up from here wouldn't be available further down the processing specially in highlighting.
+    int nPops = Math.min(minMatches - 1, intervalQueue.size());
+    for (int i = 0; i < nPops; i++) {
+      intervalQueue.pop();
+    }
+    //End of short term fix. 
+
     return docId;
   }
 

@@ -221,7 +221,7 @@ class MinShouldMatchSumScorer extends Scorer {
 
   @Override
   public IntervalIterator intervals(boolean collectIntervals) throws IOException {
-    return new CombinedIntervalIterator(this, collectIntervals, pullIterators(collectIntervals, sortedSubScorers));
+    return new CombinedIntervalIterator(this, collectIntervals, mm, pullIterators(collectIntervals, sortedSubScorers));
   }
 
   /**
