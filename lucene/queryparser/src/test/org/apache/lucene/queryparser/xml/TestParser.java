@@ -434,8 +434,10 @@ public class TestParser extends LuceneTestCase {
   /* end of keyword near query test cases*/
 
   private static void tryQuery(WildcardNearQueryParser p, String s) throws Exception {
-      Query q = p.parse(s);
+    Query q = p.parse(s);
+    if (VERBOSE) {
       System.out.println("'" + s + "' => '" + q + "'");
+    }
   }
 
   public void testWildcardNearQueryParser() throws Exception {
@@ -861,7 +863,7 @@ public class TestParser extends LuceneTestCase {
       System.out.println();
     }
   }
-  
+
   //helper
   private static Element parseXML(String text) throws ParserException {
     DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
