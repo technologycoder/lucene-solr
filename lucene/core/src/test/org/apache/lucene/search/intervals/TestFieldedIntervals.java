@@ -57,9 +57,9 @@ public class TestFieldedIntervals extends IntervalTestBase {
     pbq.add(new TermQuery(new Term("field1", "pease")), BooleanClause.Occur.MUST);
     pbq.add(bq, BooleanClause.Occur.MUST);
     checkFieldIntervals(pbq, searcher, new Object[][]{
-        { 0, "field1", 0, 0, "field1", 1, 1, "field1", 3, 3, "field1", 4, 4, "field1", 5, 5 },
-        { 1, "field1", 0, 0, "field1", 1, 1, "field1", 3, 3, "field1", 4, 4 }
-    });
+          { 0, "field1", 1, 1, "field1", 4, 4, "field1", 5, 5 },
+          { 1, "field1", 1, 1, "field1", 4, 4 }
+      });
   }
 
   @Test
@@ -68,8 +68,8 @@ public class TestFieldedIntervals extends IntervalTestBase {
     bq.add(new TermQuery(new Term("field1", "warm!")), BooleanClause.Occur.MUST);
     bq.add(new TermQuery(new Term("field2", "warm!")), BooleanClause.Occur.MUST);
     checkFieldIntervals(bq, searcher, new Object[][]{
-        { 1, "field1", 2, 2, "field2", 3, 3 }
-    });
+          { 1, "field2", 3, 3 }
+      });
   }
 
   @Test
@@ -100,9 +100,9 @@ public class TestFieldedIntervals extends IntervalTestBase {
     bq.add(new TermQuery(new Term("field1", "pease")), BooleanClause.Occur.MUST);
     bq.add(new TermQuery(new Term("field2", "some")), BooleanClause.Occur.MUST);
     checkFieldIntervals(bq, searcher, new Object[][]{
-        { 0, "field1", 0, 0, "field1", 3, 3, "field2", 0, 0, "field2", 4, 4 },
-        { 1, "field1", 0, 0, "field1", 3, 3, "field2", 0, 0, "field2", 4, 4 },
-    });
+          { 0, "field1", 0, 0, "field1", 3, 3 },     // positions of pease
+          { 1, "field1", 0, 0, "field1", 3, 3 },     // positions of pease
+      });
   }
 
   @Test
@@ -117,9 +117,9 @@ public class TestFieldedIntervals extends IntervalTestBase {
     superq.add(new TermQuery(new Term("field2", "like")), BooleanClause.Occur.MUST);
 
     checkFieldIntervals(superq, searcher, new Object[][]{
-        {0, "field1", 0, 0, "field1", 3, 3, "field2", 0, 0, "field2", 1, 1, "field2", 4, 4, "field2", 5, 5},
-        {1, "field1", 0, 0, "field1", 3, 3, "field2", 0, 0, "field2", 1, 1, "field2", 4, 4, "field2", 5, 5},
-    });
+          {0, "field2", 1, 1, "field2", 5, 5}, // positions of like
+          {1, "field2", 1, 1, "field2", 5, 5}, // positions of like
+      });
   }
 
   @Test
@@ -134,8 +134,8 @@ public class TestFieldedIntervals extends IntervalTestBase {
     superbq.add(new TermQuery(new Term("field3", "an")), BooleanClause.Occur.MUST);
 
     checkFieldIntervals(superbq, searcher, new Object[][]{
-        { 1, "field1", 0, 0, "field1", 3, 3, "field2", 0, 0, "field2", 4, 4, "field3", 0, 0 }
-    });
+          { 1, "field1", 0, 0, "field1", 3, 3, "field2", 0, 0, "field2", 4, 4 }
+      });
   }
 
 }
