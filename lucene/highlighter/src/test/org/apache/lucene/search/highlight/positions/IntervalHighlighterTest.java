@@ -218,7 +218,7 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     bq.add(new BooleanClause(termQuery("This"), Occur.MUST));
     bq.add(new BooleanClause(termQuery("test"), Occur.MUST));
     String frags[] = doSearch(bq);
-    assertEquals("<B>This</B> is a <B>test</B>", frags[0]);
+    assertEquals("This is a <B>test</B>", frags[0]);
     close();
   }
 
@@ -228,7 +228,7 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     bq.add(new BooleanClause(termQuery("This"), Occur.MUST));
     bq.add(new BooleanClause(termQuery("test"), Occur.MUST));
     String frags[] = doSearch(new ConstantScoreQuery(bq));
-    assertEquals("<B>This</B> is a <B>test</B>", frags[0]);
+    assertEquals("This is a <B>test</B>", frags[0]);
     close();
   }
 
@@ -238,7 +238,7 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     bq.add(new BooleanClause(new TermQuery(new Term(F, "test")), Occur.MUST));
     bq.add(new BooleanClause(new TermQuery(new Term(F, "This")), Occur.MUST));
     String frags[] = doSearch(bq);
-    assertEquals("<B>This</B> is a <B>test</B>", frags[0]);
+    assertEquals("This is a <B>test</B>", frags[0]);
     close();
   }
 
@@ -273,8 +273,8 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     // This generates a ConjunctionSumScorer
     bq.setMinimumNumberShouldMatch(2);
     String frags[] = doSearch(bq);
-    assertEquals("<B>a</B> <B>b</B> c d e f g h i", frags[0]);
-
+    assertEquals("a <B>b</B> c d e f g h i", frags[0]);
+    
     // This generates no scorer
     bq.setMinimumNumberShouldMatch(3);
     frags = doSearch(bq);
@@ -284,7 +284,7 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     bq.setMinimumNumberShouldMatch(2);
     bq.add(new BooleanClause(new TermQuery(new Term(F, "c")), Occur.SHOULD));
     frags = doSearch(bq);
-    assertEquals("<B>a</B> <B>b</B> <B>c</B> d e f g h i", frags[0]);
+    assertEquals("a <B>b</B> <B>c</B> d e f g h i", frags[0]);
     close();
   }
 
@@ -372,11 +372,11 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     bq.add(new BooleanClause(new TermQuery(new Term(F, "porridge")), Occur.MUST));
     String frags[] = doSearch(bq, 50, 0);
     assertEquals(
-        "<B>Pease</B> <B>porridge</B> hot! <B>Pease</B> <B>porridge</B> cold! <B>Pease</B>",
-        frags[0]);
+          "Pease <B>porridge</B> hot! Pease <B>porridge</B>",
+          frags[0]);
     frags = doSearch(bq, 50, 1);
-    assertEquals("This document has some <B>Pease</B> <B>porridge</B> in it",
-        frags[0]);
+    assertEquals("This document has some Pease <B>porridge</B> in it",
+          frags[0]);
     close();
   }
 
@@ -409,8 +409,7 @@ public class IntervalHighlighterTest extends LuceneTestCase {
     );
 
     assertThat(getHighlight(query),
-        is("<B>the</B> <B>quick</B> brown duck <B>jumps</B> over <B>the</B> lazy dog with <B>the</B> <B>quick</B> brown fox"));
-
+          is("the quick brown duck <B>jumps</B> over the lazy dog with the quick brown fox"));
     UnorderedNearQuery unq = new UnorderedNearQuery(20, true, query);
     NonOverlappingQuery bq = new NonOverlappingQuery(unq, new TermQuery(new Term(F, "duck")));
 
