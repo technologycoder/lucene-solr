@@ -634,13 +634,13 @@ public class TestParser extends LuceneTestCase {
     String text = ""
                   +"<NearFirstQuery fieldName=\"contents\" end=\"5\">"
                   +"<BooleanQuery disableCoord=\"true\"> "
-                  +"<Clause occurs=\"must\"><TermQuery>customer</TermQuery></Clause>"
-                  +"<Clause occurs=\"must\"><TermQuery>repurchases</TermQuery></Clause>"
+                  +"<Clause occurs=\"must\"><KeywordNearQuery>ban*</KeywordNearQuery></Clause>"
+                  +"<Clause occurs=\"must\"><KeywordNearQuery>sa*</KeywordNearQuery></Clause>"
                   +"</BooleanQuery>"
                   +"</NearFirstQuery>"
                   ;
     Query q = parseText(text, false);
-    dumpResults("testNearFirstBooleanMustXml", q, 5);
+    dumpResults("testNearFirstBooleanMustXml", q, 50);
   }
   
   public void testNearFirstBooleanMust() throws IOException {
@@ -853,7 +853,7 @@ public class TestParser extends LuceneTestCase {
     }
     TopDocs hits = searcher.search(q, null, numDocs);
     assertTrue(qType + " " + q + " should produce results ", hits.totalHits > 0);
-    if (VERBOSE) {
+    if (true) {
       System.out.println("=========" + qType + " class=" + q.getClass() + " query=" + q + "============");
       ScoreDoc[] scoreDocs = hits.scoreDocs;
       for (int i = 0; i < Math.min(numDocs, hits.totalHits); i++) {

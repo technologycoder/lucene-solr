@@ -74,10 +74,11 @@ public class TestDisjunctionIntervalIterator extends IntervalTestBase {
     disj.add(conj2, Occur.SHOULD);
 
     checkIntervals(disj, searcher, new int[][]{
-          { 0, 2, 2, 33, 33 },  // positions of hot!
-          { 1, 5, 5, 36, 36 },  // positions of hot!
-          { 2, 8, 8 },          // position of porridge
-      });
+        { 0,  2, 2, 4, 4, 7, 7, 32, 32, 33, 33, 35, 35, },
+        { 1,  5, 5, 7, 7, 32, 32, 35, 35, 36, 36 },
+        { 2,  8, 8 },
+    });
+
   }
 
   public void testDisjunctionRangePositionsBooleanQuery() throws IOException {

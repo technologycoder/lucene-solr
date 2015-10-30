@@ -212,6 +212,14 @@ public abstract class PriorityQueue<T> {
     downHeap();
     return heap[1];
   }
+  
+  public void swapTop(int queueTop) {
+    if (queueTop > size)
+      return;
+    T node = heap[1];
+    heap[1] = heap[queueTop];
+    heap[queueTop] = node;
+  }
 
   /** Returns the number of elements currently stored in the PriorityQueue. */
   public final int size() {

@@ -53,14 +53,10 @@ public class CombinedIntervalIterator extends IntervalIterator {
         intervalQueue.add(ref);
     }
 
-    //This is meant to be a short term win to have correct results. 
-    //The hits that are popped up from here wouldn't be available further down the processing specially in highlighting.
-    int nPops = Math.min(minMatches - 1, intervalQueue.size());
-    for (int i = 0; i < nPops; i++) {
-      intervalQueue.pop();
-    }
-    //End of short term fix. 
-
+    int queueTop = Math.min(minMatches , intervalQueue.size()+1);
+    if(queueTop > 1)
+      intervalQueue.swapTop(queueTop);
+    
     return docId;
   }
 
