@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.lucene.codecs.lucene40.BitVector;
 import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.codecs.DocValuesFormat;
 import org.apache.lucene.codecs.DocValuesProducer;
@@ -53,6 +54,7 @@ public final class SegmentReader extends AtomicReader {
 
   private final SegmentCommitInfo si;
   private final Bits liveDocs;
+  public final String segmentCorruptionDetails;
 
   // Normally set to si.docCount - si.delDocCount, unless we
   // were created as an NRT reader from IW, in which case IW
@@ -107,9 +109,11 @@ public final class SegmentReader extends AtomicReader {
       if (si.hasDeletions()) {
         // NOTE: the bitvector is stored using the regular directory, not cfs
         liveDocs = codec.liveDocsFormat().readLiveDocs(directory(), si, IOContext.READONCE);
+        segmentCorruptionDetails = getSegmentCorruptionDetails(liveDocs, si);
       } else {
         assert si.getDelCount() == 0;
         liveDocs = null;
+        segmentCorruptionDetails = null;
       }
       numDocs = si.info.getDocCount() - si.getDelCount();
       
@@ -146,6 +150,7 @@ public final class SegmentReader extends AtomicReader {
   SegmentReader(SegmentCommitInfo si, SegmentReader sr, Bits liveDocs, int numDocs) throws IOException {
     this.si = si;
     this.liveDocs = liveDocs;
+    this.segmentCorruptionDetails = getSegmentCorruptionDetails(liveDocs, si);
     this.numDocs = numDocs;
     this.core = sr.core;
     core.incRef();
@@ -598,5 +603,18 @@ public final class SegmentReader extends AtomicReader {
         producer.checkIntegrity();
       }
     }
+  }
+
+  private static String getSegmentCorruptionDetails(Bits liveDocs, SegmentCommitInfo info) {
+    if (liveDocs.length() != info.info.getDocCount()) {
+      return "(name="+info.info.name+"|liveDocs.length=" + liveDocs.length() + "|info.docCount=" + info.info.getDocCount() + ")";
+    }
+    if (liveDocs instanceof BitVector) {
+      final BitVector liveDocsVector = (BitVector) liveDocs;
+      if (liveDocsVector.count() != info.info.getDocCount() - info.getDelCount()) {
+        return "(name="+info.info.name+"|liveDocs.count=" + liveDocsVector.count() + "|info.docCount=" + info.info.getDocCount() + "|info.delCount=" + info.getDelCount() + ")";
+      }
+    }
+    return null;
   }
 }

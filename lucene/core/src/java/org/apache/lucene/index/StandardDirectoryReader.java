@@ -36,15 +36,17 @@ final class StandardDirectoryReader extends DirectoryReader {
   private final SegmentInfos segmentInfos;
   private final int termInfosIndexDivisor;
   private final boolean applyAllDeletes;
+  private final String segmentCorruptionDetails;
   
   /** called only from static open() methods */
   StandardDirectoryReader(Directory directory, AtomicReader[] readers, IndexWriter writer,
-    SegmentInfos sis, int termInfosIndexDivisor, boolean applyAllDeletes) {
+    SegmentInfos sis, int termInfosIndexDivisor, boolean applyAllDeletes, String segmentCorruptionDetails) {
     super(directory, readers);
     this.writer = writer;
     this.segmentInfos = sis;
     this.termInfosIndexDivisor = termInfosIndexDivisor;
     this.applyAllDeletes = applyAllDeletes;
+    this.segmentCorruptionDetails = segmentCorruptionDetails;
   }
 
   /** called from DirectoryReader.open(...) methods */
@@ -68,7 +70,7 @@ final class StandardDirectoryReader extends DirectoryReader {
             }
           }
         }
-        return new StandardDirectoryReader(directory, readers, null, sis, termInfosIndexDivisor, false);
+        return new StandardDirectoryReader(directory, readers, null, sis, termInfosIndexDivisor, false, getSegmentCorruptionDetails(readers));
       }
     }.run(commit);
   }
@@ -112,9 +114,10 @@ final class StandardDirectoryReader extends DirectoryReader {
       
       writer.incRefDeleter(segmentInfos);
       
+      final SegmentReader[] segmentReaders = readers.toArray(new SegmentReader[readers.size()]);
       StandardDirectoryReader result = new StandardDirectoryReader(dir,
-          readers.toArray(new SegmentReader[readers.size()]), writer,
-          segmentInfos, writer.getConfig().getReaderTermsIndexDivisor(), applyAllDeletes);
+          segmentReaders, writer,
+          segmentInfos, writer.getConfig().getReaderTermsIndexDivisor(), applyAllDeletes, getSegmentCorruptionDetails(segmentReaders));
       success = true;
       return result;
     } finally {
@@ -224,7 +227,7 @@ final class StandardDirectoryReader extends DirectoryReader {
         IOUtils.reThrow(prior);
       }
     }    
-    return new StandardDirectoryReader(directory, newReaders, null, infos, termInfosIndexDivisor, false);
+    return new StandardDirectoryReader(directory, newReaders, null, infos, termInfosIndexDivisor, false, getSegmentCorruptionDetails(newReaders));
   }
 
   @Override
@@ -244,6 +247,11 @@ final class StandardDirectoryReader extends DirectoryReader {
       buffer.append(r);
     }
     buffer.append(')');
+    if (segmentCorruptionDetails != null) {
+      buffer.append(" segmentCorruptionDetails=[");
+      buffer.append(segmentCorruptionDetails);
+      buffer.append(']');
+    }
     return buffer.toString();
   }
 
@@ -387,6 +395,21 @@ final class StandardDirectoryReader extends DirectoryReader {
   public IndexCommit getIndexCommit() throws IOException {
     ensureOpen();
     return new ReaderCommit(segmentInfos, directory);
+  }
+
+  private static String getSegmentCorruptionDetails(SegmentReader... readers) {
+    StringBuilder stringBuilder = null;
+    for (SegmentReader reader : readers) {
+      final String segmentCorruptionDetails = reader.segmentCorruptionDetails;
+      if (segmentCorruptionDetails != null) {
+        if (stringBuilder == null) {
+          stringBuilder = new StringBuilder(segmentCorruptionDetails);
+        } else {
+          stringBuilder.append(segmentCorruptionDetails);
+        }
+      }
+    }
+    return (stringBuilder == null ? null : stringBuilder.toString());
   }
 
   static final class ReaderCommit extends IndexCommit {

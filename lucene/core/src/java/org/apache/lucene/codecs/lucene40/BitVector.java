@@ -45,7 +45,7 @@ import org.apache.lucene.util.MutableBits;
  */
 // pkg-private: if this thing is generally useful then it can go back in .util,
 // but the serialization must be here underneath the codec.
-final class BitVector implements Cloneable, MutableBits {
+final public class BitVector implements Cloneable, MutableBits {
 
   private byte[] bits;
   private int size;
