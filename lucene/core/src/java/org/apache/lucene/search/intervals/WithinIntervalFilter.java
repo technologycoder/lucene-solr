@@ -54,6 +54,31 @@ public class WithinIntervalFilter implements IntervalFilter {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + 2*slop + (collectLeaves ? 1 : 0);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (getClass() != obj.getClass())
+      return false;
+    WithinIntervalFilter other = (WithinIntervalFilter) obj;
+    if (slop != other.slop) {
+      return false;
+    }
+    if (collectLeaves != other.collectLeaves) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
   public IntervalIterator filter(boolean collectIntervals, IntervalIterator iter) {
     return new WithinIntervalIterator(collectIntervals, iter);
   }

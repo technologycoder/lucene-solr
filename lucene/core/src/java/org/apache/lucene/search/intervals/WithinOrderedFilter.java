@@ -45,6 +45,36 @@ public class WithinOrderedFilter implements IntervalFilter {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + ((field == null) ? 0 : 2*field.hashCode() + (collectLeaves ? 1 : 0));
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (getClass() != obj.getClass())
+      return false;
+    WithinOrderedFilter other = (WithinOrderedFilter) obj;
+    if (collectLeaves != other.collectLeaves) {
+      return false;
+    }
+    if (field != other.field) {
+      return false;
+    }
+    if (innerFilter == null) {
+      if (other.innerFilter != null)
+        return false;
+    } else if (!innerFilter.equals(other.innerFilter))
+      return false;
+    return true;
+  }
+
+  @Override
   public IntervalIterator filter(boolean collectIntervals, IntervalIterator iter) {
     return innerFilter.filter(collectIntervals,
                               new OrderedConjunctionIntervalIterator(collectIntervals, collectLeaves, field, iter));

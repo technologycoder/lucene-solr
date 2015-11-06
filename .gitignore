@@ -1,5 +1,6 @@
 # .
 /eclipse-build
+/maven-build
 /classes
 **/build
 /idea-build
@@ -22,6 +23,7 @@
 **/pom.xml
 /nbproject
 /nb-build
+/hs_err*.log
 
 /solr/package
 
