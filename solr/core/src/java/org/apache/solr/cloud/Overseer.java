@@ -54,6 +54,7 @@ import org.apache.solr.handler.component.ShardHandler;
 import org.apache.solr.util.stats.Clock;
 import org.apache.solr.util.stats.Timer;
 import org.apache.solr.util.stats.TimerContext;
+import org.apache.solr.util.RTimer;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
@@ -283,11 +284,13 @@ public class Overseer {
               }
               lastUpdatedTime = System.nanoTime();
 
-              final long setData_start = System.nanoTime();
+              final long setDataTimer = new RTimer();
+              final RTimer jsonTimer = setDataTimer.sub("toJSON");
+              final byte[] clusterState_json = ZkStateReader.toJSON(clusterState);
+              jsonTimer.stop();
               zkClient.setData(ZkStateReader.CLUSTER_STATE,
-                  ZkStateReader.toJSON(clusterState), true);
-              final long setData_end = System.nanoTime();
-              log.info("setData (batch size {}) took {} ms", lastBatchSize, TimeUnit.MILLISECONDS.convert(setData_end-setData_start, TimeUnit.NANOSECONDS));
+                  clusterState_json, true);
+              log.info("setData (batch size {}) timing={}", lastBatchSize, setDataTimer);
 
               lastBatchSize = 0;
 
