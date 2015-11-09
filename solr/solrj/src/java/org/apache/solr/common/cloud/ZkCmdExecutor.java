@@ -25,8 +25,13 @@ import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZkCmdExecutor {
+
+  private static Logger log = LoggerFactory.getLogger(ZkCmdExecutor.class);
+
   private long retryDelay = 1500L; // 500 ms over for padding
   private int retryCount;
   private List<ACL> acl = ZooDefs.Ids.OPEN_ACL_UNSAFE;
@@ -42,6 +47,7 @@ public class ZkCmdExecutor {
   public ZkCmdExecutor(int timeoutms) {
     double timeouts = timeoutms / 1000.0;
     this.retryCount = Math.round(0.5f * ((float)Math.sqrt(8.0f * timeouts + 1.0f) - 1.0f));
+    log.info("ZkCmdExecutor.constructor timeoutms={} retryCount={} retryDelay={}", timeoutms, retryCount, retryDelay);
   }
   
   public List<ACL> getAcl() {
@@ -115,6 +121,7 @@ public class ZkCmdExecutor {
    *          the number of the attempts performed so far
    */
   protected void retryDelay(int attemptCount) throws InterruptedException {
+    log.info("ZkCmdExecutor.retryDelay attemptCount={} retryDelay={}", attemptCount, retryDelay);
     if (attemptCount > 0) {
       Thread.sleep(attemptCount * retryDelay);
     }
