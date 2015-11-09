@@ -284,7 +284,7 @@ public class Overseer {
               }
               lastUpdatedTime = System.nanoTime();
 
-              final long setDataTimer = new RTimer();
+              final RTimer setDataTimer = new RTimer();
               final RTimer jsonTimer = setDataTimer.sub("toJSON");
               final byte[] clusterState_json = ZkStateReader.toJSON(clusterState);
               jsonTimer.stop();
