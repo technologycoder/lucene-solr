@@ -46,9 +46,6 @@ public class SolrCoreParser implements QueryBuilder {
 
     lucene_parser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder(schema));
 
-    lucene_parser.addQueryBuilder("FRangeQuery", new FunctionRangeQueryBuilder(req));
-    lucene_parser.addFilterBuilder("FRangeFilter", new FunctionRangeFilterBuilder(req));
-
     lucene_parser.addQueryBuilder("BoostedQuery", new BoostedQueryBuilder(this, req));
   }
 
