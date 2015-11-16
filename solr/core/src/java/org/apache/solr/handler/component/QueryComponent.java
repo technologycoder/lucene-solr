@@ -139,6 +139,8 @@ public class QueryComponent extends SearchComponent
     }
     rb.setFieldFlags( flags );
 
+    rb.setNeedQueryInGetFields(params.getBool(CommonParams.NEED_QUERY_IN_GET_FIELDS, CommonParams.NEED_QUERY_IN_GET_FIELDS_DEFAULT));
+
     String defType = params.get(QueryParsing.DEFTYPE, QParserPlugin.DEFAULT_QTYPE);
 
     // get it from the response builder to give a different component a chance
@@ -1178,7 +1180,7 @@ public class QueryComponent extends SearchComponent
       // we already have the field sort values
       sreq.params.remove(ResponseBuilder.FIELD_SORT_VALUES);
 
-      if (!rb.isNeedDocSet()) {
+      if (!rb.isNeedDocSet() && !rb.isNeedQueryInGetFields()) {
         sreq.params.remove(CommonParams.Q);        
         sreq.params.remove(CommonParams.FQ);        
       }

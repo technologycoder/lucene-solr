@@ -61,6 +61,7 @@ public class ResponseBuilder
 
   private boolean needDocList = false;
   private boolean needDocSet = false;
+  private boolean needQueryInGetFields = false;
   private int fieldFlags = 0;
   //private boolean debug = false;
   private boolean debugTimings, debugRawTimings, debugQuery, debugResults, debugTrack;
@@ -334,6 +335,14 @@ public class ResponseBuilder
 
   public void setNeedDocSet(boolean needDocSet) {
     this.needDocSet = needDocSet;
+  }
+
+  public boolean isNeedQueryInGetFields() {
+    return needQueryInGetFields;
+  }
+
+  public void setNeedQueryInGetFields(boolean needQueryInGetFields) {
+    this.needQueryInGetFields = needQueryInGetFields;
   }
 
   public QParser getQparser() {

@@ -159,6 +159,9 @@ public interface CommonParams {
   public static final String SEGMENT_TERMINATE_EARLY = "segmentTerminateEarly";
   public static final boolean SEGMENT_TERMINATE_EARLY_DEFAULT = false;
 
+  public static final String NEED_QUERY_IN_GET_FIELDS = "needQueryInGetFields";
+  public static final boolean NEED_QUERY_IN_GET_FIELDS_DEFAULT = false;
+
   /** 'true' if the header should include the handler name */
   public static final String HEADER_ECHO_HANDLER = "echoHandler";
   
