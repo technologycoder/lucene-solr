@@ -55,7 +55,6 @@ public class SearchHandler extends RequestHandlerBase implements SolrCoreAware ,
   static final String INIT_FIRST_COMPONENTS = "first-components";
   static final String INIT_LAST_COMPONENTS = "last-components";
 
-  static final String STAGE_TIMING = "stageTiming";
   
 
   
@@ -261,35 +260,15 @@ public class SearchHandler extends RequestHandlerBase implements SolrCoreAware ,
       }
       rb.finished = new ArrayList<>();
 
-      // TODO: Need to remove stageTiming parameter in favour of debug.timing
-      boolean stageTiming = req.getParams().getBool(STAGE_TIMING, false);
-
-      // In case debug.timing was false, and stageTiming was true.
-      if (stageTiming && timer == null) {
-        timer = req.getRequestTimer();
-      }
-
       int nextStage = ResponseBuilder.STAGE_START;
       do {
         rb.stage = nextStage;
         nextStage = ResponseBuilder.STAGE_DONE;
 
-        RTimer stageSubTimer = null;
-        if (stageTiming && rb.stage > ResponseBuilder.STAGE_START) { // dont't bother to time STAGE_START since little happens
-          stageSubTimer = timer.sub("stage" + rb.stage);
-        }
-
         // call all components
-        RTimer distributedProcess_stageSubTimer = null;
-        if (stageSubTimer != null) {
-          distributedProcess_stageSubTimer = stageSubTimer.sub("distributedProcess");
-        }
         for( SearchComponent c : components ) {
           // the next stage is the minimum of what all components report
           nextStage = Math.min(nextStage, c.distributedProcess(rb));
-        }
-        if (distributedProcess_stageSubTimer != null ) {
-          distributedProcess_stageSubTimer.stop();
         }
 
         // check the outgoing queue and send requests
@@ -323,7 +302,6 @@ public class SearchHandler extends RequestHandlerBase implements SolrCoreAware ,
               } else {
                 params.set(CommonParams.QT, shardQt);
               }
-              params.remove(STAGE_TIMING);
               shardHandler1.submit(sreq, shard, params);
             }
           }
@@ -334,10 +312,6 @@ public class SearchHandler extends RequestHandlerBase implements SolrCoreAware ,
           // this loop)
           boolean tolerant = rb.req.getParams().getBool(ShardParams.SHARDS_TOLERANT, false);
           while (rb.outgoing.size() == 0) {
-            RTimer take_stageSubTimer = null;
-            if (stageSubTimer != null) {
-              take_stageSubTimer = stageSubTimer.sub("take");
-            }
             ShardResponse srsp = tolerant ? 
                 shardHandler1.takeCompletedIncludingErrors():
                 shardHandler1.takeCompletedOrError();
@@ -359,47 +333,23 @@ public class SearchHandler extends RequestHandlerBase implements SolrCoreAware ,
                 }
               }
             }
-            if (take_stageSubTimer != null ) {
-              take_stageSubTimer.stop();
-            }
 
             rb.finished.add(srsp.getShardRequest());
 
             // let the components see the responses to the request
-            RTimer handle_stageSubTimer = null;
-            if (stageSubTimer != null) {
-              handle_stageSubTimer = stageSubTimer.sub("handle");
-            }
             for(SearchComponent c : components) {
               c.handleResponses(rb, srsp.getShardRequest());
-            }
-            if (handle_stageSubTimer != null ) {
-              handle_stageSubTimer.stop();
             }
           }
         }
 
-        RTimer finish_stageSubTimer = null;
-        if (stageSubTimer != null) {
-          finish_stageSubTimer = stageSubTimer.sub("finish");
-        }
         for(SearchComponent c : components) {
           c.finishStage(rb);
-        }
-        if (finish_stageSubTimer != null ) {
-          finish_stageSubTimer.stop();
-        }
-
-        if (stageSubTimer != null ) {
-          stageSubTimer.stop();
         }
 
         // we are done when the next stage is MAX_VALUE
       } while (nextStage != ResponseBuilder.STAGE_DONE);
 
-      if (stageTiming) {
-        rsp.add("stageTiming", timer.asNamedList());
-      }
     }
     
     // SOLR-5550: still provide shards.info if requested even for a short circuited distrib request
