@@ -341,6 +341,13 @@ public class QueryComponent extends SearchComponent
       ResultContext ctx = new ResultContext();
       ctx.docs = rb.getResults().docList;
       ctx.query = null; // anything?
+
+      if (params.getBool(CommonParams.NEED_QUERY_IN_GET_FIELDS, CommonParams.NEED_QUERY_IN_GET_FIELDS_DEFAULT)) {
+        // send the query to the shards in order to allow the docTrasformers to use it
+        ctx.query = rb.getQuery();
+      }
+
+
       rsp.add("response", ctx);
       return;
     }
