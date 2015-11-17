@@ -109,7 +109,7 @@ public final class SegmentReader extends AtomicReader {
       if (si.hasDeletions()) {
         // NOTE: the bitvector is stored using the regular directory, not cfs
         liveDocs = codec.liveDocsFormat().readLiveDocs(directory(), si, IOContext.READONCE);
-        segmentCorruptionDetails = getSegmentCorruptionDetails(liveDocs, si);
+        segmentCorruptionDetails = getSegmentCorruptionDetails(liveDocs, si, si.info.getDocCount() - si.getDelCount());
       } else {
         assert si.getDelCount() == 0;
         liveDocs = null;
@@ -150,7 +150,7 @@ public final class SegmentReader extends AtomicReader {
   SegmentReader(SegmentCommitInfo si, SegmentReader sr, Bits liveDocs, int numDocs) throws IOException {
     this.si = si;
     this.liveDocs = liveDocs;
-    this.segmentCorruptionDetails = getSegmentCorruptionDetails(liveDocs, si);
+    this.segmentCorruptionDetails = getSegmentCorruptionDetails(liveDocs, si, numDocs);
     this.numDocs = numDocs;
     this.core = sr.core;
     core.incRef();
@@ -605,14 +605,15 @@ public final class SegmentReader extends AtomicReader {
     }
   }
 
-  private static String getSegmentCorruptionDetails(Bits liveDocs, SegmentCommitInfo info) {
+  private static String getSegmentCorruptionDetails(Bits liveDocs, SegmentCommitInfo info, int expectedNumDocs) {
     if (liveDocs.length() != info.info.getDocCount()) {
       return "(name="+info.info.name+"|liveDocs.length=" + liveDocs.length() + "|info.docCount=" + info.info.getDocCount() + ")";
     }
     if (liveDocs instanceof BitVector) {
       final BitVector liveDocsVector = (BitVector) liveDocs;
-      if (liveDocsVector.count() != info.info.getDocCount() - info.getDelCount()) {
-        return "(name="+info.info.name+"|liveDocs.count=" + liveDocsVector.count() + "|info.docCount=" + info.info.getDocCount() + "|info.delCount=" + info.getDelCount() + ")";
+      if (liveDocsVector.count() != info.info.getDocCount() - info.getDelCount() &&
+          liveDocsVector.count() != expectedNumDocs) {
+        return "(name="+info.info.name+"|expectedNumDocs=" + expectedNumDocs + "|liveDocs.count=" + liveDocsVector.count() + "|info.docCount=" + info.info.getDocCount() + "|info.delCount=" + info.getDelCount() + ")";
       }
     }
     return null;
