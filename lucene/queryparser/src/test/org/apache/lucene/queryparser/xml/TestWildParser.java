@@ -19,9 +19,15 @@ package org.apache.lucene.queryparser.xml;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.cjk.CJKWidthFilter;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.ja.JapaneseBaseFormFilter;
+import org.apache.lucene.analysis.ja.JapaneseKatakanaStemFilter;
+import org.apache.lucene.analysis.ja.JapaneseNumberFilter;
+import org.apache.lucene.analysis.ja.JapaneseTokenizer;
 import org.apache.lucene.analysis.standard.BBFinancialStandardTokenizer;
+import org.apache.lucene.analysis.synonym.SynonymFilter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.builders.WildcardNearQueryParser;
 import org.apache.lucene.search.FieldedQuery;
@@ -53,6 +59,43 @@ public class TestWildParser extends LuceneTestCase {
     }
   }
 
+  private final class JapaneseAnalyzerDiscardPunct extends Analyzer {
+    // This is an approximation of an Analyzer that is actually built in Solr
+    // using a config file.
+    public JapaneseAnalyzerDiscardPunct() {
+    }
+
+    @Override
+    protected TokenStreamComponents createComponents(final String fieldName, final Reader reader) {
+      final JapaneseTokenizer src = new JapaneseTokenizer(reader, null, true, JapaneseTokenizer.Mode.SEARCH);
+      TokenStream tok = new JapaneseNumberFilter(src);
+      tok = new JapaneseBaseFormFilter(src);
+      tok = new CJKWidthFilter(src);
+      tok = new JapaneseKatakanaStemFilter(src);
+//      tok = new SynonymFilter(src, null, true);
+      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
+      return new TokenStreamComponents(src, tok);
+    }
+  }
+
+  private final class JapaneseAnalyzerDontDiscardPunct extends Analyzer {
+    // This is an approximation of an Analyzer that is actually built in Solr
+    // using a config file.
+    public JapaneseAnalyzerDontDiscardPunct() {
+    }
+
+    @Override
+    protected TokenStreamComponents createComponents(final String fieldName, final Reader reader) {
+      final JapaneseTokenizer src = new JapaneseTokenizer(reader, null, false, JapaneseTokenizer.Mode.SEARCH);
+      TokenStream tok = new JapaneseNumberFilter(src);
+      tok = new JapaneseBaseFormFilter(src);
+      tok = new CJKWidthFilter(src);
+      tok = new JapaneseKatakanaStemFilter(src);
+//      tok = new SynonymFilter(src, null, true);
+      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
+      return new TokenStreamComponents(src, tok);
+    }
+  }
   @BeforeClass
   public static void beforeClass() throws Exception {
   }
@@ -237,4 +280,163 @@ public class TestWildParser extends LuceneTestCase {
     checkQueryEqual(p, "ngtr*", new TermQuery(new Term(field, "ngtr*")), ignoreWC);
     checkQueryEqual(p, "bbotf*", new TermQuery(new Term(field, "bbotf*")), ignoreWC);
   }
+
+  public void testWildcardNearQueryParserJapaneseDiscardPunct() throws Exception {
+    String field = "headline_ja";
+    boolean ignoreWC = false;
+    WildcardNearQueryParser p = new WildcardNearQueryParser(field, new JapaneseAnalyzerDiscardPunct());
+
+    FieldedQuery q2 = new OrderedNearQuery(0, new FieldedQuery[] {
+        new TermQuery(new Term(field, "london")),
+        fixRewrite(new PrefixQuery(new Term(field, "cit"))),
+        new TermQuery(new Term(field, "airport"))
+    });
+    checkQueryEqual(p, "London Cit* Airport", q2, ignoreWC);
+    checkQueryEqual(p, "London  Cit*  Airport  ", q2, ignoreWC);
+    
+    checkQueryEqual(p, "*", new MatchAllDocsQuery(), ignoreWC);
+    checkQueryEqual(p, "?", fixRewrite(new WildcardQuery(new Term(field, "?"))), ignoreWC);
+
+    // Made up:
+    FieldedQuery q = new OrderedNearQuery(0, new FieldedQuery[] {
+        new TermQuery(new Term(field, "london")),
+        new TermQuery(new Term(field, "city")),
+        new TermQuery(new Term(field, "airport"))
+    });    
+    checkQueryEqual(p, "London-City-Airport", q, ignoreWC);
+    checkQueryEqual(p, "London City Airport", q, ignoreWC);
+    
+    q = new OrderedNearQuery(0, new FieldedQuery[] {
+        new TermQuery(new Term(field, "london")),
+        fixRewrite(new PrefixQuery(new Term(field, "cit"))),
+        new TermQuery(new Term(field, "airport"))
+    });    
+    checkQueryEqual(p, "London-Cit*-Airport", q, ignoreWC);
+    checkQueryEqual(p, "London Cit* Airport", q, ignoreWC);
+    
+    checkQueryEqual(p, "Lon*", fixRewrite(new PrefixQuery(new Term(field, "lon"))), ignoreWC);
+
+    checkQuery(p,"1995 equity* 2003 equity* 2290 equity* 2306 equity* 2341 equity* " +
+        "2427 equity* 2454 equity* 2812 equity* 2831 equity* 2927 equity* " +
+        "3362 equity* 3375 equity* 3708 equity* 3740 equity* 4678 equity* " + 
+        "5271 equity* 5280 equity* 5949 equity* 6286 equity* 6365 equity* " +
+        "6476 equity* 6874 equity* 7219 equity* 7223 equity* 7265 equity* " +
+        "7291 equity* 7292 equity* 7428 equity* 7473 equity* 7541 equity* " +
+        "7718 equity* 7874 equity* 7880 equity* 8134 equity* 8208 equity* " +
+        "8355 equity* 8358 equity* 8364 equity* 8567 equity* 9543 equity* " +
+        "9817 equity* 9890 equity* 9939 equity* 9964 equity*",
+        "OrderedNear/0:Filtered(" +
+        "+headline_ja:1995 +headline_ja:equity* +headline_ja:2003 +headline_ja:equity* " +
+        "+headline_ja:2290 +headline_ja:equity* +headline_ja:2306 +headline_ja:equity* " +
+        "+headline_ja:2341 +headline_ja:equity* +headline_ja:2427 +headline_ja:equity* " +
+        "+headline_ja:2454 +headline_ja:equity* +headline_ja:2812 +headline_ja:equity* " +
+        "+headline_ja:2831 +headline_ja:equity* +headline_ja:2927 +headline_ja:equity* " +
+        "+headline_ja:3362 +headline_ja:equity* +headline_ja:3375 +headline_ja:equity* " +
+        "+headline_ja:3708 +headline_ja:equity* +headline_ja:3740 +headline_ja:equity* " +
+        "+headline_ja:4678 +headline_ja:equity* +headline_ja:5271 +headline_ja:equity* " +
+        "+headline_ja:5280 +headline_ja:equity* +headline_ja:5949 +headline_ja:equity* " +
+        "+headline_ja:6286 +headline_ja:equity* +headline_ja:6365 +headline_ja:equity* " +
+        "+headline_ja:6476 +headline_ja:equity* +headline_ja:6874 +headline_ja:equity* " +
+        "+headline_ja:7219 +headline_ja:equity* +headline_ja:7223 +headline_ja:equity* " +
+        "+headline_ja:7265 +headline_ja:equity* +headline_ja:7291 +headline_ja:equity* " +
+        "+headline_ja:7292 +headline_ja:equity* +headline_ja:7428 +headline_ja:equity* " +
+        "+headline_ja:7473 +headline_ja:equity* +headline_ja:7541 +headline_ja:equity* " +
+        "+headline_ja:7718 +headline_ja:equity* +headline_ja:7874 +headline_ja:equity* " +
+        "+headline_ja:7880 +headline_ja:equity* +headline_ja:8134 +headline_ja:equity* " +
+        "+headline_ja:8208 +headline_ja:equity* +headline_ja:8355 +headline_ja:equity* " +
+        "+headline_ja:8358 +headline_ja:equity* +headline_ja:8364 +headline_ja:equity* " +
+        "+headline_ja:8567 +headline_ja:equity* +headline_ja:9543 +headline_ja:equity* " +
+        "+headline_ja:9817 +headline_ja:equity* +headline_ja:9890 +headline_ja:equity* " +
+        "+headline_ja:9939 +headline_ja:equity* +headline_ja:9964 +headline_ja:equity*" +
+        ")");
+
+    checkQueryEqual(p, "ngtr*", fixRewrite(new PrefixQuery(new Term(field, "ngtr"))), ignoreWC);
+    checkQueryEqual(p, "bbotf*", fixRewrite(new PrefixQuery(new Term(field, "bbotf"))), ignoreWC);
+  }
+
+public void testWildcardNearQueryParserJapaneseDontDiscardPunct() throws Exception {
+  String field = "body_ja";
+  boolean ignoreWC = false;
+  WildcardNearQueryParser p = new WildcardNearQueryParser(field, new JapaneseAnalyzerDontDiscardPunct());
+
+  FieldedQuery q2 = new OrderedNearQuery(0, new FieldedQuery[] {
+      new TermQuery(new Term(field, "london")),
+      fixRewrite(new PrefixQuery(new Term(field, "cit"))),
+      new TermQuery(new Term(field, "airport"))
+  });
+  checkQueryEqual(p, "London Cit* Airport", q2, ignoreWC);
+  checkQueryEqual(p, "London  Cit*  Airport  ", q2, ignoreWC);
+  
+  checkQueryEqual(p, "*", new MatchAllDocsQuery(), ignoreWC);
+  checkQueryEqual(p, "?", fixRewrite(new WildcardQuery(new Term(field, "?"))), ignoreWC);
+
+  // Made up:
+  FieldedQuery q = new OrderedNearQuery(0, new FieldedQuery[] {
+      new TermQuery(new Term(field, "london")),
+      new TermQuery(new Term(field, "-")),
+      new TermQuery(new Term(field, "city")),
+      new TermQuery(new Term(field, "-")),
+      new TermQuery(new Term(field, "airport"))
+  });    
+  checkQueryEqual(p, "London-City-Airport", q, ignoreWC);
+  q = new OrderedNearQuery(0, new FieldedQuery[] {
+      new TermQuery(new Term(field, "london")),
+      new TermQuery(new Term(field, "city")),
+      new TermQuery(new Term(field, "airport"))
+  });    
+  checkQueryEqual(p, "London City Airport", q, ignoreWC);
+  
+  q = new OrderedNearQuery(0, new FieldedQuery[] {
+      new TermQuery(new Term(field, "london")),
+      fixRewrite(new PrefixQuery(new Term(field, "cit"))),
+      new TermQuery(new Term(field, "airport"))
+  });    
+  checkQueryEqual(p, "London Cit* Airport", q, ignoreWC);
+
+  q = new OrderedNearQuery(0, new FieldedQuery[] {
+      new TermQuery(new Term(field, "london")),
+      new TermQuery(new Term(field, "-")),
+      fixRewrite(new WildcardQuery(new Term(field, "cit*-airport")))
+  });    
+  checkQueryEqual(p, "London-Cit*-Airport", q, ignoreWC);
+
+  checkQueryEqual(p, "Lon*", fixRewrite(new PrefixQuery(new Term(field, "lon"))), ignoreWC);
+
+  checkQuery(p,"1995 equity* 2003 equity* 2290 equity* 2306 equity* 2341 equity* " +
+      "2427 equity* 2454 equity* 2812 equity* 2831 equity* 2927 equity* " +
+      "3362 equity* 3375 equity* 3708 equity* 3740 equity* 4678 equity* " + 
+      "5271 equity* 5280 equity* 5949 equity* 6286 equity* 6365 equity* " +
+      "6476 equity* 6874 equity* 7219 equity* 7223 equity* 7265 equity* " +
+      "7291 equity* 7292 equity* 7428 equity* 7473 equity* 7541 equity* " +
+      "7718 equity* 7874 equity* 7880 equity* 8134 equity* 8208 equity* " +
+      "8355 equity* 8358 equity* 8364 equity* 8567 equity* 9543 equity* " +
+      "9817 equity* 9890 equity* 9939 equity* 9964 equity*",
+      "OrderedNear/0:Filtered(" +
+      "+body_ja:1995 +body_ja:equity* +body_ja:2003 +body_ja:equity* " +
+      "+body_ja:2290 +body_ja:equity* +body_ja:2306 +body_ja:equity* " +
+      "+body_ja:2341 +body_ja:equity* +body_ja:2427 +body_ja:equity* " +
+      "+body_ja:2454 +body_ja:equity* +body_ja:2812 +body_ja:equity* " +
+      "+body_ja:2831 +body_ja:equity* +body_ja:2927 +body_ja:equity* " +
+      "+body_ja:3362 +body_ja:equity* +body_ja:3375 +body_ja:equity* " +
+      "+body_ja:3708 +body_ja:equity* +body_ja:3740 +body_ja:equity* " +
+      "+body_ja:4678 +body_ja:equity* +body_ja:5271 +body_ja:equity* " +
+      "+body_ja:5280 +body_ja:equity* +body_ja:5949 +body_ja:equity* " +
+      "+body_ja:6286 +body_ja:equity* +body_ja:6365 +body_ja:equity* " +
+      "+body_ja:6476 +body_ja:equity* +body_ja:6874 +body_ja:equity* " +
+      "+body_ja:7219 +body_ja:equity* +body_ja:7223 +body_ja:equity* " +
+      "+body_ja:7265 +body_ja:equity* +body_ja:7291 +body_ja:equity* " +
+      "+body_ja:7292 +body_ja:equity* +body_ja:7428 +body_ja:equity* " +
+      "+body_ja:7473 +body_ja:equity* +body_ja:7541 +body_ja:equity* " +
+      "+body_ja:7718 +body_ja:equity* +body_ja:7874 +body_ja:equity* " +
+      "+body_ja:7880 +body_ja:equity* +body_ja:8134 +body_ja:equity* " +
+      "+body_ja:8208 +body_ja:equity* +body_ja:8355 +body_ja:equity* " +
+      "+body_ja:8358 +body_ja:equity* +body_ja:8364 +body_ja:equity* " +
+      "+body_ja:8567 +body_ja:equity* +body_ja:9543 +body_ja:equity* " +
+      "+body_ja:9817 +body_ja:equity* +body_ja:9890 +body_ja:equity* " +
+      "+body_ja:9939 +body_ja:equity* +body_ja:9964 +body_ja:equity*" +
+      ")");
+
+  checkQueryEqual(p, "ngtr*", fixRewrite(new PrefixQuery(new Term(field, "ngtr"))), ignoreWC);
+  checkQueryEqual(p, "bbotf*", fixRewrite(new PrefixQuery(new Term(field, "bbotf"))), ignoreWC);
+}
 }

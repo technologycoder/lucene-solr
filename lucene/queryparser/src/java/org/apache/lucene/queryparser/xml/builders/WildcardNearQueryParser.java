@@ -6,7 +6,6 @@ import java.util.Locale;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
@@ -74,36 +73,37 @@ public class WildcardNearQueryParser {
     return parse(text,false);
   }
 
-  private boolean fieldHasOffsetAtt(String text) {
-    boolean has_it = false;
-    TokenStream source = null;
-    try {
-        source = analyzer.tokenStream(field, text);
-        has_it = source.hasAttribute(PositionIncrementAttribute.class);
-    } catch (IOException ioe) {
-      return false;
-    } finally {
-      IOUtils.closeWhileHandlingException(source);
-    }
-    return has_it;
+  private boolean fieldHasOffsetAtt(TokenStream source) {
+    return source.hasAttribute(PositionIncrementAttribute.class);
   }
 
-  public Query parse(String text, boolean ignoreWildcard) throws ParserException {
+  public Query parse(String unanalyzedText, boolean ignoreWildcard) throws ParserException {
     // to hold the sub queries until we generate the NearQuery
     ArrayList<FieldedQuery> queries = new ArrayList<>();
     ArrayList<Integer> positions = new ArrayList<>();
 
-    if (ignoreWildcard) {
-      analysePhrases(text, queries, positions);
-    } else if (!fieldHasOffsetAtt(text)) {
-      FieldedQuery q = BuildWildcardQuery(text);
-      if (q != null) {
-        queries.add(q);
-        positions.add(0);
+    TokenStream source = null;
+    try {
+      source = analyzer.tokenStream(field, unanalyzedText);
+      if (ignoreWildcard) {
+        analysePhrases(source, unanalyzedText, queries, positions);
+      } else if (!fieldHasOffsetAtt(source)) {
+        FieldedQuery q = BuildWildcardQuery(unanalyzedText);
+        if (q != null) {
+          queries.add(q);
+          positions.add(0);
+        }
+      } else {
+        // The field has an offsetAtt
+        analyseWildcardPhrases(source, unanalyzedText, queries, positions);
       }
-    } else {
-      // The field has an offsetAtt
-      analyseWildcardPhrases(text, queries, positions);
+    } catch (IOException ioe) {
+      ParserException p = new ParserException("Cannot build query on field:"
+          + field + ", text:" + unanalyzedText);
+      p.initCause(ioe);
+      throw p;
+    } finally {
+      IOUtils.closeWhileHandlingException(source);
     }
 
     if(queries.isEmpty()) {
@@ -145,12 +145,10 @@ public class WildcardNearQueryParser {
 
   //analyses the text and fills up the individual term queries and positions in the respective array lists
   //and returns the position increment after the last query token. This increment can be used to chain up the rest of the phrases to this query list.
-  private int analysePhrases(String unanalyzedText,
+  private int analysePhrases(TokenStream source, String unanalyzedText,
       ArrayList<FieldedQuery> queries, ArrayList<Integer> positions) throws ParserException {
     int currentPosition = -1;
-    TokenStream source = null;
     try {
-      source = analyzer.tokenStream(field, unanalyzedText);
       source.reset();
 
       TermToBytesRefAttribute termAtt = null;
@@ -198,18 +196,21 @@ public class WildcardNearQueryParser {
     // analyzer indicating whether to lowercase original unanalyzedText or not.
     return unanalyzedText.substring(begin, end).toLowerCase(Locale.getDefault());
   }
+  
+  private boolean isAllWhitespace(BytesRef bytes) {
+    String full = bytes.utf8ToString();
+    return !full.matches("\\S+");
+  }
 
   //analyses the text and fills up the individual term queries and
   //positions in the respective array lists and returns the position
   //increment after the last query token. This increment can be used
   //to chain up the rest of the phrases to this query list.
-  private int analyseWildcardPhrases(String unanalyzedText,
+  private int analyseWildcardPhrases(TokenStream source, String unanalyzedText,
      ArrayList<FieldedQuery> queries, ArrayList<Integer> positions) throws ParserException {
     int currentPosition = -1;
     ArrayList<WildcardType> wildcards = findWildcards(unanalyzedText);
-    TokenStream source = null;
     try {
-      source = analyzer.tokenStream(field, unanalyzedText);
       source.reset();
 
       // termAtt and bytes will get updated as a side-effect of
@@ -242,7 +243,7 @@ public class WildcardNearQueryParser {
       // together and need to do some bookkeeping.
       int mergeStartOffset = -1;
       int lastOffset = 0;
-
+      
       // The splitting into pieces and re-glueing things together will
       // all require extra bookkeeping to get the proper
       // positionIncrements.
@@ -284,7 +285,23 @@ public class WildcardNearQueryParser {
 
         termAtt.fillBytesRef();
         lastOffset = offsetAtt.endOffset();
-        if (lastOffset < wildcards.size() &&
+        if (isAllWhitespace(bytes)) {
+          // On an all-whitespace token, this breaks concatentation and drops the token.
+          // In the future, we will not have all-whitespace tokens reaching this code and
+          // we could remove it.
+          if (mergeStartOffset > -1) {
+            // Not a wildcard. If in the process of merging, then merge ends now.
+            lastOffset = offsetAtt.startOffset();
+            currentPosition += lastPositionIncrement;
+            lastPositionIncrement = 1;
+            FieldedQuery wq = BuildWildcardQuery(sourceSubstring(unanalyzedText, mergeStartOffset, lastOffset));
+            if (wq != null) {
+              queries.add(wq);
+              positions.add(currentPosition);
+            }
+            mergeStartOffset = -1;
+          }
+        } else if (lastOffset < wildcards.size() &&
             wildcards.get(lastOffset) != WildcardType.NOT_WILDCARD) {
           // Current token will need to merge with at least one following
           // wildcard. Don't create the term yet.
