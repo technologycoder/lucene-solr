@@ -30,12 +30,13 @@
   <path id="classpath">
     <pathelement path="${queries.jar}"/>
     <pathelement path="${sandbox.jar}"/>
-  	 <pathelement path="${analyzers-common.jar}"/>
+    <pathelement path="${analyzers-common.jar}"/>
     <path refid="base.classpath"/>
   </path>
 
   <path id="test.classpath">
-  	<pathelement path="${analyzers-common.jar}"/>
+    <pathelement path="${analyzers-common.jar}"/>
+    <pathelement path="${analyzers-kuromoji.jar}"/>
     <path refid="test.base.classpath"/>
   </path>
 

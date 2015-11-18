@@ -70,4 +70,27 @@ public class FieldedConjunctionQuery extends FieldedQuery {
   public int queryCount() {
     return queryCount;
   }
+  
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    if (bq != null) {
+      result = prime * result + bq.hashCode();
+    }
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    FieldedConjunctionQuery other = (FieldedConjunctionQuery) obj;
+    if (queryCount != other.queryCount()) return false;
+    if (bq == null) {
+      if (other.bq != null) return false;
+    } else if (!bq.equals(other.bq)) return false;
+    return true;
+  }
 }
