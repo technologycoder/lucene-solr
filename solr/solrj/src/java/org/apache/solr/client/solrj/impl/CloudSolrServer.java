@@ -420,6 +420,9 @@ public class CloudSolrServer extends SolrServer {
       List<String> urls = new ArrayList<>();
       Replica leader = slice.getLeader();
       if (leader == null) {
+        if (this.directeUpdateToLeadersOnly) {
+          continue;
+        }
         // take unoptimized general path - we cannot find a leader yet
         return null;
       }
@@ -522,6 +525,9 @@ public class CloudSolrServer extends SolrServer {
             clusterState);
         if (response != null) {
           return response;
+        }
+        if (this.directeUpdateToLeadersOnly) {
+          throw new SolrException(ErrorCode.SERVICE_UNAVAILABLE, "directUpdate[ToLeadersOnly] could not find a leader");
         }
       }
       sendToLeaders = true;
