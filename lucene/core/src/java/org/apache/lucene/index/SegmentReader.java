@@ -606,14 +606,16 @@ public final class SegmentReader extends AtomicReader {
   }
 
   private static String getSegmentCorruptionDetails(Bits liveDocs, SegmentCommitInfo info, int expectedNumDocs) {
-    if (liveDocs.length() != info.info.getDocCount()) {
-      return "(name="+info.info.name+"|liveDocs.length=" + liveDocs.length() + "|info.docCount=" + info.info.getDocCount() + ")";
-    }
-    if (liveDocs instanceof BitVector) {
-      final BitVector liveDocsVector = (BitVector) liveDocs;
-      if (liveDocsVector.count() != info.info.getDocCount() - info.getDelCount() &&
-          liveDocsVector.count() != expectedNumDocs) {
-        return "(name="+info.info.name+"|expectedNumDocs=" + expectedNumDocs + "|liveDocs.count=" + liveDocsVector.count() + "|info.docCount=" + info.info.getDocCount() + "|info.delCount=" + info.getDelCount() + ")";
+    if (liveDocs != null) {
+      if (liveDocs.length() != info.info.getDocCount()) {
+        return "(name="+info.info.name+"|liveDocs.length=" + liveDocs.length() + "|info.docCount=" + info.info.getDocCount() + ")";
+      }
+      if (liveDocs instanceof BitVector) {
+        final BitVector liveDocsVector = (BitVector) liveDocs;
+        if (liveDocsVector.count() != info.info.getDocCount() - info.getDelCount() &&
+            liveDocsVector.count() != expectedNumDocs) {
+          return "(name="+info.info.name+"|expectedNumDocs=" + expectedNumDocs + "|liveDocs.count=" + liveDocsVector.count() + "|info.docCount=" + info.info.getDocCount() + "|info.delCount=" + info.getDelCount() + ")";
+        }
       }
     }
     return null;
