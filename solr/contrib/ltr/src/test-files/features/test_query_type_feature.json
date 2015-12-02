@@ -1,0 +1,9 @@
+[
+    {
+        "type": "ltr.feature.impl.QueryTypeFeature", 
+        "params": {
+            "querytype": "TOPIC"
+        }, 
+        "name": "query_has_topic"
+    }
+]

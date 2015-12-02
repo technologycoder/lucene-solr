@@ -1,0 +1,17 @@
+[
+    {
+        "type": "ltr.feature.impl.HasFieldFeature", 
+        "name": "has_title",
+        "params": {
+          "field": "title"
+        }
+        
+    },
+    {
+        "type": "ltr.feature.impl.HasFieldFeature", 
+        "name": "has_description",
+        "params":{
+          "field": "description"
+        }
+    }
+]

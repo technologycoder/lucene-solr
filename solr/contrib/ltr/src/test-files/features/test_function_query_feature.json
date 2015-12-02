@@ -1,0 +1,9 @@
+[
+    {
+        "type": "ltr.feature.impl.FunctionQueryFeature", 
+        "name": "powpolarity",
+        "params": {
+            "fq":"pow(popularity,2)"
+        }
+    }
+]

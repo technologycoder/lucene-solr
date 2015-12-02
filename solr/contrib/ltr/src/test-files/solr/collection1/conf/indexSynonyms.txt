@@ -1,0 +1,950 @@
+# the asf licenses this file to you under the apache license, version 2.0
+# (the "license"); you may not use this file except in compliance with
+# the license.  you may obtain a copy of the license at
+#
+#     http://www.apache.org/licenses/license-2.0
+#
+# unless required by applicable law or agreed to in writing, software
+# distributed under the license is distributed on an "as is" basis,
+# without warranties or conditions of any kind, either express or implied.
+# see the license for the specific language governing permissions and
+# limitations under the license.
+
+#-----------------------------------------------------------------------
+
+# some synonym groups specific to this example
+gb,gib,gigabyte,gigabytes
+mb,mib,megabyte,megabytes
+television, televisions, tv, tvs
+#notice we use "gib" instead of "gib" so any worddelimiterfilter coming
+#after us won't split it into two words.
+
+# bloomberg synonyms
+mtge,mtg,mortgage,mortgages
+muni,municipal,munis,municipals
+corp,corporates,corporate
+govt,government,sovereign
+find,search
+price earnings,pe,p/e
+france, french, republic of france
+#german day bond TODO: Delete after 07/24
+aussie, australia, australian, ozzie
+#ktop, topeka TODO: Delete after 07/24
+argentina, argentine, argentinean, argentinian
+brasil, brazil, brazilian
+canada, canadian, canuck
+chile, chilean, republic of chile
+china, chinese
+colombia, colombian, columbia, columbian, republic of colombia
+dane, danes, danish, denmark, kingdom of denmark
+arab republic of egypt, egypt, egyptian
+#georgia, georgian, republic of georgia TODO: Delete after 07/24
+h.k., hong kong, hong-kong, hongkongese, hk, hongkong
+hungarian, hungary, magyar
+iceland, icelander, icelandic, republic of iceland
+india, indian, republic of india
+indonesia, indonesian
+israel, israeli, state of israel
+japan, japanese
+kazakh, kazakhstan, kazakhstani, republic of kazakhstan
+kuwait, kuwaiti, state of kuwait
+malaysia, malaysian
+mexican, mexico, united mexican states
+dominion of new zealand, kiwi, new zealand, new zealander
+federal republic of nigeria, nigeria, nigerian
+kingdom of norway, norway, norwegian
+islamic republic of pakistan, pakistan, pakistani
+peru, peruvian, republic of peru
+filipino, philippine, philippines, republic of the philippines, the philippine islands, the philippines
+poland, polish, republic of poland
+romania, romanian
+russia, russian, russian federation
+saudi, saudi arabia, saudi arabian
+republic of singapore, s'pore, singapore, singaporean
+south africa, south african, s africa, s african
+republic of korea, south korea, south korean, s korea, s korean
+kingdom of sweden, swede, sweden, swedish
+swiss, swiss confederation, switzerland
+formosa, formosan, republic of taiwan, taiwan, taiwanese
+kingdom of thailand, thai, thailand
+turk, turkey, turkic, turkish
+ukraine, ukrainian
+america, american, u.s., united states, united states of america, us, usa
+dec, december
+produce, production
+initial public offering, ipo
+us t, us treasuries, us treasury, us treasurys, us tsy, ust
+foreign exchange, forex, fx
+invest banking, investment banking
+inc, incorporation
+republic of zimbabwe, zimbabwe, zimbabwean
+republic of zambia, zambia, zambian
+republic of yemen, yemen, yemeni, yemenite
+sahrawi, western sahara,w sahara
+# wallis and futuna TODO: Delete after 07/24
+socialist republic of vietnam, vietnam, vietnamese
+bolivarian republic of venezuela, venezuela, venezuelan
+holy see, state of the vatican city, vatican, vatican city state
+ni-vanuatu, republic of vanuatu, vanuatu, vanuatuan
+republic of uzbekistan, uzbek, uzbekistan, uzbekistani
+eastern republic of uruguay, uruguay, uruguayan
+emirati, emirian, united arab emirates, uae, u.a.e.
+republic of uganda, uganda, ugandan
+u.s. virgin islands, united states virgin islands, us virgin islands, virgin islands (u.s.)
+tuvalu, tuvaluan
+turks and caicos islander, turks and caicos islanders, turks and caicos islands
+republic of turkmenistan, turkmen, turkmenistan
+afghan, afghanistan, islamic republic of afghanistan
+aland, aland islander, aland islands
+albania, albanian, republic of albania
+belgian, belgium, kingdom of belgium
+belarus, belarusian, republic of belarus
+bajan, barbadian, barbados
+austria, austrian, republic of austria
+azerbaijan, azerbaijani, azeri, republic of azerbaijan
+bahamas, bahamian, commonwealth of the bahamas, the bahamas
+bahrain, bahraini, kingdom of bahrain
+aruba, aruban
+armenia, armenian, republic of armenia
+angola, angolan, republic of angola
+anguilla, anguillan
+antigua, antigua and barbuda, antiguan, barbuda, barbudan
+andorra, andorran, principality of andorra
+#american samoa, samoan, territory of american samoa TODO: Delete after 07/24
+jamaica, jamaican
+eire, ireland, irish, republic of ireland, the republic of ireland
+isle of man, manx
+iran, iranian, islamic republic of iran
+iraq, iraqi, republic of iraq
+ayisyen, haiti, haitian, republic of haiti
+catracho, honduran, honduras, republic of honduras
+hashemite kingdom of jordan, jordan, jordanian
+#bailiwick of jersey, jersey, jersey channel islands: Remove due to DRQS 52764930 TODO:Delete
+oman, omani, sultanate of oman
+qatar, qatari, state of qatar
+#region of reunion, reunion, reunionese, reunionnais TODO: Delete after 07/24
+republic of rwanda, rwanda, rwandan, rwandese
+britain, british, briton, england, great britain, uk, united kingdom
+republic of tunisia, tunisia, tunisian
+republic of trinidad and tobago, tobagonian, trini, trinibagonian, trinidad and tobago, trinidadian
+tokelau, tokelauan
+togo, togolese, togolese republic
+tanzania, tanzanian, united republic of tanzania
+republic of tajikistan, tadzhik, tajik, tajikistan, tajikistani
+republic of the sudan, sudan, sudanese
+syria, syrian, syrian arab republic
+democratic socialist republic of sri lanka, sri lanka, sri lankan
+dutch guiana, republic of suriname, surinam, suriname, surinamer, surinamese
+kingdom of swaziland, swazi, swaziland
+republic of somalia, somali
+kenya, kenyan, republic of kenya
+i-kiribati, kiribati, republic of kiribati
+kosovar, kosovo, republic of kosovo
+kirghiz, kirgiz, kyrgyz, kyrgyz republic, kyrgyzstan, kyrgyzstani
+latvia, latvian, republic of latvia
+lebanese, lebanese republic, lebanon
+basotho, kingdom of lesotho, lesotho, mosotho
+liberia, liberian, republic of liberia
+great socialist people's libyan arab jamahiriya, libya, libyan
+democratic republic of timor-leste, east timor, e timor, east timorese, maubere
+ecuador, ecuadorean, ecuadorian, republic of ecuador
+el salvador, republic of el salvador, salvadoran
+djibouti, republic of djibouti
+commonwealth of dominica, dominica
+dominican, dominican republic, dominicane, dominicanse, quisqueyano
+estonia, estonian, republic of estonia
+eritrea, eritrean, state of eritrea
+equatoguinean, equatorial guinea, equatorial guinean, republic of equatorial guinea
+ethiopia, federal democratic republic of ethiopia
+burma, burmese, myanmar, myanmarese, union of myanmar
+mozambican, mozambique, republic of mozambique
+namibia, namibian, republic of namibia
+nauru, nauruan, republic of nauru
+federal democratic republic of nepal, nepal, nepalese, nepali
+dutch, holland, hollander, kingdom of the netherlands, netherlander, netherlands
+neth antilles, netherlands antilles
+caledonian, new caledonia, territory of new caledonia and dependencies
+nicaragua, nicaraguan, republic of nicaragua
+niger, nigerien, republic of niger
+fekai, niue, niuean, rock of polynesia
+norfolk island, norfuk ailen, territory of norfolk island
+palau, palauan, republic of palau
+portugal, portuguese, portuguese republic
+pitcairn, pitcairn islands, pitcairner
+panama, panamanian, republic of panama
+paraguay, paraguayan, republic of paraguay
+independent state of papua new guinea, papau new guinean, papua new guinea, papuan
+palestine, palestinian, palestinian territories, palestinian territory
+departmental collectivity of mayotte, mahoran, mayotte
+mauritian, mauritius, republic of mauritius
+islamic republic of mauritania, mauritania, mauritanian
+martician, martinican, martinique
+marshall islander, marshall islands, marshallese, republic of the marshall islands
+malta, maltese, republic of malta
+mali, malian, republic of mali
+maldives, maldivian, republic of maldives
+malawi, malawian, republic of malawi
+madagascar, malagasy, republic of madagascar
+macedonia, macedonian, republic of macedonia
+macanese, macao
+grand duchy of luxembourg, luxembourg, luxembourger
+lithuania, lithuanian, republic of lithuania
+liechtenstein, liechtensteiner, liechtensteinerin, principality of liechtenstein
+kingdom of morocco, moroccan, morocco
+montenegrin, montenegro
+mongolia, mongolian
+monacan, monaco, monegasque, principality of monaco
+moldova, moldovan, republic of moldova
+federated states of micronesia, micronesia, micronesian
+deutschland, federal democratic republic of germany, federal republic of germany, german, germany
+gambi, gambia, gambian, republic of the gambia, the gambia
+gabon, gabonaise, gabonese, gabonese republic
+french polynesia, french polynesian, tahitian
+finland, finn, finnish, republic of finland
+fiji, fiji islander, fijian, republic of the fiji islands
+faroe islander, faroe islands, faroese
+falkland islands, falklands, malvinas
+french guiana, french guianese
+ghana, ghanaian, republic of ghana
+british overseas territory of gibraltar, gibraltar, the rock
+greece, greek, hellenic republic
+greenland, greenlander, greenlandic
+grenada, grenadan, grenadian
+guam, guamanian, territory of guam
+guatemala, guatemalan, republic of guatemala
+bailiwick of guernsey, guernsey
+guinea, guinean, republic of guinea
+bissau-guinean, guinea-bissauan, republic of guinea-bissau
+co-operative republic of guyana, guyana, guyanan, guyanese
+saint helena, saint helenian, st helena, st. helena, st. helenian
+federation of saint kitts and nevis, kittian, nevis, nevisian, saint kitts, saint kitts and nevis, st. kitts
+saint lucia, saint lucian, sainte-lucie, st. lucia
+saint martin, saint-martin, sint maarten, st maarten, st martin, st. martin
+saint pierre and miquelon, st. pierre and miquelon, territorial collectivity of saint pierre and miquelon
+grenadines, saint vincent, saint vincent and the grenadines, st. vincent, st. vincent and the grenadines
+german samoa, independent state of samoa, samoa, samoan, western samoa
+republic of san marino, sammarinese, san marinese, san marino
+solomon islander, solomon islands
+republic of slovenia, slovene, slovenia, slovenian
+slovak, slovak republic, slovakia, slovakian
+republic of sierra leone, sierra leone, sierra leonean
+republic of seychelles, seychelles, seychellois, seychelloise
+republic of serbia, serbia, serbian
+republic of senegal, senegal, senegalese
+democratic republic of sao tome & principe, sao tomean
+british virgin islands, virgin islander, virgin islands (british)
+brunei, brunei darussalam, bruneian, islamic sultanate of brunei, state of brunei darussalam
+bulgaria, burgarian, republic of bulgaria
+burkina faso, burkinabe
+burundi, burundian, republic of burundi
+cambodia, cambodian, kingdom of cambodia
+cameroon, carmeroonian, republic of cameroon
+cape verde, cape verdean, cape verdian, republic of cape verde
+cayman islands, caymanian
+central african, central african republic
+chad, chadian, republic of chad, tchad
+belize, belizean
+benin, beninese, beninois, republic of benin
+bermuda, bermudan, bermudian
+bhutan, bhutanese, kingdom of bhutan
+bolivia, bolivian, plurinational state of bolivia
+bosnia, bosniak, bosnian, herzegovina, herzegovinian, republic of bosnia and herzegovina
+batswana, botswana, botswanan, motswana, republic of botswana
+czech, czech republic
+cypriot, cyprus, republic of cyprus
+cuba, cuban, republic of cuba
+croat, croatia, croatian, hrvatska, republic of croatia
+costa rica, costa rican, republic of costa rica, tico
+cook islander, cook islands
+christmas island, christmas islander
+cocos islander, cocos islanders, cocos islands, keeling islands
+comoran, comorian, comoros, union of the comoros
+congo, congo-brazzaville, congolese, little congo, republic of the congo
+congo, congo-kinshasa, congolese, dr congo, droc, zaire
+macanese, macau, macau special administrative region
+non farm, nonfarm
+algeria, algerian, people's democratic republic of algeria
+bangladesh, bangladeshi, people's republic of bangladesh
+lao people's democratic republic, laos, laotian
+democratic people's republic of korea, north korea, north korean
+1 year, 1 yr, 12 month, 12 months, 12m, 12month, 1y, 1year, 1yr, 52 week, 52 weeks, 52week, 52wk
+capitalisation, capitalization
+forward, fwd
+ecb, european central bank
+# acela, airtrain, amtrak, lirr, mbta, metro-north, metrolink, mta, nj transit, njt, septa TODO: Delete after 07/24
+statistics, stats
+tonga, tongan
+harper collins, harpercollins
+book to bill, book-to-bill
+# intraday, real time, real-time TODO: Delete after 07/24
+# code, symbol, ticker TODO: Delete after 07/24
+# owner, owns TODO: Delete after 07/24
+fed, federal reserve, federal reserves, feds
+new york => ny, new york
+arizona => az, arizona
+arkansas => ar, arkansas
+alabama => al, alabama
+alaska => ak, alaska
+california => ca, california
+colorado => co, colorado
+connecticut => conn, ct, connecticut
+delaware => de, delaware
+florida => fl, florida
+georgia => ga, georgia
+hawaii => hi, hawaii
+idaho => id, idaho
+illinois => il, illinois
+iowa => ia, iowa
+kansas => ks, kansas
+kentucky => ky, kentucky
+indiana => in, indiana
+louisiana => la, louisiana
+new mexico => nm, new mexico
+maine => me, maine
+maryland => md, maryland
+massachusetts => ma, massachusetts
+michigan => mi, mich, michigan
+minnesota => mn, minnesota
+mississippi => ms, mississippi
+missouri => mo, missouri
+montana => mt, montana
+nebraska => ne, nebraska
+nevada => nv, nevada
+new hampshire => nh, new hampshire
+north carolina => nc, n carolina, north carolina
+north dakota => nd, n dakota, north dakota
+ohio => oh, ohio
+oklahoma => ok, oklahoma
+oregon => or, oregon
+pennsylvania => pa, pennsylvania
+rhode island => ri, rhode island
+south carolina => sc, s carolina, south carolina
+south dakota => sd, s dakota, south dakota
+tennessee => tn, tennessee
+texas => tx, texas
+utah => ut, utah
+vermont => vt, vermont
+virginia => va, virginia
+washington => wa, washington
+west virginia => wv, w virginia, west virginia
+wisconsin => wi, wisconsin
+wyoming => wy, wyoming
+manhattan, n.y.c., nyc
+los angeles => la, los angeles
+philadelphia, philly
+consumer price, consumer price index, consumer prices, cpi, inflation
+ppi, producer price, producer price index, producer prices
+wholesale price, wholesale price index, wholesale prices, wpi
+gdp, gross domestic product, gross state product, gsp
+gnp, gross national product
+2 y, 2 year, 2 years, 2 yr, 2y, 2year, 2yr
+3 year, 3 years, 3y, 3year, 3yr
+5 y, 5 year, 5 years, 5 yr, 5y, 5year, 5yr
+10 y, 10 year, 10 years, 10 yr, 10y, 10year, 10yr
+15 y, 15 year, 15 years, 15 yr, 15y, 15year, 15yr
+20 y, 20 year, 20 years, 20 yr, 20y, 20year, 20yr
+30 y, 30 year, 30 years, 30 yr, 30y, 30year, 30yr
+1 week, 1 weeks, 1 wk, 1w, 1week, 1wk
+4 w, 4 week, 4 weeks, 4 wk, 4w, 4week, 4wk
+52 week, 52 weeks, 52 wk, 52w, 52week, 52wk
+1 d, 1 day, 1d, 1day
+1 mo, 1 month, 1 months, 1m, 1mo, 1month, 30 day
+3 m, 3 mo, 3 month, 3 months, 3m, 3mo, 3month, 90 day
+6 m, 6 mo, 6 month, 6 months, 6m, 6mo, 6month
+1 year, 12 mo, 12 month, 12 months, 12m, 12mo, 12month
+spd, sprd, spread, spreads
+asset swap spread, asw
+natural resource, natural resources
+managing director, mng dir
+kingdom of spain, spain, spanish, espana
+year to date, year-to-date, ytd
+2 w, 2 week, 2 wk, 2w, 2week, 2wk
+2 m, 2 mo, 2 month, 2m, 2mo, 2month, 60 day
+9 mo, 9 month, 9 months, 9m, 9mo, 9month
+8 mo, 8 month, 8 months, 8m, 8mo, 8month
+36 mo, 36 month, 36 months, 36m, 36mo, 36month
+18 mo, 18 month, 18 months, 18m, 18mo, 18month
+24 mo, 24 month, 24 months, 24m, 24mo, 24month
+48 mo, 48 month, 48 months, 48m, 48mo, 48month
+60 mo, 60 month, 60 months, 60m, 60mo, 60month
+120 day, 4 mo, 4 month, 4 months, 4m, 4mo, 4month
+5 mo, 5 month, 5 months, 5m, 5mo, 5month
+7 mo, 7 month, 7 months, 7m, 7mo, 7month
+10 mo, 10 month, 10 months, 10m, 10mo, 10month
+11 mo, 11 month, 11 months, 11m, 11mo, 11month
+4 y, 4 year, 4 years, 4 yr, 4y, 4year, 4yr
+6 y, 6 year, 6 years, 6 yr, 6y, 6year, 6yr
+7 y, 7 year, 7 years, 7 yr, 7y, 7year, 7yr
+8 y, 8 year, 8 years, 8 yr, 8y, 8year, 8yr
+9 y, 9 year, 9 years, 9 yr, 9y, 9year, 9yr
+40 y, 40 year, 40 years, 40 yr, 40y, 40year, 40yr
+50 y, 50 year, 50 years, 50 yr, 50y, 50year, 50yr
+13 week, 13 weeks, 13 wk, 13w, 13week, 13wk
+26 week, 26 weeks, 26 wk, 26w, 26week, 26wk
+1 month, 30 d, 30 day, 30 days, 30d, 30day
+60 d, 60 day, 60 days, 60d, 60day
+3 month, 90 d, 90 day, 90 days, 90d, 90day
+120 d, 120 day, 120 days, 120d, 120day
+180 d, 180 day, 180 days, 180d, 180day
+360 d, 360 day, 360 days, 360d, 360day
+50 d, 50 day, 50 days, 50d, 50day
+100 d, 100 day, 100 days, 100d, 100day
+200 d, 200 day, 200 days, 200d, 200day
+20 d, 20 day, 20 days, 20d, 20day
+9 d, 9 day, 9 days, 9d, 9day
+14 d, 14 day, 14 days, 14d, 14day
+15 d, 15 day, 15 days, 15d, 15day
+3 d, 3 day, 3 days, 3d, 3day
+2 d, 2 day, 2 days, 2d, 2day
+10 d, 10 day, 10 days, 10d, 10day
+5 d, 5 day, 5 days, 5d, 5day
+260 d, 260 day, 260 days, 260d, 260day
+7 d, 7 day, 7 days, 7d, 7day
+chart, graph
+charts, graphs
+# director, head TODO: Delete after 07/24
+cds, credit default swap, credit default swaps
+qoq, quarter over quarter, quarterly
+year over year, yearly, yoy
+mom, month over month, monthly
+# change, growth, growth rate, percent change, percent growth, rate of growth TODO: Delete after 07/24
+gov, government, govt, sov, sovereign
+italian, italian republic, italy, republic of italy
+commonwealth of puerto rico, puerto rican, puerto rico, puerto rico commonwealth
+auto, automobile, automobiles, automotive, autos, car, cars
+edit, manage, modify, update
+industry, sector
+anticipated, estimated, expected, forecast, forecasted, prediction, projected, projections
+ceo, chief executive officer
+cfo, chief finance officer, chief financial officer
+ltm, trailing 12m
+live, real time, scrolling, streaming
+andorra, andorran peseta
+aed, dirham, dubai, uae, united arab emirates
+afn, afghanistan, afghanistan afghani
+# all, albania, albanian lek TODO: Delete after 07/24
+amd, armenia, armenian dram
+ang, netherlands antillean guilder, netherlands antilles
+light louisiana sweet, lls
+west texas intermediate, wti
+heavy louisiana sweet, hls
+thunder horse, thunderhorse
+uae, united arab emirates
+foroozan, forozan
+appi, asian petroleum price index
+official selling price, osp
+icp, indonesian crude price
+fob, free on board
+west texas sour, wts
+bfoe, brent forties oseberg ekofisk
+alaskan northern slope, ans
+brent weighted average price, bwave
+efp, exchange for physical
+# calendar merc average, cma TODO: Delete after 07/24
+tocom, tokyo commodity exchange
+new york merchantile exchange, nymex
+ice, intercontinental exchange
+cfd, contract for difference
+international petroleum exchange, ipe
+barrel, bbl
+dated, dtd
+north west, northwest, nw
+west, western
+#med, mediterranean TODO: Delete after 07/24
+#sulfer, sulphur TODO: Delete after 07/24
+lme, london metal exchange
+month to date, month-to-date, mtd
+qtd, quarter to date, quarter-to-date
+nav, net asset value
+date, dt, dt.
+paed, periodic automatic electronic deposit
+univ, university
+1st, first
+2nd, second
+3rd, third
+adr, adrs, american depositary receipt, american depositary receipts, american depository receipt, american depository receipts
+asm, available seat miles
+revenue passenger miles, rpm
+global, world
+ammonium paratungstate, apt
+# mb, metal bulletin TODO: Delete after 07/24
+aluminium, aluminum
+total return, tr
+metals, mtls
+ferro silicon, ferro-silicon, ferrosilicon
+ferro-manganese, ferromanganese
+silico manganese, silico-manganese, silicomanganese
+average, avg
+mnthly, monthly, mthly
+ferro tungsten, ferro-tungsten, ferrotungsten
+ferro molybdenum, ferro-molybdenum, ferromolybdenum
+ferro vanadium, ferro-vanadium, ferrovanadium
+# unemployment, unemplyment TODO: Delete after 07/24
+# hot rolled, hr, hrc TODO: Delete after 07/24
+# cold rolled, cr, crc TODO: Delete after 07/24
+heavy melting scrap => hms, heavy melting scrap
+cost insurance and freight => cif, cost insurance and freight
+cost and freight => cfr, cost and freight
+cis, commonwealth of independent states
+kg, kilo, kilogram, kilograms
+li2o, lithium oxide
+minor metals trade association, mmta
+nasaa, nasaac, north american special aluminium alloy, north american special aluminium alloy contract
+value added tax, vat
+fob, freight on board
+kltm, kuala lumpur tin market
+copper, cu
+zinc => zn, zinc
+sn, tin
+lead, pb, plumbum
+magnesium, mg
+manganese, mn
+fof, fund of funds
+cdr, conditional default rate
+earnings before interest and taxes, ebit
+world cup, worldcup
+exponential moving average => ema, exponential moving average
+exponential moving avg => ema, exponential moving avg
+
+
+# uk-us synonyms
+zip code,postcode
+adapter,adaptor
+adrenalin,adrenaline
+agenda,agendum
+airplane,aeroplane
+aluminum,aluminium
+analog,analogue
+analyze,analyse
+analyzed,analysed
+analyzer,analyser
+analyzing,analysing
+anemia,anaemia
+anesthesia,anaesthesia
+anesthesiologist,anaesthetist
+anesthetic,anaesthetic
+annex,annexe
+antennas,antennae
+antialiased,anti-aliased
+antialiasing,anti-aliasing
+anymore,any more
+appall,appal
+archeology,archaeology
+armor,armour
+artifact,artefact
+authorization,authorisation
+authorizational,authorisational
+authorize,authorise
+authorized,authorised
+authorizing,authorising
+automobile,motorcar
+ax,axe
+backward,backwards
+balk,baulk
+basicly,basically
+behavior,behaviour
+behoove,behove
+brace,curly bracket
+braces,curly brackets
+# braked,broke TODO: Delete after 07/24
+burned,burnt
+caliber,calibre
+canceled,cancelled
+canceling,cancelling
+capitalization,capitalisation
+capitalize,capitalise
+capitalized,capitalised
+capitalizing,capitalising
+carburetor,carburettor
+case insensitive,case-insensitive
+case sensitive,case-sensitive
+caster,castor
+catalog,catalogue
+categorization,categorisation
+categorize,categorise
+categorized,categorised
+categorizing,categorising
+centimeter,centimetre
+center,centre
+centered,centred
+centering,centring
+centralization,centralisation
+centralize,centralise
+centralized,centralised
+centralizing,centralising
+cesium,caesium
+check,cheque
+# check,tick TODO: Delete after 07/24
+checkbox,tickbox
+checked,chequered
+checked,ticked
+checker,chequer
+checkerboard,chequerboard
+checkered,chequered
+cipher,cypher
+color,colour
+colored,coloured
+colorer,colourer
+colorful,colourful
+coloring,colouring
+colorkey,colour-key
+colorspace,colour-space
+cooperate,co-operate
+coordinate,co-ordinate
+counterclockwise,anti-clockwise
+counter-clockwise,anti-clockwise
+cozy,cosy
+curb,kerb
+curriculums,curricula
+customizable,customisable
+customization,customisation
+customize,customise
+customized,customised
+customizing,customising
+dealed,dealt
+defense,defence
+dialed,dialled
+dialer,dialler
+dialing,dialling
+dialog,dialogue
+diarrhea,diarrhoea
+digitization,digitisation
+digitize,digitise
+digitized,digitised
+digitizer,digitiser
+digitizing,digitising
+disk,disc
+disorganized,disorganised
+distill,distil
+donut,doughnut
+downspout,drainpipe
+draft,draught
+dreamed,dreamt
+email,e-mail
+encyclopedia,encyclopaedia
+endeavor,endeavour
+enology,oenology
+equaled,equalled
+equaling,equalling
+equalize,equalise
+equalized,equalised
+equalizer,equaliser
+equalizing,equalising
+esophagus,oesophagus
+esthetics,aesthetics
+estrogen,oestrogen
+familiarization,familiarisation
+familiarize,familiarise
+familiarized,familiarised
+familiarizing,familiarising
+favor,favour
+favored,favoured
+favoring,favouring
+favorite,favourite
+fetus,foetus
+fiber,fibre
+filet,fillet
+flavor,flavour
+flavored,flavoured
+flavoring,flavouring
+forever,for ever
+formulas,formulae
+forums,fora
+fueled,fuelled
+fueling,fuelling
+furor,furore
+globalization,globalisation
+globalizational,globalisational
+globalize,globalise
+globalized,globalised
+globalizing,globalising
+globaly,globally
+glycerin,glycerine
+goiter,goitre
+gray,grey
+graylist,greylist
+graylisted,greylisted
+graylisting,greylisting
+guerilla,guerrilla
+gynecology,gynaecology
+hanged,hung
+harbor,harbour
+harbored,harboured
+harboring,harbouring
+hemophilia,haemophilia
+hemophiliac,haemophiliac
+hauler,haulier
+homeopathic,homoeopathic
+homeopathy,homoeopathy
+honor,honour
+honored,honoured
+honoring,honouring
+humor,humour
+humored,humoured
+humoring,humouring
+infeasible,unfeasible
+initialization,initialisation
+initializational,initialisational
+initialize,initialise
+initialized,initialised
+initializer,initialiser
+initializing,initialising
+inquire,enquire
+inquiry,enquiry
+insure,ensure
+internationalization,internationalisation
+internationalizational,internationalisational
+internationalize,internationalise
+internationalized,internationalised
+internationalizing,internationalising
+jeweled,jewelled
+jeweler,jeweller
+jewelery,jewellery
+journaling,journalling
+judgment,judgement
+kilometer,kilometre
+kneeled,knelt
+labeled,labelled
+labeler,labeller
+labeling,labelling
+labor,labour
+labored,laboured
+laboring,labouring
+ladybug,ladybird
+leaned,leant
+leaped,lept
+learned,learnt
+leukemia,leukaemia
+license,licence
+licorice,liquorice
+lighted,lit
+liter,litre
+localization,localisation
+localizational,localisational
+localize,localise
+localized,localised
+localizing,localising
+math,maths
+medieval,mediaeval
+meter,metre
+micrometer,micrometre
+milliliter,millilitre
+millimeter,millimetre
+minimize,minimise
+minimized,minimised
+minimizing,minimising
+misspelled,misspelt
+modeled,modelled
+modeler,modeller
+modeling,modelling
+mold,mould
+molt,moult
+mustache,moustache
+nanometer,nanometre
+neighbor,neighbour
+neighboring,neighbouring
+neuron,neurone
+normalcy,normality
+normalization,normalisation
+normalize,normalise
+normalized,normalised
+normalizing,normalising
+northward,northwards
+offense,offence
+oftentimes,often
+onward,onwards
+optimization,optimisation
+optimizational,optimisational
+optimize,optimise
+optimized,optimised
+optimizing,optimising
+organization,organisation
+organizational,organisational
+organize,organise
+organized,organised
+organizer,organiser
+organizing,organising
+ornery,irritable
+orthopedic,orthopaedic
+pajamas,pyjamas
+paneled,panelled
+paneling,panelling
+paren,bracket
+parentheses,brackets
+parenthesis,bracket
+parenthesized,bracketed
+pediatric,paediatric
+period,full stop
+persnickety,pernickety
+picometer,picometre
+plow,plough
+postpend,suffix
+pound,hash
+practice,practise
+prepend,prefix
+prioritization,prioritisation
+prioritize,prioritise
+prioritized,prioritised
+prioritizing,prioritising
+program,programme
+proved,proven
+pry,prise
+railroad,railway
+randomization,randomisation
+randomize,randomise
+randomized,randomised
+randomizing,randomising
+realization,realisation
+realize,realise
+realized,realised
+realizing,realising
+recognizable,recognisable
+recognize,recognise
+recognized,recognised
+recognizing,recognising
+reinitialize,reinitialise
+reinitialized,reinitialised
+reinitializing,reinitialising
+rumor,rumour
+rumored,rumoured
+saber,sabre
+sanitarium,sanatorium
+scepter,sceptre
+schedule,timetable
+serialization,serialisation
+serializational,serialisational
+serialize,serialise
+serialized,serialised
+serializing,serialising
+signaled,signalled
+signaling,signalling
+simultanous,simultaneous
+skeptic,sceptic
+skeptical,sceptical
+skepticism,scepticism
+sled,sleigh
+specialization,specialisation
+specializational,specialisational
+specialize,specialise
+specialized,specialised
+specializing,specialising
+specialty,speciality
+specter,spectre
+spelled,spelt
+spilled,spilt
+spiraled,spiralled
+spiraling,spiralling
+spoiled,spoilt
+standardize,standardise
+story,storey
+stories,storeys
+sulfur,sulphur
+sulfurous,sulphurous
+summarization,summarisation
+summarizational,summarisational
+summarize,summarise
+summarized,summarised
+summarizing,summarising
+symbolization,symbolisation
+symbolizational,symbolisational
+symbolize,symbolise
+symbolized,symbolised
+symbolizing,symbolising
+synchronization,synchronisation
+synchronizational,synchronisational
+synchronize,synchronise
+synchronized,synchronised
+synchronizing,synchronising
+synthesize,synthesise
+taliban,taleban
+templatization,templatisation
+templatizational,templatisational
+templatize,templatise
+templatized,templatised
+templatizing,templatising
+theater,theatre
+tidbit,titbit
+tire,tyre
+totaled,totalled
+totaler,totaller
+totaling,totalling
+toward,towards
+trapezium,trapezoid
+trapezoid,trapezium
+trash,rubbish
+uncategorized,uncategorised
+unauthorized,unauthorised
+uninitialization,uninitialisation
+uninitializational,uninitialisational
+uninitialize,uninitialise
+uninitialized,uninitialised
+uninitializing,uninitialising
+unorganized,unorganised
+unrecognizable,unrecognisable
+unrecognized,unrecognised
+useable,usable
+utilization,utilisation
+utilize,utilise
+utilized,utilised
+utilizing,utilising
+vacation,holiday
+vapor,vapour
+vectorization,vectorisation
+vectorizational,vectorisational
+vectorize,vectorise
+vectorized,vectorised
+vectorizer,vectoriser
+vectorizing,vectorising
+virtualization,virtualisation
+virtualize,virtualise
+virtualized,virtualised
+virtualizing,virtualising
+vise,vice
+visualization,visualisation
+visualize,visualise
+visualized,visualised
+visualizing,visualising
+yogurt,yoghurt
+smolder,smoulder
+sulfate,sulphate
+telegram,telegramme
+future,futures,fut
+
+# DRQS 53701276
+salty => salty, salt
+
+# other synonyms
+bloomberg,bbg
+township,twp
+limited,ltd
+px => price, px
+management,mgmt
+
+# recognized synonyms
+sparkline => spark, line, sparkline
+timeline => time, line, timeline
+probability => prob, probability
+technology => tech, technology
+county => county, cnty
+
+bbgid,figi
+m, month
+nat gas, natgas, natural gas
+backtesting, back testing, back-testing
+indices, indexes
+cash flow, cashflow
+hdd, heating degree day
+cia, comphanhia, compania
+pharma, pharmaceuticals
+paid, payed
+breakeven, break-even, break even
+dtcc, depository trust and clearing corporation
+corporation, corp
+benchmark, generic
+doe, eia
+outrt, outright
+
+#over night, overnight
+pre-market, pre market, premarket => pre-market, pre market, premarket, overnight, over night
+post-market, post market, postmarket => post-market, post market, postmarket, overnight, over night
+

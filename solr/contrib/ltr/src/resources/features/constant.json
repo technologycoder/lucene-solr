@@ -1,0 +1,9 @@
+[
+    {
+        "type": "ltr.feature.impl.ConstantFeature", 
+        "params": {
+            "value": 42
+        }, 
+        "name": "c1"
+    }
+]

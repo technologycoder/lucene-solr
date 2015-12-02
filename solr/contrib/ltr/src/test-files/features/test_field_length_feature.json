@@ -1,0 +1,17 @@
+[
+    {
+        "type": "ltr.feature.impl.FieldLengthFeature", 
+        "name": "title_length",
+        "params": {
+          "field": "title"
+        }
+        
+    },
+    {
+        "type": "ltr.feature.impl.FieldLengthFeature", 
+        "name": "description_length",
+        "params":{
+          "field": "description"
+        }
+    }
+]

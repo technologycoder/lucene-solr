@@ -1,0 +1,199 @@
+<config>
+  <luceneMatchVersion>LUCENE_41</luceneMatchVersion>
+  <dataDir>${solr.data.dir:}</dataDir>
+  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.MMapDirectoryFactory}" />
+
+  <!-- ========== LTR RERANKING BEGIN ========== -->
+
+  <!-- Query parser used to rerank top docs with a provided model -->
+  <queryParser name="ltr" class="com.bloomberg.solr.ltr.ranking.LTRQParserPlugin" />
+
+  <searchComponent name="ltrComponent" class="com.bloomberg.solr.ltr.ranking.LTRComponent" />
+
+  <!-- add a transformer that will encode the document features in the response. For each document the transformer will add 
+    the features as an extra field in the response. The name of the field we will be the the name of the transformer enclosed 
+    between brackets (in this case [fv]). In order to get the feature vector you will have to specify that you want the field 
+    (e.g., fl="*,[fv]) -->
+  <transformer name="fv" class="ltr.ranking.LTRFeatureTransformerFactory" />
+  
+  <!--  this transformer will compute the feature values within the trasformer, used for computing the feature values without applying a model-->
+  <transformer name="fvonly" class="ltr.ranking.LTRFeatureLoggerTransformerFactory" />
+ 
+
+  <!--  this transformer will compute the feature values within the trasformer, used for computing the feature values without applying a model-->
+  <transformer name="fvonly" class="com.bloomberg.solr.ltr.ranking.LTRFeatureLoggerTransformerFactory" />
+
+  <!-- Query request handler managing models and features -->
+  <requestHandler name="/query" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+      <str name="df">id</str>
+    </lst>
+    <arr name="last-components">
+      <str>ltrComponent</str>
+    </arr>
+  </requestHandler>
+
+  <!-- ========== LTR RERANKING END ========== -->
+
+
+
+
+  <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
+    <str name="queryAnalyzerFieldType">lowString</str>
+
+    <lst name="spellchecker">
+      <str name="name">singleedit</str>
+      <str name="field">spell</str>
+      <str name="classname">solr.DirectSolrSpellChecker</str>
+      <str name="distanceMeasure">internal</str>
+      <float name="accuracy">0.5</float>
+      <int name="maxEdits">1</int>
+      <int name="minPrefix">0</int>
+      <int name="maxInspections">15</int>
+      <int name="minQueryLength">3</int>
+      <float name="maxQueryFrequency">0.01</float>
+    </lst>
+
+    <lst name="spellchecker">
+      <str name="name">doubleedit</str>
+      <str name="field">spell</str>
+      <str name="classname">solr.DirectSolrSpellChecker</str>
+      <str name="distanceMeasure">internal</str>
+      <float name="accuracy">0.5</float>
+      <int name="maxEdits">2</int>
+      <int name="minPrefix">0</int>
+      <int name="maxInspections">15</int>
+      <int name="minQueryLength">3</int>
+      <float name="maxQueryFrequency">0.01</float>
+    </lst>
+  </searchComponent>
+
+  <indexConfig></indexConfig>
+  <jmx />
+  <updateHandler class="solr.DirectUpdateHandler2">
+    <autoCommit>
+      <maxTime>15000</maxTime>
+      <openSearcher>false</openSearcher>
+    </autoCommit>
+    <autoSoftCommit>
+      <maxTime>1000</maxTime>
+    </autoSoftCommit>
+    <updateLog>
+      <str name="dir">${solr.data.dir:}</str>
+    </updateLog>
+  </updateHandler>
+  <query>
+    <maxBooleanClauses>1024</maxBooleanClauses>
+    <!-- Assuming 100 simulataneous threads each returning 20docs at a time -->
+    <filterCache class="solr.FastLRUCache" size="4096" initialSize="2048" autowarmCount="0" />
+    <queryResultCache class="solr.LRUCache" size="6144" initialSize="2048" autowarmCount="0" />
+    <documentCache class="solr.LRUCache" size="6144" initialSize="1024" autowarmCount="0" />
+    <enableLazyFieldLoading>true</enableLazyFieldLoading>
+    <queryResultWindowSize>20</queryResultWindowSize>
+    <queryResultMaxDocsCached>2000</queryResultMaxDocsCached>
+    <useColdSearcher>true</useColdSearcher>
+    <maxWarmingSearchers>2</maxWarmingSearchers>
+
+    <!-- KPL - DRQS 54582808 -->
+    <listener event="newSearcher" class="org.apache.solr.schema.ExternalFileFieldReloader" />
+    <listener event="firstSearcher" class="org.apache.solr.schema.ExternalFileFieldReloader" />
+  </query>
+  <requestDispatcher handleSelect="false">
+    <requestParsers enableRemoteStreaming="true" multipartUploadLimitInKB="2048000" />
+    <httpCaching never304="true" />
+  </requestDispatcher>
+  <requestHandler name="/analysis/field" startup="lazy" class="solr.FieldAnalysisRequestHandler" />
+  <requestHandler name="/select" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <int name="rows">20</int>
+      <str name="df">id</str>
+    </lst>
+  </requestHandler>
+  <!-- A request handler that returns indented JSON by default -->
+  <requestHandler name="/query" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+      <str name="df">id</str>
+    </lst>
+  </requestHandler>
+  <requestHandler name="/update" class="solr.UpdateRequestHandler">
+    <!-- See below for information on defining updateRequestProcessorChains that can be used by name on each Update Request -->
+    <!-- <lst name="defaults"> <str name="update.chain">dedupe</str> </lst> -->
+  </requestHandler>
+  <!-- realtime get handler, guaranteed to return the latest stored fields of any document, without the need to commit or 
+    open a new searcher. The current implementation relies on the updateLog feature being enabled. -->
+  <requestHandler name="/get" class="solr.RealTimeGetHandler">
+    <lst name="defaults">
+      <str name="omitHeader">true</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+    </lst>
+  </requestHandler>
+  <requestHandler name="/admin/" class="solr.admin.AdminHandlers" />
+  <requestHandler name="/admin/ping" class="solr.PingRequestHandler">
+    <lst name="invariants">
+      <str name="q">solrpingquery</str>
+    </lst>
+    <lst name="defaults">
+      <str name="echoParams">all</str>
+    </lst>
+  </requestHandler>
+  <requestHandler name="/debug/dump" class="solr.DumpRequestHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <str name="echoHandler">true</str>
+    </lst>
+  </requestHandler>
+  <requestHandler name="/replication" class="solr.ReplicationHandler" startup="lazy" />
+
+  <requestHandler name="/spell1" class="solr.SearchHandler" startup="lazy">
+    <lst name="defaults">
+      <str name="spellcheck.dictionary">singleedit</str>
+      <str name="spellcheck">on</str>
+      <str name="spellcheck.extendedResults">true</str>
+      <str name="spellcheck.count">200</str>
+      <str name="spellcheck.alternativeTermCount">200</str>
+      <str name="spellcheck.maxResultsForSuggest">100</str>
+      <str name="spellcheck.collate">true</str>
+      <str name="spellcheck.collateExtendedResults">true</str>
+      <str name="spellcheck.maxCollationTries">100</str>
+      <str name="spellcheck.maxCollations">100</str>
+    </lst>
+    <arr name="last-components">
+      <str>spellcheck</str>
+    </arr>
+  </requestHandler>
+
+  <requestHandler name="/spell2" class="solr.SearchHandler" startup="lazy">
+    <lst name="defaults">
+      <str name="spellcheck.dictionary">doubleedit</str>
+      <str name="spellcheck">on</str>
+      <str name="spellcheck.extendedResults">true</str>
+      <str name="spellcheck.count">200</str>
+      <str name="spellcheck.alternativeTermCount">200</str>
+      <str name="spellcheck.maxResultsForSuggest">100</str>
+      <str name="spellcheck.collate">true</str>
+      <str name="spellcheck.collateExtendedResults">true</str>
+      <str name="spellcheck.maxCollationTries">100</str>
+      <str name="spellcheck.maxCollations">100</str>
+    </lst>
+    <arr name="last-components">
+      <str>spellcheck</str>
+    </arr>
+  </requestHandler>
+
+  <queryResponseWriter name="json" class="solr.JSONResponseWriter">
+    <!-- For the purposes of the tutorial, JSON responses are written as plain text so that they are easy to read in *any* 
+      browser. If you expect a MIME type of "application/json" just remove this override. -->
+    <str name="content-type">text/plain; charset=UTF-8</str>
+  </queryResponseWriter>
+  <admin>
+    <defaultQuery>*:*</defaultQuery>
+  </admin>
+</config>

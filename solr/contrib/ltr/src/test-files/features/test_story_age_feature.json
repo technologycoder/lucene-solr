@@ -1,0 +1,34 @@
+[
+   {
+        "type": "ltr.feature.impl.StoryAgeFeature", 
+        "params": {
+            "field": "date", 
+            "granularity": "days"
+        }, 
+        "name": "story_age_days"
+    }, 
+    {
+        "type": "ltr.feature.impl.StoryAgeFeature", 
+        "params": {
+            "field": "date", 
+            "granularity": "hours"
+        }, 
+        "name": "story_age_hours"
+    }, 
+    {
+        "type": "ltr.feature.impl.StoryAgeFeature", 
+        "params": {
+            "field": "date", 
+            "granularity": "minutes"
+        }, 
+        "name": "story_age_minutes"
+    }, 
+    {
+        "type": "ltr.feature.impl.StoryAgeFeature", 
+        "params": {
+            "field": "date", 
+            "granularity": "seconds"
+        }, 
+        "name": "story_age_seconds" 
+    }
+]

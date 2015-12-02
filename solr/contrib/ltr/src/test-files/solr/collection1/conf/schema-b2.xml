@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schema>
+  <uniqueKey>
+    id
+  </uniqueKey>
+  <fields>
+    <field indexed="true" multiValued="false" name="_version_" stored="true" type="long"/>
+    <field default="NOW" indexed="true" multiValued="false" name="indexed_timestamp" stored="true" type="date"/>
+    <dynamicField indexed="true" multiValued="false" name="*_de" required="false" stored="true" type="text_de"/>
+    <dynamicField indexed="true" multiValued="true" name="*_des" required="false" stored="true" type="text_de"/>
+    <dynamicField indexed="true" multiValued="false" name="*_es" required="false" stored="true" type="text_es"/>
+    <dynamicField indexed="true" multiValued="true" name="*_ess" required="false" stored="true" type="text_es"/>
+    <dynamicField indexed="true" multiValued="false" name="*_fr" required="false" stored="true" type="text_fr"/>
+    <dynamicField indexed="true" multiValued="true" name="*_frs" required="false" stored="true" type="text_fr"/>
+    <dynamicField indexed="true" multiValued="false" name="*_it" required="false" stored="true" type="text_it"/>
+    <dynamicField indexed="true" multiValued="true" name="*_its" required="false" stored="true" type="text_it"/>
+    <dynamicField indexed="true" multiValued="false" name="*_ja" required="false" stored="true" type="text_ja"/>
+    <dynamicField indexed="true" multiValued="true" name="*_jas" required="false" stored="true" type="text_ja"/>
+    <dynamicField indexed="true" multiValued="false" name="*_ko" required="false" stored="true" type="text_ko"/>
+    <dynamicField indexed="true" multiValued="true" name="*_kos" required="false" stored="true" type="text_ko"/>
+    <dynamicField indexed="true" multiValued="false" name="*_pt" required="false" stored="true" type="text_pt"/>
+    <dynamicField indexed="true" multiValued="true" name="*_pts" required="false" stored="true" type="text_pt"/>
+    <dynamicField indexed="true" multiValued="false" name="*_ru" required="false" stored="true" type="text_ru"/>
+    <dynamicField indexed="true" multiValued="true" name="*_rus" required="false" stored="true" type="text_ru"/>
+    <dynamicField indexed="true" multiValued="false" name="*_zh" required="false" stored="true" type="text_zh"/>
+    <dynamicField indexed="true" multiValued="true" name="*_zhs" required="false" stored="true" type="text_zh"/>
+    <dynamicField indexed="true" multiValued="false" name="*_zt" required="false" stored="true" type="text_zt"/>
+    <dynamicField indexed="true" multiValued="true" name="*_zts" required="false" stored="true" type="text_zt"/>
+    <dynamicField indexed="true" multiValued="false" name="*_i" required="false" stored="true" type="int"/>
+    <dynamicField indexed="true" multiValued="false" name="*_b" required="false" stored="true" type="boolean"/>
+    <dynamicField indexed="true" multiValued="false" name="*_s" required="false" stored="true" type="string"/>
+    <dynamicField indexed="true" multiValued="false" name="*_d" required="false" stored="true" type="double"/>
+    <dynamicField indexed="true" multiValued="false" name="*_ls" required="false" stored="true" type="lowString"/>
+    <dynamicField indexed="true" multiValued="true" name="*_lss" required="false" stored="true" type="lowString"/>
+    <dynamicField indexed="true" multiValued="true" name="*_adsk" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="id" required="false" stored="true" type="string"/>
+    <field indexed="true" multiValued="false" name="global_xrefkey" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="global_categoryName" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="global_categoryId" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="global_normHits" required="false" stored="true" type="double"/>
+    <field indexed="true" multiValued="false" name="global_contextHits" required="false" stored="true" type="double"/>
+    <field indexed="true" multiValued="false" name="global_collapse" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="global_sortkey" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="global_timestamp" required="false" stored="true" type="date"/>
+    <field indexed="true" multiValued="true" name="global_permission" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="func_title" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="func_mnemonic" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="func_tail" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="func_runstring" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="func_category" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="func_description" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="func_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="func_hlkwKeywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="func_strongKeywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="func_blurb" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="func_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="true" name="func_TextSynonym" required="false" stored="false" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="func_description_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="true" name="func_adskSynonym" required="false" stored="false" type="adskLowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="helppage_documentId" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="helppage_helppageId" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="helppage_parentId" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="helppage_runstring" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="helppage_maplevel" stored="true" type="double"/>
+    <field indexed="true" multiValued="false" name="helppage_title" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="helppage_functitle" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="helppage_function" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="helppage_breadcrumb" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="helppage_yellowKey" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="true" name="helppage_bodytext" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="helppage_fullbodytext" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="helppage_TextPartial" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="true" name="helppage_TextSynonym" stored="false" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="true" name="helppage_adskSynonym" required="false" stored="false" type="adskLowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="doc_id" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="doc_title" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="doc_description" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="doc_pages" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="doc_author" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="doc_authorUuid" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="doc_updateTime" required="false" stored="true" type="date"/>
+    <field indexed="true" multiValued="true" name="doc_langFilter" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="true" name="doc_fileFilter" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="doc_fileType" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="doc_parentCategory" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="doc_category" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="doc_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="doc_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="true" name="doc_TextSynonym" required="false" stored="false" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="doc_title_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="comp_bbid" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="comp_companyName" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="comp_alias" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="comp_description" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="comp_formerNames" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="true" name="comp_currentNames" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="comp_tradingStatusId" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="comp_tradingStatus" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="comp_country" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="comp_region" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="comp_ticker" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="comp_industry" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="comp_industryCode" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="true" name="comp_strongKeywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="comp_weakKeywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="comp_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="comp_companyName_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="comp_ticker_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="faq_id" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="faq_scsPageId" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="faq_title" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="faq_answer" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="faq_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="faq_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="faq_title_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="true" name="faq_adskSynonym" required="false" stored="false" type="adskLowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="def_id" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="def_scsPageId" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="def_pageUrl" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="def_source" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="def_term" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="def_text" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="def_acronym" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="def_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="def_strongKeywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="def_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="def_term_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ppl_id" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ppl_uuid" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="ppl_photo_id" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="ppl_title" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ppl_description" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_career_country" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_career_region" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="ppl_comp_scale" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="true" name="ppl_education" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_awards" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_career_orgs" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="ppl_present_primary_org" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="true" name="ppl_present_primary_titles" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="ppl_last_name" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ppl_first_name" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ppl_nick_name" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_suffix" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_initials_names" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="ppl_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="ppl_wikiKeywords" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ppl_normNewsScore" required="false" stored="true" type="double"/>
+    <field indexed="true" multiValued="true" name="ppl_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="ppl_last_name_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ppl_present_primary_org_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="cs_suid" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="cs_headline" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="cs_subtitle" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="cs_body" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="cs_blurb" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="cs_author" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="cs_language" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="cs_timeOfArrival" required="false" stored="true" type="date"/>
+    <field indexed="true" multiValued="false" name="cs_timeOfUpdate" required="false" stored="true" type="date"/>
+    <field indexed="true" multiValued="false" name="cs_wireId" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="wire_title" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="wire_description" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="wire_section" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="wire_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="wire_person_name" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="wire_person_org" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="true" name="wire_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="wire_title_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="wire_description_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="clcrt_name" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="clcrt_description" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="clcrt_apiname" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="clcrt_filters" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="clcrt_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="clcrt_askb_alias" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="clcrt_runstring" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="clcrt_crmt_hits" required="false" stored="true" type="double"/>
+    <field indexed="true" multiValued="true" name="clcrt_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="clcrt_name_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="clcrt_description_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="clcrt_apiname_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="true" name="clcrt_adskSynonym" required="false" stored="false" type="adskLowStopSynStemText"/>
+    <field indexed="true" multiValued="false" name="xltp_id" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="xltp_name" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="xltp_description" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="xltp_title" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="true" name="xltp_markets" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="xltp_players" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="true" name="xltp_modelTypes" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="true" name="xltp_keywords" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="xltp_runstring" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="true" name="xltp_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="xltp_title_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="muni_bbid" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="muni_cusip" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="muni_ticker" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="muni_state" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="muni_title" required="false" stored="true" type="lowStopSynStemText"/>
+    <field indexed="true" multiValued="true" name="muni_TextPartial" required="false" stored="false" type="lowStopGramText"/>
+    <field indexed="true" multiValued="false" name="muni_title_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="mtge_bbid" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="mtge_ticker" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="mtge_companyName" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="mtge_description" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="mtge_companyName_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ctrb_tail" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ctrb_description" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="ctrb_ticker" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ctrb_firmname" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="ctrb_firmnum" required="false" stored="true" type="int"/>
+    <field indexed="true" multiValued="false" name="ctrb_country" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ctrb_taxonomy" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ctrb_region" required="false" stored="true" type="lowStopText"/>
+    <field indexed="true" multiValued="false" name="ctrb_currency" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ctrb_source" required="false" stored="true" type="lowString"/>
+    <field indexed="true" multiValued="false" name="ctrb_description_str" required="false" stored="false" type="lowString"/>
+    <field indexed="true" multiValued="false" name="bi_name" required="false" stored="true" type="lowStopStemText"/>
+    <field indexed="true" multiValued="false" name="bi_runstring" required="false" stored="true" type="lowStopText"/>
+    <copyField dest="func_TextPartial" source="func_description"/>
+    <copyField dest="func_TextPartial" source="func_strongKeywords"/>
+    <copyField dest="func_TextPartial" source="func_keywords"/>
+    <copyField dest="func_TextPartial" source="func_runstring"/>
+    <copyField dest="func_TextSynonym" source="func_description"/>
+    <copyField dest="func_TextSynonym" source="func_runstring"/>
+    <copyField dest="func_TextSynonym" source="func_strongKeywords"/>
+    <copyField dest="func_adskSynonym" source="func_description"/>
+    <copyField dest="func_adskSynonym" source="func_runstring"/>
+    <copyField dest="func_adskSynonym" source="func_strongKeywords"/>
+    <copyField dest="func_adskSynonym" source="func_keywords"/>
+    <copyField dest="func_adskSynonym" source="func_hlkwKeywords"/>
+    <copyField dest="func_adskSynonym" source="func_blurb"/>
+    <copyField dest="func_description_str" source="func_description"/>
+    <copyField dest="helppage_TextPartial" source="helppage_bodytext"/>
+    <copyField dest="helppage_TextPartial" source="helppage_title"/>
+    <copyField dest="helppage_TextPartial" source="helppage_breadcrumb"/>
+    <copyField dest="helppage_TextSynonym" source="helppage_bodytext"/>
+    <copyField dest="helppage_TextSynonym" source="helppage_title"/>
+    <copyField dest="helppage_TextSynonym" source="helppage_breadcrumb"/>
+    <copyField dest="helppage_adskSynonym" source="helppage_bodytext"/>
+    <copyField dest="helppage_adskSynonym" source="helppage_title"/>
+    <copyField dest="helppage_adskSynonym" source="helppage_breadcrumb"/>
+    <copyField dest="helppage_adskSynonym" source="helppage_functitle"/>
+    <copyField dest="doc_title_str" source="doc_title"/>
+    <copyField dest="doc_TextPartial" source="doc_description"/>
+    <copyField dest="doc_TextPartial" source="doc_title"/>
+    <copyField dest="doc_TextPartial" source="doc_parentCategory"/>
+    <copyField dest="doc_TextPartial" source="doc_category"/>
+    <copyField dest="doc_TextSynonym" source="doc_title"/>
+    <copyField dest="doc_TextSynonym" source="doc_description"/>
+    <copyField dest="doc_TextSynonym" source="doc_parentCategory"/>
+    <copyField dest="doc_TextSynonym" source="doc_category"/>
+    <copyField dest="def_term_str" source="def_term"/>
+    <copyField dest="def_TextPartial" source="def_term"/>
+    <copyField dest="def_TextPartial" source="def_keywords"/>
+    <copyField dest="faq_title_str" source="faq_title"/>
+    <copyField dest="faq_TextPartial" source="faq_title"/>
+    <copyField dest="faq_TextPartial" source="faq_keywords"/>
+    <copyField dest="faq_adskSynonym" source="faq_title"/>
+    <copyField dest="faq_adskSynonym" source="faq_answer"/>
+    <copyField dest="faq_adskSynonym" source="faq_keywords"/>
+    <copyField dest="comp_companyName_str" source="comp_companyName"/>
+    <copyField dest="comp_ticker_str" source="comp_ticker"/>
+    <copyField dest="comp_TextPartial" source="comp_companyName"/>
+    <copyField dest="comp_TextPartial" source="comp_alias"/>
+    <copyField dest="comp_TextPartial" source="comp_strongKeywords"/>
+    <copyField dest="comp_TextPartial" source="comp_industry"/>
+    <copyField dest="xltp_title_str" source="xltp_title"/>
+    <copyField dest="xltp_TextPartial" source="xltp_title"/>
+    <copyField dest="clcrt_name_str" source="clcrt_name"/>
+    <copyField dest="clcrt_apiname_str" source="clcrt_apiname"/>
+    <copyField dest="clcrt_description_str" source="clcrt_description"/>
+    <copyField dest="clcrt_TextPartial" source="clcrt_description"/>
+    <copyField dest="clcrt_adskSynonym" source="clcrt_description"/>
+    <copyField dest="clcrt_adskSynonym" source="clcrt_keywords"/>
+    <copyField dest="clcrt_adskSynonym" source="clcrt_askb_alias"/>
+    <copyField dest="muni_title_str" source="muni_title"/>
+    <copyField dest="muni_TextPartial" source="muni_title"/>
+    <copyField dest="mtge_companyName_str" source="mtge_companyName"/>
+    <copyField dest="ctrb_description_str" source="ctrb_description"/>
+    <copyField dest="wire_description_str" source="wire_description"/>
+    <copyField dest="wire_title_str" source="wire_title"/>
+    <copyField dest="wire_TextPartial" source="wire_description"/>
+    <copyField dest="ppl_last_name_str" source="ppl_last_name"/>
+    <copyField dest="ppl_present_primary_org_str" source="ppl_present_primary_org"/>
+    <copyField dest="ppl_TextPartial" source="ppl_title"/>
+  </fields>
+  <types>
+    <fieldType class="solr.TrieIntField" name="int" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType class="solr.TrieLongField" name="long" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType class="solr.TrieFloatField" name="float" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType class="solr.TrieDoubleField" name="double" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType class="solr.TrieDateField" name="date" omitNorms="true" positionIncrementGap="0" precisionStep="0"/>
+    <fieldType class="solr.BoolField" name="boolean" omitNorms="true" sortMissingLast="true"/>
+    <fieldType class="solr.StrField" name="string" omitNorms="true" sortMissingLast="true"/>
+    <fieldType class="solr.ExternalFileField" defVal="0.0" keyField="id" name="entryFile" valType="pfloat"/>
+    <fieldType class="solr.TextField" name="lowString" omitNorms="true" omitTermFreqAndPositions="true" sortMissingLast="true">
+      <analyzer>
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowStopString" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" enablePositionIncrements="true" ignoreCase="true" words="stopwords.txt"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowText" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowStopText" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.StopFilterFactory" enablePositionIncrements="true" ignoreCase="true" words="stopwords.txt"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowStopStemText" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.StopFilterFactory" enablePositionIncrements="true" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.StemmerOverrideFilterFactory" dictionary="stemdict.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowStopSynStemText" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.SynonymFilterFactory" expand="true" ignoreCase="true" synonyms="indexSynonyms.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.StopFilterFactory" enablePositionIncrements="true" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.StemmerOverrideFilterFactory" dictionary="stemdict.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowStopGramText" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.EdgeNGramFilterFactory" maxGramSize="15" minGramSize="3" side="front"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.StopFilterFactory" enablePositionIncrements="true" ignoreCase="true" words="stopwords.txt"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="lowSynStemText" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.SynonymFilterFactory" expand="true" ignoreCase="true" synonyms="indexSynonyms.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.StemmerOverrideFilterFactory" dictionary="stemdict.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="true" class="solr.TextField" name="adskLowStopSynStemText" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.SynonymFilterFactory" expand="true" ignoreCase="true" synonyms="adskSynonyms.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.StemmerOverrideFilterFactory" dictionary="stemdict.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter catenateAll="1" catenateNumbers="1" catenateWords="1" class="solr.WordDelimiterFilterFactory" preserveOriginal="1" splitOnCaseChange="1" splitOnNumerics="0" types="wdfftypes.txt"/>
+        <filter class="solr.StopFilterFactory" enablePositionIncrements="true" ignoreCase="true" words="stopwords.txt"/>
+        <filter class="solr.KeywordRepeatFilterFactory"/>
+        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
+        <filter class="solr.EnglishMinimalStemFilterFactory"/>
+        <filter class="solr.KStemFilterFactory"/>
+        <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType autoGeneratePhraseQueries="false" class="solr.TextField" name="text_ja" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.JapaneseTokenizerFactory" mode="search"/>
+        <filter class="solr.JapaneseBaseFormFilterFactory"/>
+        <filter class="solr.CJKWidthFilterFactory"/>
+        <filter class="solr.JapaneseKatakanaStemFilterFactory" minimumLength="4"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_fr" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.FrenchLightStemFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_de" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.GermanNormalizationFilterFactory"/>
+        <filter class="solr.GermanLightStemFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_es" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.SpanishLightStemFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_pt" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.PortugueseLightStemFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_it" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.ItalianLightStemFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_zt" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.CJKTokenizerFactory"/>
+        <filter class="solr.CJKWidthFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.CJKBigramFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_ko" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.CJKTokenizerFactory"/>
+        <filter class="solr.CJKWidthFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.CJKBigramFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_zh" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.CJKTokenizerFactory"/>
+        <filter class="solr.CJKWidthFilterFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.CJKBigramFilterFactory"/>
+      </analyzer>
+    </fieldType>
+    <fieldType class="solr.TextField" name="text_ru" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.StandardTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.SnowballPorterFilterFactory" language="Russian"/>
+      </analyzer>
+    </fieldType>
+  </types>
+</schema>

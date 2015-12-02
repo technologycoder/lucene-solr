@@ -1,0 +1,9 @@
+[
+    {
+        "type": "ltr.feature.impl.FieldValueFeature", 
+        "params": {
+            "field": "popularity"
+        }, 
+        "name": "popularity"
+    } 
+]

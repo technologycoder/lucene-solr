@@ -1,0 +1,51 @@
+[
+    {
+        "name": "constant1",
+        "type": "ltr.feature.impl.ValueFeature",
+     "store":"test",
+        "params": {
+            "value": 1
+        }
+    },
+    {
+        "name": "constant2",
+        "type": "ltr.feature.impl.ValueFeature",
+     "store":"test",
+        "params": {
+            "value": 2
+        }
+    },
+    {
+        "name": "constant3",
+        "type": "ltr.feature.impl.ValueFeature",
+     "store":"test",
+        "params": {
+            "value": 3
+        }
+    },
+    {
+        "name": "constant4",
+        "type": "ltr.feature.impl.ValueFeature",
+     "store":"test",
+        "params": {
+            "value": 4
+        }
+    },
+    {
+        "name": "constant5",
+        "type": "ltr.feature.impl.ValueFeature",
+     "store":"test",
+        "params": {
+            "value": 5
+        }
+    },
+     {
+        "name": "pop",
+        "type": "ltr.feature.impl.FieldValueFeature",
+     "store":"test",
+        "params": {
+            "field": "popularity"
+        }
+    }
+    
+]

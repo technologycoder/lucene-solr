@@ -1,0 +1,9 @@
+[
+    {
+        "name": "matchedTitle",
+        "type": "ltr.feature.impl.SolrFeature",
+        "params": {
+            "q": "{!terms f=title}${user_query}"
+        }
+    }
+]

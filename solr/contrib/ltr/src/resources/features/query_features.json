@@ -1,0 +1,14 @@
+[
+    {
+        "type": "ltr.feature.impl.QueryTypeFeature", 
+        "params": {
+            "querytype": "TOPIC"
+        }, 
+        "name": "query_has_topic"
+    },
+    {
+        "type": "ltr.feature.impl.OriginalScoreFeature", 
+        "name": "original_score"
+    }
+    
+]

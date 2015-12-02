@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+
+<config>
+
+  <luceneMatchVersion>${tests.luceneMatchVersion:LUCENE_CURRENT}</luceneMatchVersion>
+  <dataDir>${solr.data.dir:}</dataDir>
+  <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
+
+  <xi:include href="./solrconfig-news-ltr.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />  
+
+  <requestHandler name="/update" class="solr.UpdateRequestHandler" /> 
+
+  <!-- Query request handler managing models and features -->
+  <requestHandler name="/query" class="solr.SearchHandler">
+    <lst name="defaults">
+      <str name="echoParams">explicit</str>
+      <str name="wt">json</str>
+      <str name="indent">true</str>
+      <str name="df">id</str>
+    </lst>
+    
+  </requestHandler>
+
+</config>

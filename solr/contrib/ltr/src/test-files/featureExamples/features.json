@@ -1,0 +1,6 @@
+[
+
+{ "name": "comp_industryTermScorer", "type": "ltr.feature.impl.SolrFeature", "params": {"q": "${user_query}","df": "comp_industry"}},
+{ "name": "comp_strongKeywordsTermScorer", "type": "ltr.feature.impl.SolrFeature", "params": {"q": "${user_query}","df": "comp_strongKeywords"}}
+
+]

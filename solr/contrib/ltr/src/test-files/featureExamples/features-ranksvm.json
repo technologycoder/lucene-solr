@@ -1,0 +1,51 @@
+[
+  {
+     "name": "title",
+     "type": "ltr.feature.impl.ValueFeature",
+     "params": {
+         "value": 1
+     }
+  },
+  {
+    "name": "description",
+    "type": "ltr.feature.impl.ValueFeature",
+    "params": {
+       "value": 2
+    }
+  },
+  {
+    "name": "keywords",
+    "type": "ltr.feature.impl.ValueFeature",
+    "params": {
+        "value": 2
+    }
+  },
+ {
+     "name": "popularity",
+     "type": "ltr.feature.impl.ValueFeature",
+     "params": {
+         "value": 3
+     }
+ },
+ {
+     "name": "text",
+     "type": "ltr.feature.impl.ValueFeature",
+     "params": {
+         "value": 4
+     }
+ },
+ {
+   "name": "queryIntentPerson",
+   "type": "ltr.feature.impl.ValueFeature",
+   "params": {
+       "value": 5
+   }
+ },
+ {
+   "name": "queryIntentCompany",
+   "type": "ltr.feature.impl.ValueFeature",
+   "params": {
+       "value": 5
+   }
+ }
+]
