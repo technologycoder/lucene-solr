@@ -761,8 +761,8 @@ public class SnapPuller {
     }
     long bytesDownloaded = 0;
     for (Map<String,Object> file : filesToDownload) {
-      if (!slowFileExists(indexDir, (String) file.get(NAME))
-          || downloadCompleteIndex) {
+      if (downloadCompleteIndex
+          || fileIsSpecialOrMissing(indexDir, (String) file.get(NAME))) {
         dirFileFetcher = new DirectoryFileFetcher(tmpIndexDir, file,
             (String) file.get(NAME), false, latestGeneration);
         currentFile = file;
@@ -789,6 +789,13 @@ public class SnapPuller {
       return false;
     }
   }  
+
+  private static boolean fileIsSpecialOrMissing(Directory dir, String fileName) throws IOException {
+    return
+        fileName.endsWith(".si") ||
+        fileName.endsWith(".del") ||
+        !slowFileExists(dir, fileName);
+  }
 
   /**
    * All the files which are common between master and slave must have same size else we assume they are
@@ -819,7 +826,7 @@ public class SnapPuller {
     LOG.debug("Moving file: {}", fname);
     boolean success = false;
     try {
-      if (slowFileExists(indexDir, fname)) {
+      if (!fileIsSpecialOrMissing(indexDir, fname)) {
         LOG.info("Skipping move file - it already exists:" + fname);
         return true;
       }
