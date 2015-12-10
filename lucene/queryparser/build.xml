@@ -36,6 +36,7 @@
 
   <path id="test.classpath">
     <pathelement path="${analyzers-common.jar}"/>
+    <pathelement path="${analyzers-icu.jar}"/>
     <pathelement path="${analyzers-kuromoji.jar}"/>
     <path refid="test.base.classpath"/>
   </path>
