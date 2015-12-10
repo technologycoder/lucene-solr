@@ -194,7 +194,7 @@ public class WildcardNearQueryParser {
     // Since this is original (pre-analyzer) unanalyzedText, it has not been lowercased.
     // Assume that we want it in lowercase. Future: pass information from the
     // analyzer indicating whether to lowercase original unanalyzedText or not.
-    return unanalyzedText.substring(begin, end).toLowerCase(Locale.getDefault());
+      return unanalyzedText.substring(begin, end).toLowerCase(Locale.getDefault());
   }
   
   private boolean isAllWhitespace(BytesRef bytes) {
@@ -241,7 +241,7 @@ public class WildcardNearQueryParser {
       // The analyzer will split our phrase into pieces and hide
       // wildcards.  We will be gluing some of these pieces back
       // together and need to do some bookkeeping.
-      int mergeStartOffset = -1;
+      String reconstructed = "";
       int lastOffset = 0;
       
       // The splitting into pieces and re-glueing things together will
@@ -262,23 +262,20 @@ public class WildcardNearQueryParser {
         // both.
         for (int j = lastOffset; j < offsetAtt.startOffset(); j++) {
           if (wildcards.get(j) == WildcardType.NOT_WILDCARD) {
-            if (mergeStartOffset > -1) {
-              // Not a wildcard. If in the process of merging, then merge ends now.
+            if (!reconstructed.isEmpty()) {
+              // Not a wildcard. In the process of merging, so merge ends now.
               lastOffset = j;
               currentPosition += lastPositionIncrement;
               lastPositionIncrement = 1;
-              FieldedQuery wq = BuildWildcardQuery(sourceSubstring(unanalyzedText, mergeStartOffset, lastOffset));
+              FieldedQuery wq = BuildWildcardQuery(reconstructed);
               if (wq != null) {
                 queries.add(wq);
                 positions.add(currentPosition);
               }
-              mergeStartOffset = -1;
+              reconstructed = "";
             }
           } else {
-            if (mergeStartOffset == -1) {
-              // A wildcard. If not in the process of merging, then start a merge now.
-              mergeStartOffset = j;
-            }
+            reconstructed += sourceSubstring(unanalyzedText, j, j+1);
             lastOffset = j + 1;
           }
         }
@@ -289,37 +286,39 @@ public class WildcardNearQueryParser {
           // On an all-whitespace token, this breaks concatentation and drops the token.
           // In the future, we will not have all-whitespace tokens reaching this code and
           // we could remove it.
-          if (mergeStartOffset > -1) {
+          if (!reconstructed.isEmpty()) {
             // Not a wildcard. If in the process of merging, then merge ends now.
             lastOffset = offsetAtt.startOffset();
             currentPosition += lastPositionIncrement;
             lastPositionIncrement = 1;
-            FieldedQuery wq = BuildWildcardQuery(sourceSubstring(unanalyzedText, mergeStartOffset, lastOffset));
+            FieldedQuery wq = BuildWildcardQuery(reconstructed);
             if (wq != null) {
               queries.add(wq);
               positions.add(currentPosition);
             }
-            mergeStartOffset = -1;
+            reconstructed = "";
           }
-        } else if (lastOffset < wildcards.size() &&
-            wildcards.get(lastOffset) != WildcardType.NOT_WILDCARD) {
+        } else if ((!reconstructed.isEmpty()) ||
+                   (lastOffset < wildcards.size() &&
+                    wildcards.get(lastOffset) != WildcardType.NOT_WILDCARD)) {
           // Current token will need to merge with at least one following
           // wildcard. Don't create the term yet.
-          if (mergeStartOffset == -1) {
-            mergeStartOffset = offsetAtt.startOffset();
+          int unanalyzedLength = (offsetAtt.endOffset() - offsetAtt.startOffset());
+          if (unanalyzedLength > bytes.length) {
+              // reverse the effect of stemming
+              reconstructed += sourceSubstring(unanalyzedText, offsetAtt.startOffset(), offsetAtt.endOffset());
+          } else {
+              reconstructed += bytes.utf8ToString();
           }
-          lastOffset = lastOffset + 1;
         } else {
           // Current token doesn't need to merge with anything before
           // or after it, so create it.
-          if (mergeStartOffset <= -1) {
-            currentPosition += lastPositionIncrement;
-            lastPositionIncrement = 1;
-            FieldedQuery q = BuildWildcardQuery(bytes.utf8ToString());
-            if (q != null) {
-              queries.add(q);
-              positions.add(currentPosition);
-            }
+          currentPosition += lastPositionIncrement;
+          lastPositionIncrement = 1;
+          FieldedQuery q = BuildWildcardQuery(bytes.utf8ToString());
+          if (q != null) {
+            queries.add(q);
+            positions.add(currentPosition);
           }
         }
       }
@@ -327,36 +326,35 @@ public class WildcardNearQueryParser {
       // We are done with the non-wildcard tokens. But, there may still be wildcards.
       for (int j = lastOffset; j < wildcards.size(); j++) {
         if (wildcards.get(j) == WildcardType.NOT_WILDCARD) {
-          if (mergeStartOffset > -1) {
+          if (!reconstructed.isEmpty()) {
+            // End of current merge
             currentPosition += lastPositionIncrement;
             lastPositionIncrement = 1;
             lastOffset = j;
-            FieldedQuery wq = BuildWildcardQuery(sourceSubstring(unanalyzedText, mergeStartOffset, lastOffset));
+            FieldedQuery wq = BuildWildcardQuery(reconstructed);
             if (wq != null) {
               queries.add(wq);
               positions.add(currentPosition);
             }
-            mergeStartOffset = -1;
+            reconstructed = "";
           }
         } else {
-          if (mergeStartOffset == -1) {
-              mergeStartOffset = j;
-          }
+          reconstructed += sourceSubstring(unanalyzedText, j, j+1);
           lastOffset = j + 1;
         }
       }
 
       // We are done with all the tokens. Create a final term if necessary.
-      if (mergeStartOffset > -1) {
+      if (!reconstructed.isEmpty()) {
         currentPosition += lastPositionIncrement;
         lastPositionIncrement = 1;
         lastOffset = wildcards.size();
-        FieldedQuery wq = BuildWildcardQuery(sourceSubstring(unanalyzedText, mergeStartOffset, lastOffset));
+        FieldedQuery wq = BuildWildcardQuery(reconstructed);
         if (wq != null) {
           queries.add(wq);
           positions.add(currentPosition);
         }
-        mergeStartOffset = -1;
+        reconstructed = "";
       }
 
       source.end();

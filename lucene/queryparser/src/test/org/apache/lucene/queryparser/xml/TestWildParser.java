@@ -22,12 +22,13 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.cjk.CJKWidthFilter;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
+import org.apache.lucene.analysis.en.PorterStemFilter;
+import org.apache.lucene.analysis.icu.ICUFoldingFilter;
 import org.apache.lucene.analysis.ja.JapaneseBaseFormFilter;
 import org.apache.lucene.analysis.ja.JapaneseKatakanaStemFilter;
 import org.apache.lucene.analysis.ja.JapaneseNumberFilter;
 import org.apache.lucene.analysis.ja.JapaneseTokenizer;
 import org.apache.lucene.analysis.standard.BBFinancialStandardTokenizer;
-import org.apache.lucene.analysis.synonym.SynonymFilter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.builders.WildcardNearQueryParser;
 import org.apache.lucene.search.FieldedQuery;
@@ -54,7 +55,24 @@ public class TestWildParser extends LuceneTestCase {
     @Override
     protected TokenStreamComponents createComponents(final String fieldName, final Reader reader) {
       final BBFinancialStandardTokenizer src = new BBFinancialStandardTokenizer(TEST_VERSION_CURRENT, reader);
-      TokenStream tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
+      TokenStream tok = new ICUFoldingFilter(src);
+      //   tok = new WordDelimiterFilter(null, src, null, 0, null);
+      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, tok);
+      return new TokenStreamComponents(src, tok);
+    }
+  }
+
+  private final class BBFinancialEnglishStemAnalyzer extends Analyzer {
+    // Let's make sure that we do the right thing if our analyzer does stemming.
+    public BBFinancialEnglishStemAnalyzer() {
+    }
+
+    @Override
+    protected TokenStreamComponents createComponents(final String fieldName, final Reader reader) {
+      final BBFinancialStandardTokenizer src = new BBFinancialStandardTokenizer(TEST_VERSION_CURRENT, reader);
+      TokenStream tok = new ICUFoldingFilter(src);
+      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, tok);
+      tok = new PorterStemFilter(tok);
       return new TokenStreamComponents(src, tok);
     }
   }
@@ -72,7 +90,7 @@ public class TestWildParser extends LuceneTestCase {
       tok = new JapaneseBaseFormFilter(src);
       tok = new CJKWidthFilter(src);
       tok = new JapaneseKatakanaStemFilter(src);
-//      tok = new SynonymFilter(src, null, true);
+      //      tok = new SynonymFilter(src, null, true);
       tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
       return new TokenStreamComponents(src, tok);
     }
@@ -91,7 +109,7 @@ public class TestWildParser extends LuceneTestCase {
       tok = new JapaneseBaseFormFilter(src);
       tok = new CJKWidthFilter(src);
       tok = new JapaneseKatakanaStemFilter(src);
-//      tok = new SynonymFilter(src, null, true);
+      //      tok = new SynonymFilter(src, null, true);
       tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
       return new TokenStreamComponents(src, tok);
     }
@@ -180,6 +198,13 @@ public class TestWildParser extends LuceneTestCase {
     });
     checkQueryEqual(p, "London ? Airport", q, ignoreWC);
 
+    q = new OrderedNearQuery(0, new FieldedQuery[] {
+        fixRewrite(new WildcardQuery(new Term(field, "??"))),
+        new TermQuery(new Term(field, "london")),
+        fixRewrite(new WildcardQuery(new Term(field, "??")))
+    });
+    checkQueryEqual(p, "?? London ??", q, ignoreWC);
+
     checkQuery(p, "London City * Airport", "OrderedNear/1:Filtered(+OrderedNear/0:Filtered(+headline:london +headline:city) +headline:airport)");
 
     q = new OrderedNearQuery(1, new FieldedQuery[] {
@@ -232,6 +257,12 @@ public class TestWildParser extends LuceneTestCase {
     checkQuery(p, "vietnam-singapore industrial* park*", "OrderedNear/0:Filtered(+headline:vietnam +headline:singapore +headline:industrial* +headline:park*)");
     checkQuery(p, "prorated* or pro-rated", "OrderedNear/0:Filtered(+headline:prorated* +headline:or +headline:pro +headline:rated)");
 
+    q = new TermQuery(new Term(field, "opiniao"));
+    checkQueryEqual(p, "opinião", q, ignoreWC);
+    q = fixRewrite(new PrefixQuery(new Term(field, "publico")));
+    checkQueryEqual(p, "público*", q, ignoreWC);
+    checkQuery(p, "público* opinião", "OrderedNear/0:Filtered(+headline:publico* +headline:opiniao)");
+
     // Made up:
     checkQuery(p, "*or-me", "OrderedNear/0:Filtered(+headline:*or +headline:me)");
     checkQuery(p, "or*-me", "OrderedNear/0:Filtered(+headline:or* +headline:me)");
@@ -241,7 +272,23 @@ public class TestWildParser extends LuceneTestCase {
     checkQuery(p, "throw-in*", "OrderedNear/0:Filtered(+headline:throw +headline:in*)");
   }
 
-  public void testWildcardNearQueryParserKeyword() throws Exception {
+  public void testWildcardNearQueryParserStemming() throws Exception {
+    String field = "body_en";
+    boolean ignoreWC = false;
+    WildcardNearQueryParser p = new WildcardNearQueryParser(field, new BBFinancialEnglishStemAnalyzer());
+
+    checkQueryEqual(p, "*", new MatchAllDocsQuery(), ignoreWC);
+    checkQueryEqual(p, "?", fixRewrite(new WildcardQuery(new Term(field, "?"))), ignoreWC);
+    
+    checkQuery(p, "cats", "body_en:cat");
+    checkQuery(p, "cats*", "body_en:cats*");
+    checkQuery(p, "*cats", "body_en:*cats");
+    
+    checkQuery(p, "cats-eye", "OrderedNear/0:Filtered(+body_en:cat +body_en:ey)");
+    checkQuery(p, "cats*eye", "body_en:cats*eye");
+  }
+    
+    public void testWildcardNearQueryParserKeyword() throws Exception {
     String field = "agent_name";
     boolean ignoreWC = false;
     WildcardNearQueryParser p = new WildcardNearQueryParser(field, new KeywordAnalyzer());
@@ -257,7 +304,10 @@ public class TestWildParser extends LuceneTestCase {
 
     checkQueryEqual(p, "Lon*", fixRewrite(new PrefixQuery(new Term(field, "Lon"))), ignoreWC);
 
-    checkQueryEqual(p, "ngtr*", fixRewrite(new PrefixQuery(new Term(field, "ngtr"))), ignoreWC);
+    checkQueryEqual(p, "opinião", new TermQuery(new Term(field, "opinião")), ignoreWC);
+    checkQueryEqual(p, "público*", fixRewrite(new PrefixQuery(new Term(field, "público"))), ignoreWC);
+    
+    checkQueryEqual(p, "ngtr*", fixRewrite(new PrefixQuery(new Term(field, "ngtr"))), ignoreWC);    
     checkQueryEqual(p, "bbotf*", fixRewrite(new PrefixQuery(new Term(field, "bbotf"))), ignoreWC);
 }
 
@@ -276,6 +326,9 @@ public class TestWildParser extends LuceneTestCase {
     checkQueryEqual(p, "London Cit* Airport", new TermQuery(new Term(field, "London Cit* Airport")), ignoreWC);
 
     checkQueryEqual(p, "Lon*", new TermQuery(new Term(field, "Lon*")), ignoreWC);
+
+    checkQueryEqual(p, "opinião", new TermQuery(new Term(field, "opinião")), ignoreWC);
+    checkQueryEqual(p, "público*", new TermQuery(new Term(field, "público*")), ignoreWC);
 
     checkQueryEqual(p, "ngtr*", new TermQuery(new Term(field, "ngtr*")), ignoreWC);
     checkQueryEqual(p, "bbotf*", new TermQuery(new Term(field, "bbotf*")), ignoreWC);
