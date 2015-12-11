@@ -155,7 +155,7 @@ public class RecoveryStrategy extends Thread implements ClosableThread {
       throw new SolrException(ErrorCode.SERVICE_UNAVAILABLE,
           "Skipping recovery, no " + REPLICATION_HANDLER + " handler found");
     }
-    
+
     ModifiableSolrParams solrParams = new ModifiableSolrParams();
     solrParams.set(ReplicationHandler.MASTER_URL, leaderUrl);
     

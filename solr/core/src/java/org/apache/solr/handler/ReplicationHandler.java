@@ -984,8 +984,18 @@ public class ReplicationHandler extends RequestHandlerBase implements SolrCoreAw
       LOG.info("Commits will be reserved for  " + reserveCommitDuration);
       isMaster = true;
     }
+
+    NamedList cloud = (NamedList) initArgs.get("cloud");
+    boolean enableCloud = isEnabled( cloud );
+    if (enableCloud) {
+      String reserve = (String) cloud.get(RESERVE);
+      if (reserve != null && !reserve.trim().equals("")) {
+        reserveCommitDuration = SnapPuller.readInterval(reserve);
+        LOG.info("Commits (cloud) will be reserved for  " + reserveCommitDuration);
+      }
+    }
   }
-  
+
   // check master or slave is enabled
   private boolean isEnabled( NamedList params ){
     if( params == null ) return false;
