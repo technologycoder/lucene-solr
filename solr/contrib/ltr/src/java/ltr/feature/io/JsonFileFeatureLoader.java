@@ -98,6 +98,7 @@ public class JsonFileFeatureLoader {
       f.init(name, params, id);
       return f;
     } catch (Exception e) {
+      logger.error("{}",e.getMessage());
       throw new FeatureException(name, e);
     }
   }

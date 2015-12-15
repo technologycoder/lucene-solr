@@ -5,6 +5,7 @@ import java.io.IOException;
 import ltr.feature.norm.Normalizer;
 import ltr.feature.norm.impl.IdentityNormalizer;
 import ltr.util.FeatureException;
+import ltr.util.LtrException;
 import ltr.util.NamedParams;
 
 import org.apache.lucene.search.IndexSearcher;

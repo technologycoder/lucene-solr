@@ -1,0 +1,9 @@
+[
+    {
+        "type": "ltr.feature.impl.FieldCharLengthFeature", 
+        "name": "content_char_length",
+        "params": {
+          "field": "content"
+        }
+    }
+]

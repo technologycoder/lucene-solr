@@ -1,0 +1,14 @@
+[
+    {
+        "type": "ltr.feature.impl.CompanionCodeFeature", 
+        "params": {
+            "code_values" : {
+                "feature-${q}-test": 111.0,
+                "blaTOP1": 5.0
+             },
+            "field":"content"
+        }, 
+        "name": "companion"
+    }
+]
+    

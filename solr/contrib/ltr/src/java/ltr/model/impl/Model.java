@@ -157,8 +157,9 @@ public abstract class Model extends Query {
     // since the feature store is a linkedhashmap order is preserved
     for (Feature f : features) {
       arr[i] = f.createWeight(searcher);
-      arr[i].setOriginalQuery(originalQuery);
       arr[i].setRequest(req);
+      arr[i].setOriginalQuery(originalQuery);
+
       ++i;
     }
     return arr;

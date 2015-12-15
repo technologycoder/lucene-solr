@@ -1,0 +1,10 @@
+[
+    {
+        "type": "ltr.feature.impl.FieldLengthFeature", 
+        "name": "content_length",
+        "params": {
+          "field": "content"
+        }
+        
+    }
+]

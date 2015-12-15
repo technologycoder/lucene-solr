@@ -1,0 +1,14 @@
+[
+    {
+        "type": "ltr.feature.impl.CompanionCodeFeature", 
+        "params": {
+            "code_values" : {
+                "NONMATCH": 1.0
+             },
+            "field":"content",
+            "default_value": 42.0
+        }, 
+        "name": "companion"
+    }
+]
+    

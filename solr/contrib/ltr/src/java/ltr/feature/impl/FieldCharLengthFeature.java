@@ -93,6 +93,11 @@ public class FieldCharLengthFeature extends Feature {
       }
 
       @Override
+      public float getDefaultScore() {
+    	  return 0;
+      }
+      
+      @Override
       public String toString() {
         return "FieldCharLengthFeature [name=" + name + " field=" + field + "]";
       }

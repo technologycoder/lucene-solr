@@ -6,7 +6,7 @@
   <dataDir>${solr.data.dir:}</dataDir>
   <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.RAMDirectoryFactory}"/>
 
-  <xi:include href="./solrconfig-news-ltr.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />  
+  <xi:include href="solrconfig-news-ltr.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />  
 
   <requestHandler name="/update" class="solr.UpdateRequestHandler" /> 
 

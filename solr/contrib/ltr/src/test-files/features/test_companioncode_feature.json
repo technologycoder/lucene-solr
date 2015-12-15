@@ -1,0 +1,28 @@
+[
+    {
+        "type": "ltr.feature.impl.CompanionCodeFeature", 
+        "params": {
+            "code_values" : {
+                "${q}TEST": 1.0,
+                "${q}TOP": 2.0,
+                "${q}TOP1": 3.0
+             },
+            "field":"content"
+        }, 
+        "name": "companion"
+    },
+    {
+        "type": "ltr.feature.impl.CompanionCodeFeature", 
+        "params": {
+            "code_values" : {
+                "${q}TEST": 1.0,
+                "feature-${q}-TEST": 42.0,
+                "${q}TOP": 2.0,
+                "${q}TOP1": 3.0
+             },
+            "field":"content"
+        }, 
+        "name": "companion2"
+    } 
+]
+    
