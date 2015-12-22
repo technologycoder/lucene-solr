@@ -18,4 +18,7 @@
 -->
 <ivy-module version="2.0">
     <info organisation="org.apache.lucene" module="queryparser"/>
+    <dependencies>
+      <dependency org="com.ibm.icu" name="icu4j" rev="${/com.ibm.icu/icu4j}" transitive="false"/>
+    </dependencies>
 </ivy-module>

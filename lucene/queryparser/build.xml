@@ -38,6 +38,7 @@
     <pathelement path="${analyzers-common.jar}"/>
     <pathelement path="${analyzers-icu.jar}"/>
     <pathelement path="${analyzers-kuromoji.jar}"/>
+    <fileset dir="lib" includes="icu4j*.jar"/>
     <path refid="test.base.classpath"/>
   </path>
 
