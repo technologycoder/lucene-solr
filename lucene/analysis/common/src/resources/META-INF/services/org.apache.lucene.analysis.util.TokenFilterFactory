@@ -59,6 +59,7 @@ org.apache.lucene.analysis.in.IndicNormalizationFilterFactory
 org.apache.lucene.analysis.it.ItalianLightStemFilterFactory
 org.apache.lucene.analysis.lv.LatvianStemFilterFactory
 org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilterFactory
+org.apache.lucene.analysis.miscellaneous.BBKoreanEnglishSplittingFilterFactory
 org.apache.lucene.analysis.miscellaneous.CapitalizationFilterFactory
 org.apache.lucene.analysis.miscellaneous.CodepointCountFilterFactory
 org.apache.lucene.analysis.miscellaneous.HyphenatedWordsFilterFactory
