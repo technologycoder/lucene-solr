@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ltr.feature.FeatureStore;
 import ltr.feature.ModelMetadata;
 import ltr.feature.norm.Normalizer;
 import ltr.feature.norm.impl.IdentityNormalizer;
@@ -30,14 +31,15 @@ import org.apache.solr.request.SolrQueryRequest;
  *
  */
 public abstract class Model extends Query {
-  // A model will produce a score for each document given a query so 
+  // A model will produce a score for each document given a query so
   // it is considered a scoring function, and extends the lucene Query object.
 
   // contains a description of the model
   protected ModelMetadata meta;
 
   // feature logger to output the features.
-  private FeatureLogger<?> fl = FeatureLogger.getFeatureLogger(FeatureLogger.Format.CSV, 50);  
+  private FeatureLogger<?> fl = FeatureLogger.getFeatureLogger(
+      FeatureLogger.Format.CSV, 50);
 
   // Map of external parameters, such as query intent, that can be used by
   // features
@@ -49,7 +51,7 @@ public abstract class Model extends Query {
   // Original solr request
   protected SolrQueryRequest request;
 
-  public void init(ModelMetadata meta) throws ModelException {
+  public void init(final ModelMetadata meta) throws ModelException {
     this.meta = meta;
   }
 
@@ -57,43 +59,57 @@ public abstract class Model extends Query {
   public abstract Model replicate() throws ModelException;
 
   public ModelMetadata getMetadata() {
-    return meta;
+    return this.meta;
   }
 
-  //public abstract float score(float[] modelFeatureValuesNormalized);
+  public abstract FeatureStore getFeatureStore();
 
-  //public abstract Query getModelQuery();
-
-  public void setFeatureLogger(FeatureLogger<?> fl) {
+  public void setFeatureLogger(final FeatureLogger<?> fl) {
     this.fl = fl;
   }
 
   public FeatureLogger<?> getFeatureLogger() {
     return this.fl;
   }
-  
-  public Collection<Feature> getAllFeatures(){
-    return meta.getAllFeatures();
+
+  public Collection<Feature> getAllFeatures() {
+    return this.meta.getAllFeatures();
   }
 
-  public void setOriginalQuery(Query mainQuery) {
+  public void setOriginalQuery(final Query mainQuery) {
     this.originalQuery = mainQuery;
   }
 
-  /**
-   * @param externalFeatureInfo
-   */
-  public void setExternalFeatureInfo(Map<String,String> externalFeatureInfo) {
+  public void setExternalFeatureInfo(
+      final Map<String,String> externalFeatureInfo) {
     this.efi = externalFeatureInfo;
   }
 
-  public void setRequest(SolrQueryRequest request) {
+  public void setRequest(final SolrQueryRequest request) {
     this.request = request;
   }
 
-  public Explanation explain(AtomicReaderContext context, int doc, float finalScore, List<Explanation> featureExplanations) {
-    Explanation e = new Explanation(finalScore, meta.getName() + " [ " + meta.getType() + " ] model applied to features");
-    for (Explanation featureExplain : featureExplanations) {
+  /**
+   * This method will produce an {@link Explanation} describing how the final
+   * score in the reranking was computed.
+   *
+   * @param context
+   *          the atomic reader use to compute the features for this document
+   * @param doc
+   *          the current document
+   * @param finalScore
+   *          the final score predicted
+   * @param featureExplanations
+   *          a list of explanations, each one describing how a feature was
+   *          computed
+   * @return an object describing how the reranking score for this document was
+   *         computed
+   */
+  public Explanation explain(final AtomicReaderContext context, final int doc,
+      final float finalScore, final List<Explanation> featureExplanations) {
+    final Explanation e = new Explanation(finalScore, this.meta.getName()
+        + " [ " + this.meta.getType() + " ] model applied to features");
+    for (final Explanation featureExplain : featureExplanations) {
       e.addDetail(featureExplain);
     }
     return e;
@@ -104,122 +120,113 @@ public abstract class Model extends Query {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((meta == null) ? 0 : meta.hashCode());
-    result = prime * result + ((originalQuery == null) ? 0 : originalQuery.hashCode());
-    result = prime * result + ((efi == null) ? 0 : originalQuery.hashCode());
-    result = prime * result + this.toString().hashCode();
+    result = (prime * result)
+        + ((this.meta == null) ? 0 : this.meta.hashCode());
+    result = (prime * result)
+        + ((this.originalQuery == null) ? 0 : this.originalQuery.hashCode());
+    result = (prime * result)
+        + ((this.efi == null) ? 0 : this.originalQuery.hashCode());
+    result = (prime * result) + this.toString().hashCode();
     return result;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (!super.equals(obj))
+  public boolean equals(final Object obj) {
+    if (!super.equals(obj)) {
       return false;
-    Model other = (Model) obj;
-    if (meta == null) {
-      if (other.meta != null)
+    }
+    final Model other = (Model) obj;
+    if (this.meta == null) {
+      if (other.meta != null) {
         return false;
-    } else if (!meta.equals(other.meta))
+      }
+    } else if (!this.meta.equals(other.meta)) {
       return false;
-    if (originalQuery == null) {
-      if (other.originalQuery != null)
+    }
+    if (this.originalQuery == null) {
+      if (other.originalQuery != null) {
         return false;
-    } else if (!originalQuery.equals(other.originalQuery))
+      }
+    } else if (!this.originalQuery.equals(other.originalQuery)) {
       return false;
+    }
     return true;
   }
 
   public SolrQueryRequest getRequest() {
-    return request;
+    return this.request;
   }
 
-  /**
-   * @return
-   */
   public List<Feature> getFeatures() {
-    return meta.getFeatures();
+    return this.meta.getFeatures();
   }
-  
+
   @Override
-  public Weight createWeight(IndexSearcher searcher) throws IOException {
-    Collection<Feature> features = this.getAllFeatures();
-    List<Feature> modelFeatures = this.getFeatures();
-    //return new ModelWeight(searcher, getWeights(modelFeatures, searcher), getWeights(features, searcher), this);
-    return makeModelWeight(searcher, getWeights(modelFeatures, searcher), getWeights(features, searcher));
+  public Weight createWeight(final IndexSearcher searcher) throws IOException {
+    final Collection<Feature> features = this.getAllFeatures();
+    final List<Feature> modelFeatures = this.getFeatures();
+    return this.makeModelWeight(searcher,
+        this.getWeights(modelFeatures, searcher),
+        this.getWeights(features, searcher));
   }
-  
-  protected abstract ModelWeight makeModelWeight(IndexSearcher searcher, FeatureWeight[] modelFeatures, FeatureWeight[] allFeatures);
-  
-  protected FeatureWeight[] getWeights(Collection<Feature> features, IndexSearcher searcher) throws IOException {
-    FeatureWeight[] arr = new FeatureWeight[features.size()];
+
+  protected abstract ModelWeight makeModelWeight(IndexSearcher searcher,
+      FeatureWeight[] modelFeatures, FeatureWeight[] allFeatures);
+
+  protected FeatureWeight[] getWeights(final Collection<Feature> features,
+      final IndexSearcher searcher) throws IOException {
+    final FeatureWeight[] arr = new FeatureWeight[features.size()];
+    final SolrQueryRequest req = this.getRequest();
     int i = 0;
-    SolrQueryRequest req = this.getRequest();
     // since the feature store is a linkedhashmap order is preserved
-    for (Feature f : features) {
+    for (final Feature f : features) {
       arr[i] = f.createWeight(searcher);
       arr[i].setRequest(req);
-      arr[i].setOriginalQuery(originalQuery);
+      arr[i].setOriginalQuery(this.originalQuery);
 
       ++i;
     }
     return arr;
   }
-  
+
   @Override
-  public String toString(String field) {
+  public String toString(final String field) {
     return field;
   }
-  
+
+  /**
+   *
+   * ModelWeight will take care to generate a ModelScorer in order to score a
+   * given document (see {@link Weight}). This object will first generate all
+   * the FeatureScorer that we need to compute the features for a document, and
+   * it will then pass the features to the ModelScorer.
+   */
   public abstract class ModelWeight extends Weight {
 
-    IndexSearcher searcher;
     // List of the model's features used for scoring. This is a subset of the
     // features used for logging.
-    FeatureWeight[] modelFeatures; 
-    float[] modelFeatureValuesNormalized;
+    private final FeatureWeight[] modelFeatures;
+    private final float[] modelFeatureValuesNormalized;
 
     // List of all the feature values, used for both scoring and logging
-    FeatureWeight[] allFeatureWeights; 
-    float[] allFeatureValues;
-    String[] allFeatureNames;
-    
-    
-    
+    private final FeatureWeight[] allFeatureWeights;
+    final float[] allFeatureValues;
+    final String[] allFeatureNames;
 
     /**
-     * @return the allFeatureWeights
+     * Builds a ModelWeight Object
+     *
+     * @param searcher
+     *          the index
+     * @param modelFeatures
+     *          the features specified from the model in order to compute the
+     *          reranking score
+     * @param allFeatures
+     *          a superset of modelFeatures, containing all the features
+     *          declared in the feature store, computed in order to log them
      */
-    public FeatureWeight[] getAllFeatureWeights() {
-      return allFeatureWeights;
-    }
-
-    /**
-     * @return the allFeatureValues
-     */
-    public float[] getAllFeatureValues() {
-      return allFeatureValues;
-    }
-    
-    
-
-    /**
-     * @return the modelFeatureValuesNormalized
-     */
-    public float[] getModelFeatureValuesNormalized() {
-      return modelFeatureValuesNormalized;
-    }
-
-    /**
-     * @return the allFeatureNames
-     */
-    public String[] getAllFeatureNames() {
-      return allFeatureNames;
-    }
-
-
-
-    public ModelWeight(IndexSearcher searcher, FeatureWeight[] modelFeatures, FeatureWeight[] allFeatures) {
-      this.searcher = searcher;
+    public ModelWeight(final IndexSearcher searcher,
+        final FeatureWeight[] modelFeatures, final FeatureWeight[] allFeatures) {
       this.allFeatureWeights = allFeatures;
       this.modelFeatures = modelFeatures;
       this.modelFeatureValuesNormalized = new float[modelFeatures.length];
@@ -227,12 +234,37 @@ public abstract class Model extends Query {
       this.allFeatureNames = new String[allFeatures.length];
 
       for (int i = 0; i < allFeatures.length; ++i) {
-        allFeatureNames[i] = allFeatures[i].getName();
+        this.allFeatureNames[i] = allFeatures[i].getName();
       }
     }
-    
-    
-    
+
+    /**
+     * @return the allFeatureWeights
+     */
+    public FeatureWeight[] getAllFeatureWeights() {
+      return this.allFeatureWeights;
+    }
+
+    /**
+     * @return the allFeatureValues
+     */
+    public float[] getAllFeatureValues() {
+      return this.allFeatureValues;
+    }
+
+    /**
+     * @return the modelFeatureValuesNormalized
+     */
+    public float[] getModelFeatureValuesNormalized() {
+      return this.modelFeatureValuesNormalized;
+    }
+
+    /**
+     * @return the allFeatureNames
+     */
+    public String[] getAllFeatureNames() {
+      return this.allFeatureNames;
+    }
 
     /**
      * Goes through all the stored feature values, and calculates the normalized
@@ -240,45 +272,42 @@ public abstract class Model extends Query {
      */
     public void normalize() {
       int pos = 0;
-      for (FeatureWeight feature : modelFeatures) {
-        Normalizer norm = feature.getNorm();
-        modelFeatureValuesNormalized[pos] = norm.normalize(allFeatureValues[feature.getId()]);
+      for (final FeatureWeight feature : this.modelFeatures) {
+        final Normalizer norm = feature.getNorm();
+        this.modelFeatureValuesNormalized[pos] = norm
+            .normalize(this.allFeatureValues[feature.getId()]);
         pos++;
       }
     }
 
     @Override
-    public Explanation explain(AtomicReaderContext context, int doc) throws IOException {
-      FeatureScorer[] featureScorers = new FeatureScorer[allFeatureValues.length];
+    public Explanation explain(final AtomicReaderContext context, final int doc)
+        throws IOException {
+      final FeatureScorer[] featureScorers = new FeatureScorer[this.allFeatureValues.length];
 
-      Explanation[] explanations = new Explanation[allFeatureValues.length];
+      final Explanation[] explanations = new Explanation[this.allFeatureValues.length];
       int index = 0;
-      for (FeatureWeight feature : allFeatureWeights) {
+      for (final FeatureWeight feature : this.allFeatureWeights) {
         featureScorers[index] = feature.scorer(context, null);
         explanations[index++] = feature.explain(context, doc);
       }
 
-      List<Explanation> featureExplanations = new ArrayList<>();
-      for (FeatureWeight f : modelFeatures) {
-        Normalizer n = f.getNorm();
+      final List<Explanation> featureExplanations = new ArrayList<>();
+      for (final FeatureWeight f : this.modelFeatures) {
+        final Normalizer n = f.getNorm();
         Explanation e = explanations[f.id];
-        if (n != IdentityNormalizer.INSTANCE)
+        if (n != IdentityNormalizer.INSTANCE) {
           e = n.explain(e);
+        }
         featureExplanations.add(e);
       }
       // TODO this calls twice the scorers, could be optimized.
-
-      // index = 0;
-      // for (FeatureWeight feature : modelFeatures) {
-      // featureScorers[index++] = feature.scorer(context, null);
-      // }
-      //ModelScorer bs = new ModelScorer(this, featureScorers);
-      ModelScorer bs = makeModelScorer(this, featureScorers);
+      final ModelScorer bs = this.makeModelScorer(this, featureScorers);
       // diego: no need to advance, scorers here will be in the required
       // position
       bs.advance(doc);
 
-      float finalScore = bs.score();
+      final float finalScore = bs.score();
 
       return Model.this.explain(context, doc, finalScore, featureExplanations);
 
@@ -295,24 +324,34 @@ public abstract class Model extends Query {
     }
 
     @Override
-    public void normalize(float norm, float topLevelBoost) {
-      for (FeatureWeight feature : allFeatureWeights) {
+    public void normalize(final float norm, final float topLevelBoost) {
+      for (final FeatureWeight feature : this.allFeatureWeights) {
         feature.normalize(norm, topLevelBoost);
       }
     }
 
     @Override
-    public Scorer scorer(AtomicReaderContext context, PostingFeatures features, Bits acceptDocs) throws IOException {
-      FeatureScorer[] featureScorers = new FeatureScorer[allFeatureWeights.length];
-      for (int i = 0; i < allFeatureWeights.length; i++) {
-        featureScorers[i] = allFeatureWeights[i].scorer(context, acceptDocs);
+    public Scorer scorer(final AtomicReaderContext context,
+        final PostingFeatures features, final Bits acceptDocs)
+            throws IOException {
+      final FeatureScorer[] featureScorers = new FeatureScorer[this.allFeatureWeights.length];
+      for (int i = 0; i < this.allFeatureWeights.length; i++) {
+        featureScorers[i] = this.allFeatureWeights[i].scorer(context,
+            acceptDocs);
       }
-      //return new ModelScorer(this, featureScorers);
-      return makeModelScorer(this, featureScorers);
+      return this.makeModelScorer(this, featureScorers);
     }
-    
-    protected abstract ModelScorer makeModelScorer(ModelWeight weight, FeatureScorer[] featureScorers);
 
+    protected abstract ModelScorer makeModelScorer(ModelWeight weight,
+        FeatureScorer[] featureScorers);
+
+    /**
+     * A model scorer will take a list of {@link FeatureScorer} and it will apply to
+     * a give document in order to generate the its feature values. A concrete learning
+     * to rank scorer will have to extend this and implement the method score() in order
+     * in order to access the feature values and combine them in a final score.
+     * {@link LoggingModel}.
+     */
     public abstract class ModelScorer extends Scorer {
 
       protected final FeatureScorer[] allFeatureScorers;
@@ -320,7 +359,8 @@ public abstract class Model extends Query {
       /** The document number of the current match. */
       protected int doc = -1;
 
-      protected ModelScorer(Weight weight, FeatureScorer featureScorers[]) {
+      protected ModelScorer(final Weight weight,
+          final FeatureScorer featureScorers[]) {
         super(weight);
         this.allFeatureScorers = featureScorers;
       }
@@ -328,29 +368,23 @@ public abstract class Model extends Query {
       @Override
       public long cost() {
         throw new UnsupportedOperationException();
-        /*long sum = 0;
-        for (int i = 0; i < allFeatureScorers.length; i++) {
-          sum += allFeatureScorers[i].cost();
-        }
-        return sum;*/
       }
 
       @Override
       public int docID() {
-        return doc;
+        return this.doc;
       }
 
       @Override
-      public int advance(int target) throws IOException {
-        assert doc != NO_MORE_DOCS;
-        doc = NO_MORE_DOCS;
-        for (FeatureScorer scorer : allFeatureScorers) {
-          doc = Math.min(doc, scorer.advance(target));
+      public int advance(final int target) throws IOException {
+        assert this.doc != NO_MORE_DOCS;
+        this.doc = NO_MORE_DOCS;
+        for (final FeatureScorer scorer : this.allFeatureScorers) {
+          this.doc = Math.min(this.doc, scorer.advance(target));
         }
-        return doc;
+        return this.doc;
       }
 
-     
       @Override
       public int freq() throws IOException {
         throw new UnsupportedOperationException();

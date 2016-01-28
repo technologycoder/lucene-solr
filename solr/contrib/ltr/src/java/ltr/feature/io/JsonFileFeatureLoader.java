@@ -7,6 +7,7 @@ import java.util.Map;
 
 import ltr.feature.FeatureStore;
 import ltr.ranking.Feature;
+import ltr.util.CommonLtrParams;
 import ltr.util.FeatureException;
 import ltr.util.NamedParams;
 
@@ -16,72 +17,95 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Load a json-encoded feature store from a reader
- * 
+ * Loads a json-encoded feature store from a reader. A feature store will be
+ * encoded as a json map that contains the version of the feature store and a
+ * parameter 'features' containing the list of features. Each feature will
+ * be encoded as a map containing the attributes of a feature (name, type,
+ * and optional params).
  */
 public class JsonFileFeatureLoader {
 
-  private static final Logger logger = LoggerFactory.getLogger(JsonFileFeatureLoader.class);
+  private static final Logger logger = LoggerFactory
+      .getLogger(JsonFileFeatureLoader.class);
 
-  public JsonFileFeatureLoader() {
-  }
+  public JsonFileFeatureLoader() {}
 
   /**
    * Loads the json encoded features in the reader in the given feature store.
-   * 
-   * @param reader a reader on the json encoded features
-   * @param store the store where to load the features.
+   *
+   * @param reader
+   *          a reader on the json encoded features
+   * @param store
+   *          the store where to load the features.
    * @throws IOException
+   *           if an error occurs during the reading of the file
    */
   @SuppressWarnings("rawtypes")
-  public void loadFeatures(Reader reader, FeatureStore store) throws IOException {
-    JSONParser parser = new JSONParser(reader);
-    Object b = ObjectBuilder.getVal(parser);
-    if (!(b instanceof List)) {
+  public void loadFeatures(final Reader reader, final FeatureStore store)
+      throws IOException {
+    final JSONParser parser = new JSONParser(reader);
+    final Object b = ObjectBuilder.getVal(parser);
+    if (!(b instanceof Map)) {
       return;
     }
     @SuppressWarnings("unchecked")
-    List<Object> list = (List) b;
-    int id = 0;
-    for (Object o : list) {
-      Feature f = getFeature(o, id);
-      if (f != null){
-        store.add(f);
-        ++id;
-      } else {
-        logger.error("cannot load feature {}, store {}", o, store.getStoreName());
+    final Map<String,Object> params = (Map) b;
+    if (params.containsKey(CommonLtrParams.VERSION)) {
+      final Object value = params.get(CommonLtrParams.VERSION);
+      if (value instanceof Float) {
+        store.setVersion((float) value);
+      }
+      if (value instanceof Double) {
+        store.setVersion(((Double) value).floatValue());
+      }
+    }
+
+    if (params.containsKey(CommonLtrParams.FEATURE_FIELD)) {
+      final List<Object> featureList = (List) params
+          .get(CommonLtrParams.FEATURE_FIELD);
+      int featureId = 0;
+      for (final Object o : featureList) {
+        final Feature f = this.getFeature(o, featureId);
+        if (f != null) {
+          store.add(f);
+          ++featureId;
+        } else {
+          logger.error("cannot load feature {}, store {}", o,
+              store.getStoreName());
+        }
       }
     }
   }
 
   @SuppressWarnings("rawtypes")
-  private Feature getFeature(Object o, int id) {
-    if (!(o instanceof Map)){
+  private Feature getFeature(final Object o, final int id) {
+    if (!(o instanceof Map)) {
       return null;
     }
-    Map map = (Map) o;
-    String name = (String) map.get("name");
-    String type = (String) map.get("type");
+    final Map map = (Map) o;
+    final String name = (String) map.get(CommonLtrParams.FEATURE_NAME);
+    final String type = (String) map.get(CommonLtrParams.FEATURE_TYPE);
 
     NamedParams params = null;
 
-    if (map.containsKey("params")) {
+    if (map.containsKey(CommonLtrParams.FEATURE_PARAMS)) {
       @SuppressWarnings("unchecked")
-      Map<String,Object> np = (Map<String,Object>) map.get("params");
+      final Map<String,Object> np = (Map<String,Object>) map
+      .get(CommonLtrParams.FEATURE_PARAMS);
       params = new NamedParams(np);
     }
 
     try {
-      return createFeature(name, type, params, id);
-    } catch (FeatureException e) {
-      logger.error(e.getMessage());
+      return this.createFeature(name, type, params, id);
+    } catch (final FeatureException e) {
+      logger.error("loading feature: {} \n{} ",name, e);
       return null;
     }
   }
 
   /**
    * generates an instance of the feature class specified in type.
-   * 
+   *
    * @param name
    *          a symbolic name for the feature
    * @param type
@@ -91,14 +115,15 @@ public class JsonFileFeatureLoader {
    * @param id
    *          - unique int identifier for the feature
    */
-  private Feature createFeature(String name, String type, NamedParams params, int id) throws FeatureException {
+  private Feature createFeature(final String name, final String type,
+      final NamedParams params, final int id) throws FeatureException {
     try {
-      Class<?> c = Class.forName(type);
-      Feature f = (Feature) c.newInstance();
+      final Class<?> c = Class.forName(type);
+      final Feature f = (Feature) c.newInstance();
       f.init(name, params, id);
       return f;
-    } catch (Exception e) {
-      logger.error("{}",e.getMessage());
+    } catch (final Exception e) {
+      logger.error("creating feature {} \n {}",name, e);
       throw new FeatureException(name, e);
     }
   }

@@ -1,4 +1,6 @@
-[
+{
+"version":1.0,
+"features":[
    {
         "type": "ltr.feature.impl.StoryAgeFeature", 
         "params": {
@@ -32,3 +34,4 @@
         "name": "story_age_seconds" 
     }
 ]
+}

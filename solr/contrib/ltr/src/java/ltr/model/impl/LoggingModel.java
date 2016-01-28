@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * a stubbed reranking model that will be used only for 
+ * a stubbed reranking model that will be used only for
  * computing the features.
  **/
 public class LoggingModel extends Model {
@@ -27,51 +27,51 @@ public class LoggingModel extends Model {
   private static final Logger logger = LoggerFactory.getLogger(LoggingModel.class);
   FeatureStore store = null;
 
-  public LoggingModel(FeatureStore store) throws FeatureException {
+  public LoggingModel(final FeatureStore store) throws FeatureException {
     this.store = store;
   }
 
   @Override
-  public Weight createWeight(IndexSearcher searcher) throws IOException {
+  public Weight createWeight(final IndexSearcher searcher) throws IOException {
     // FIXME: Each model should own its list of global features for logging, in
     // case different models
     // want to log different sets of features.
-    Collection<Feature> features = store.getFeatures();
-    List<Feature> modelFeatures = Collections.emptyList();
-    return new LoggingModelWeight(searcher, getWeights(modelFeatures, searcher), getWeights(features, searcher));
+    final Collection<Feature> features = this.store.getFeatures();
+    final List<Feature> modelFeatures = Collections.emptyList();
+    return new LoggingModelWeight(searcher, this.getWeights(modelFeatures, searcher), this.getWeights(features, searcher));
   }
 
   public class LoggingModelWeight extends ModelWeight {
 
-    public LoggingModelWeight(IndexSearcher searcher, FeatureWeight[] modelFeatures, FeatureWeight[] allFeatures) {
+    public LoggingModelWeight(final IndexSearcher searcher, final FeatureWeight[] modelFeatures, final FeatureWeight[] allFeatures) {
       super(searcher, modelFeatures, allFeatures);
     }
 
     @Override
-    protected ModelScorer makeModelScorer(ModelWeight weight, FeatureScorer[] featureScorers) {
+    protected ModelScorer makeModelScorer(final ModelWeight weight, final FeatureScorer[] featureScorers) {
       return new LoggingModelScorer(weight, featureScorers);
     }
 
     public class LoggingModelScorer extends ModelScorer {
 
-      protected LoggingModelScorer(Weight weight, FeatureScorer[] featureScorers) {
+      protected LoggingModelScorer(final Weight weight, final FeatureScorer[] featureScorers) {
         super(weight, featureScorers);
       }
 
       @Override
       public float score() throws IOException { // FIXME: Look at making default
-                                                // logic later.
+        // logic later.
         {
-          for (int i = 0; i < allFeatureScorers.length; i++) {
-            FeatureScorer scorer = allFeatureScorers[i];
-            if (scorer.docID() != doc) {
-              allFeatureValues[i] = scorer.getDefaultScore();
+          for (int i = 0; i < this.allFeatureScorers.length; i++) {
+            final FeatureScorer scorer = this.allFeatureScorers[i];
+            if (scorer.docID() != this.doc) {
+              LoggingModelWeight.this.allFeatureValues[i] = scorer.getDefaultScore();
             } else {
               try {
-                allFeatureValues[i] = scorer.score();
-              } catch (Exception e) {
-                allFeatureValues[i] = scorer.getDefaultScore();
-                logger.error("error computing feature {}, {}", allFeatureNames[i], e.getMessage());
+                LoggingModelWeight.this.allFeatureValues[i] = scorer.score();
+              } catch (final Exception e) {
+                LoggingModelWeight.this.allFeatureValues[i] = scorer.getDefaultScore();
+                logger.error("error computing feature {}, \n{}", LoggingModelWeight.this.allFeatureNames[i], e);
               }
             }
           }
@@ -81,7 +81,7 @@ public class LoggingModel extends Model {
       }
 
       @Override
-      public IntervalIterator intervals(boolean collectIntervals) throws IOException {
+      public IntervalIterator intervals(final boolean collectIntervals) throws IOException {
         throw new UnsupportedOperationException();
       }
 
@@ -95,8 +95,13 @@ public class LoggingModel extends Model {
   }
 
   @Override
-  protected ModelWeight makeModelWeight(IndexSearcher searcher, FeatureWeight[] modelFeatures, FeatureWeight[] allFeatures) {
+  protected ModelWeight makeModelWeight(final IndexSearcher searcher, final FeatureWeight[] modelFeatures, final FeatureWeight[] allFeatures) {
     throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public FeatureStore getFeatureStore() {
+    return this.store;
   }
 
 }

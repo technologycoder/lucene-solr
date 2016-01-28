@@ -11,11 +11,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * @author Diego Ceccarelli - dceccarelli4@bloomberg.net
- *
- * @since Nov 12, 2015
- */
 public class TestAgeFeature extends TestRerankBase {
 
   @BeforeClass

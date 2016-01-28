@@ -12,24 +12,66 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class FeatureLogger<RECORD> {
 
+  // contains the mapping docid -> computed features
+  private final Map<Integer,RECORD> docIdToFeatures;
+
   public enum Format {
     CSV, JSON
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(FeatureLogger.class);
+  private static final Logger logger = LoggerFactory
+      .getLogger(FeatureLogger.class);
 
-  public FeatureLogger(int rerank) {
-    docIdToFeatures = new HashMap<>(rerank);
+  public FeatureLogger(final int numDocsToRerank) {
+    this.docIdToFeatures = new HashMap<>(numDocsToRerank);
   }
 
-  private Map<Integer,RECORD> docIdToFeatures;
+  /**
+   * returns a FeatureLogger that logs the features in output, using the format
+   * specified in the 'format' param: - csv will log the features as a unique
+   * string in csv format - json will log the features in a map in a
+   * Map<feature_name,featurevalue> if format is null or empty, csv format will
+   * be selected.
+   *
+   * @param format
+   *          the format to use
+   * @param numDocsToRerank
+   *          how many documents are reranked
+   * @return a feature logger for the format specified.
+   */
+  public static FeatureLogger<?> getFeatureLogger(final Format format,
+      int numDocsToRerank) {
+    if (numDocsToRerank < 0) {
+      logger.warn("invalid number of documents to rerank ({}), set it to 0",
+          numDocsToRerank);
+      numDocsToRerank = 0;
+    }
+    FeatureLogger<?> featureLogger;
+    switch (format) {
+      case CSV:
+        featureLogger = new CSVFeatureLogger(numDocsToRerank);
+        break;
+      case JSON:
+        featureLogger = new MapFeatureLogger(numDocsToRerank);
+        break;
+      default:
+        logger.warn("unknown feature logger {}", format);
+        featureLogger = new CSVFeatureLogger(numDocsToRerank);
+        break;
+    }
+    return featureLogger;
+  }
 
   /**
    * Log will be called every time that the model generates the feature values
    * for a document and a query.
-   * 
+   *
    * @param docid
    *          Solr document id whose features we are saving
+   * @param featureStoreName
+   *          name of current feature store
+   * @param featureStoreVersion
+   *          version of the current feature store
    * @param featureNames
    *          List of all the feature names we are logging
    * @param featureValues
@@ -40,100 +82,114 @@ public abstract class FeatureLogger<RECORD> {
    *         otherwise.
    */
 
-  public boolean log(int docid, String[] featureNames, float[] featureValues) {
-    RECORD r = makeRecord(docid, featureNames, featureValues);
-    if (r == null)
+  public boolean log(final int docid, final String featureStoreName,
+      final float featureStoreVersion, final String[] featureNames,
+      final float[] featureValues) {
+    final RECORD r = this.makeRecord(docid, featureStoreName,
+        featureStoreVersion, featureNames, featureValues);
+    if (r == null) {
       return false;
-    docIdToFeatures.put(docid, r);
+    }
+    this.docIdToFeatures.put(docid, r);
     return true;
   }
 
   /**
-   * returns a FeatureLogger that logs the features in output, using the format
-   * specified in the 'format' param: - csv will log the features as a unique
-   * string in csv format - json will log the features in a map in a
-   * Map<feature_name,featurevalue> if format is null or empty, csv format will
-   * be selected.
-   * 
-   * @param name
-   *          the format to use
-   * @param rerank
-   *          how many documents are reranked
-   * @return a feature logger for the format specified.
-   */
-  public static FeatureLogger<?> getFeatureLogger(Format format, int rerank) {
-    if (format == null) {
-      return new CSVFeatureLogger(rerank);
-    }
-    if (Format.CSV == format) {
-      return new CSVFeatureLogger(rerank);
-    }
-    if (Format.JSON == format) {
-      return new MapFeatureLogger(rerank);
-    }
-    logger.warn("unknown feature logger {}", format);
-    return null;
-
-  }
-
-  public abstract RECORD makeRecord(int docid, String[] featureNames, float[] featureValues);
-
-  /**
    * populate the document with its feature vector
-   * 
+   *
    * @param docid
    *          Solr document id
    * @return String representation of the list of features calculated for docid
    */
-  public RECORD getFeatureVector(int docid) {
-    return docIdToFeatures.get(docid);
+  public RECORD getFeatureVector(final int docid) {
+    return this.docIdToFeatures.get(docid);
   }
 
+  /**
+   * given a docid, a feature store name, its version, a list of feature names,
+   * and a list of feature values, so that the string at index i in the feature
+   * name list is the name of the feature value at index i in the feature
+   * values, it will generate a record object of type RECORD containing the
+   * values.
+   *
+   * @param docid
+   *          the docid of the document for which the features are produced
+   * @param featureStoreName
+   *          the name of the feature store used to compute the features
+   * @param featureStoreVersion
+   *          the version of the feature store used to compute the features
+   * @param featureNames
+   *          a list containing all the names features computed
+   * @param featureValues
+   *          a list containing all the values of the features computed (in the
+   *          same order of the names)
+   * @return a object of type RECORD containing all the values to log.
+   */
+  public abstract RECORD makeRecord(int docid, String featureStoreName,
+      float featureStoreVersion, String[] featureNames, float[] featureValues);
+
+  /**
+   * This class will produce a Map containing the feature values to serialize,
+   * it will be used to encode the feature in the response as a map (in json/xml
+   * etc).
+   */
   public static class MapFeatureLogger extends FeatureLogger<Map<String,Float>> {
 
-    public MapFeatureLogger(int rerank) {
-      super(rerank);
+    public MapFeatureLogger(final int numDocsToRerank) {
+      super(numDocsToRerank);
     }
 
     @Override
-    public Map<String,Float> makeRecord(int docid, String[] featureNames, float[] featureValues) {
-      Map<String,Float> hashmap =  new HashMap<>(featureValues.length);
-      for (int i = 0; i < featureNames.length; i++){
-            hashmap.put(featureNames[i], featureValues[i]);
+    public Map<String,Float> makeRecord(final int docid,
+        final String featureStoreName, final float featureStoreVersion,
+        final String[] featureNames, final float[] featureValues) {
+      final Map<String,Float> featureMap = new HashMap<>(featureValues.length);
+      featureMap.put("@" + featureStoreName, featureStoreVersion);
+      for (int i = 0; i < featureNames.length; i++) {
+        featureMap.put(featureNames[i], featureValues[i]);
       }
-      return hashmap;
+      return featureMap;
     }
-
   }
 
+  /**
+   * This class will produce a string containing all the feature values to
+   * serialize, encoded using the CSV format.
+   */
   public static class CSVFeatureLogger extends FeatureLogger<String> {
     StringBuilder sb = new StringBuilder(500);
     char keyValueSep = ':';
     char featureSep = ';';
 
-    public CSVFeatureLogger(int rerank) {
-      super(rerank);
+    public CSVFeatureLogger(final int numDocsToRerank) {
+      super(numDocsToRerank);
     }
 
-    public CSVFeatureLogger setKeyValueSep(char keyValueSep) {
+    public CSVFeatureLogger setKeyValueSep(final char keyValueSep) {
       this.keyValueSep = keyValueSep;
       return this;
     }
 
-    public CSVFeatureLogger setFeatureSep(char featureSep) {
+    public CSVFeatureLogger setFeatureSep(final char featureSep) {
       this.featureSep = featureSep;
       return this;
     }
 
     @Override
-    public String makeRecord(int docid, String[] featureNames, float[] featureValues) {
+    public String makeRecord(final int docid, final String featureStoreName,
+        final float featureStoreVersion, final String[] featureNames,
+        final float[] featureValues) {
+      this.sb.append('@').append(featureStoreName).append(this.keyValueSep);
+      this.sb.append(featureStoreVersion).append(this.featureSep);
       for (int i = 0; i < featureNames.length; i++) {
-          sb.append(featureNames[i]).append(keyValueSep).append(featureValues[i]);
-          sb.append(featureSep);
+        this.sb.append(featureNames[i]).append(this.keyValueSep)
+        .append(featureValues[i]);
+        this.sb.append(this.featureSep);
       }
 
-      String features = (sb.length() == 0) ? "" : sb.substring(0, sb.length() - 1);
-      sb.setLength(0);
+      final String features = (this.sb.length() == 0) ? "" : this.sb.substring(
+          0, this.sb.length() - 1);
+      this.sb.setLength(0);
       return features;
     }
 

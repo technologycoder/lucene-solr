@@ -37,7 +37,7 @@ public class TestQueryWithLogging extends TestRerankBase {
     query.add("fl", "*,score,fv:[fv model=missing]");
     query.add("wt", "json");
  
-    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv==''");
+    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv=='@missing:-1.0'");
   }
   
   @Test
@@ -50,10 +50,10 @@ public class TestQueryWithLogging extends TestRerankBase {
     query.add("fl", "*,score,fv:[fv model=test_different_feature_values]");
     query.add("wt", "json");
  
-    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv=='popularity:1.0'");
-    assertJQ("/query?"+query.toString(), "/response/docs/[1]/fv=='popularity:2.0'");
-    assertJQ("/query?"+query.toString(), "/response/docs/[2]/fv=='popularity:3.0'");
-    assertJQ("/query?"+query.toString(), "/response/docs/[3]/fv=='popularity:5.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv=='@test_different_feature_values:1.0;popularity:1.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[1]/fv=='@test_different_feature_values:1.0;popularity:2.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[2]/fv=='@test_different_feature_values:1.0;popularity:3.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[3]/fv=='@test_different_feature_values:1.0;popularity:5.0'");
   }
 
   
@@ -67,10 +67,10 @@ public class TestQueryWithLogging extends TestRerankBase {
     query.add("fl", "*,score,fv:[fv model=test_multiple_feature_values]");
     query.add("wt", "json");
  
-    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv=='popularity:1.0;c1:42.0'");
-    assertJQ("/query?"+query.toString(), "/response/docs/[1]/fv=='popularity:2.0;c1:42.0'");
-    assertJQ("/query?"+query.toString(), "/response/docs/[2]/fv=='popularity:3.0;c1:42.0'");
-    assertJQ("/query?"+query.toString(), "/response/docs/[3]/fv=='popularity:5.0;c1:42.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv=='@test_multiple_feature_values:1.0;popularity:1.0;c1:42.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[1]/fv=='@test_multiple_feature_values:1.0;popularity:2.0;c1:42.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[2]/fv=='@test_multiple_feature_values:1.0;popularity:3.0;c1:42.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[3]/fv=='@test_multiple_feature_values:1.0;popularity:5.0;c1:42.0'");
   }
 
   
@@ -84,10 +84,10 @@ public class TestQueryWithLogging extends TestRerankBase {
     query.add("fl", "*,score,fv:[fv model=empty]");
     query.add("wt", "json");
  
-    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv==''");
-    assertJQ("/query?"+query.toString(), "/response/docs/[1]/fv==''");
-    assertJQ("/query?"+query.toString(), "/response/docs/[2]/fv==''");
-    assertJQ("/query?"+query.toString(), "/response/docs/[3]/fv==''");
+    assertJQ("/query?"+query.toString(), "/response/docs/[0]/fv=='@empty:1.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[1]/fv=='@empty:1.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[2]/fv=='@empty:1.0'");
+    assertJQ("/query?"+query.toString(), "/response/docs/[3]/fv=='@empty:1.0'");
   }
   
  

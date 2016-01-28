@@ -1,4 +1,6 @@
-[
+{
+"version":1.0,
+"features":[
     {
         "type": "ltr.feature.impl.QueryTypeFeature", 
         "params": {
@@ -12,3 +14,4 @@
     }
     
 ]
+}

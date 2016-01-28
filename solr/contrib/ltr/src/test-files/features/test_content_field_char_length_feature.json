@@ -1,4 +1,6 @@
-[
+{
+"version":1.0,
+"features":[
     {
         "type": "ltr.feature.impl.FieldCharLengthFeature", 
         "name": "content_char_length",
@@ -7,3 +9,4 @@
         }
     }
 ]
+}

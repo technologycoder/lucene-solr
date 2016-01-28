@@ -17,7 +17,7 @@ import org.apache.lucene.util.Bits;
 import org.apache.solr.request.SolrQueryRequest;
 
 public abstract class FeatureWeight extends Weight implements Cloneable {
-
+  
   protected String name;
   protected NamedParams params = NamedParams.EMPTY;
   protected Normalizer norm = IdentityNormalizer.INSTANCE;
@@ -26,16 +26,16 @@ public abstract class FeatureWeight extends Weight implements Cloneable {
   protected Map<String,String> efi;
   protected Query originalQuery;
   public int id;
-
+  
   /**
    * Initialize a feature without the normalizer from the feature file. This is
    * called on initial construction since multiple models share the same
    * features, but have different normalizers. A concrete model's feature is
    * copied through featForNewModel().
-   * 
+   *
    * @param searcher
    *          Solr searcher available for features if they need them
-   * 
+   *
    * @param name
    *          Name of the feature
    * @param params
@@ -47,117 +47,125 @@ public abstract class FeatureWeight extends Weight implements Cloneable {
    *          be used to directly access the feature in the global list of
    *          features.
    */
-  public FeatureWeight(IndexSearcher searcher, String name, NamedParams params, Normalizer norm, int id) {
+  public FeatureWeight(final IndexSearcher searcher, final String name,
+      final NamedParams params, final Normalizer norm, final int id) {
     this.searcher = searcher;
     this.name = name;
     this.params = params;
     this.id = id;
     this.norm = norm;
   }
-
-  public final void setRequest(SolrQueryRequest request) {
+  
+  public final void setRequest(final SolrQueryRequest request) {
     this.request = request;
   }
-
-  public final void setExternalFeatureInfo(Map<String,String> efi) {
+  
+  public final void setExternalFeatureInfo(final Map<String,String> efi) {
     this.efi = efi;
   }
-
+  
   /**
-   * Called once after all parameters have been set on the weight.
-   * Override this to do things with the original query, request, 
-   * or external parameters.
-   * @throws IOException 
+   * Called once after all parameters have been set on the weight. Override this
+   * to do things with the original query, request, or external parameters.
+   *
+   * @throws IOException
    */
   public void process() throws IOException {}
-
+  
   public String getName() {
-    return name;
+    return this.name;
   }
-
+  
   public Normalizer getNorm() {
-    return norm;
+    return this.norm;
   }
-
+  
   public NamedParams getParams() {
-    return params;
+    return this.params;
   }
-
+  
   public int getId() {
-    return id;
+    return this.id;
   }
-
   
   @Override
-  public Scorer scorer(AtomicReaderContext context, PostingFeatures arg1, Bits acceptDocs) throws IOException {
-    return scorer(context, acceptDocs);
+  public Scorer scorer(final AtomicReaderContext context,
+      final PostingFeatures arg1, final Bits acceptDocs) throws IOException {
+    return this.scorer(context, acceptDocs);
   }
-
-  public abstract FeatureScorer scorer(AtomicReaderContext context, Bits acceptDocs) throws IOException;
-
+  
+  public abstract FeatureScorer scorer(AtomicReaderContext context,
+      Bits acceptDocs) throws IOException;
+  
   @Override
-  public Explanation explain(AtomicReaderContext context, int doc) throws IOException {
-    FeatureScorer r = scorer(context, null);
+  public Explanation explain(final AtomicReaderContext context, final int doc)
+      throws IOException {
+    final FeatureScorer r = this.scorer(context, null);
     r.advance(doc);
     float score = r.getDefaultScore();
-    if (r.docID() == doc)
+    if (r.docID() == doc) {
       score = r.score();
-    Explanation e = new Explanation(score, r.toString());
+    }
+    final Explanation e = new Explanation(score, r.toString());
     return e;
   }
-
+  
   @Override
   public float getValueForNormalization() throws IOException {
     return 1f;
   }
-
+  
   @Override
-  public void normalize(float norm, float topLevelBoost) {
+  public void normalize(final float norm, final float topLevelBoost) {
     // For advanced features that use Solr weights internally, you must override
     // and pass this call on to them
   }
-
+  
   @Override
   public String toString() {
-    return this.getClass().getName() + " [name=" + name + ", params=" + params + "]";
+    return this.getClass().getName() + " [name=" + this.name + ", params="
+        + this.params + "]";
   }
-
+  
   /**
    * @param originalQuery
    *          the originalQuery to set
    * @throws IOException
-   * @param originalQuery the originalQuery to set
+   *           this method could be used to manipulate the query and could throw
+   *           IOExceptions
    */
-  public void setOriginalQuery(Query originalQuery) throws IOException {
+  public void setOriginalQuery(final Query originalQuery) throws IOException {
     this.originalQuery = originalQuery;
   }
-
+  
   /**
    * Default FeatureScorer class that returns the score passed in. Can be used
    * as a simple ConstantFeature, or to return a default scorer in case an
    * underlying feature's scorer is null.
    */
   public class ConstantFeatureScorer extends FeatureScorer {
-
+    
     float constScore;
     String featureType;
-
-    public ConstantFeatureScorer(FeatureWeight weight, float constScore, String featureType) {
+    
+    public ConstantFeatureScorer(final FeatureWeight weight,
+        final float constScore, final String featureType) {
       super(weight);
       this.constScore = constScore;
       this.featureType = featureType;
     }
-
+    
     @Override
     public float score() {
-      return constScore;
+      return this.constScore;
     }
-
+    
     @Override
     public String toString() {
-      return featureType + " [name=" + name + " value=" + constScore + "]";
+      return this.featureType + " [name=" + this.name + " value="
+          + this.constScore + "]";
     }
-
+    
   }
-
+  
 }

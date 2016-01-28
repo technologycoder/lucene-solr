@@ -1,4 +1,6 @@
-[
+{
+"version":1.0,
+"features":[
     {
         "type": "ltr.feature.impl.HasFieldFeature", 
         "name": "has_title",
@@ -15,3 +17,4 @@
         }
     }
 ]
+}

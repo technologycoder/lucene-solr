@@ -1,0 +1,20 @@
+{
+"version":1.0,
+"features":[
+  {
+     "name": "solrconfigfeature",
+     "type": "ltr.feature.impl.ConstantFeature",
+     "params": {
+         "value": 1
+     }
+  },
+  {
+    "name": "solrconfigfeature2",
+    "type": "ltr.feature.impl.ConstantFeature",
+    "params": {
+       "value": 2
+    }
+  }
+]
+}
+

@@ -7,11 +7,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * @author Diego Ceccarelli - dceccarelli4@bloomberg.net
- *
- * @since Nov 12, 2015
- */
 public class TestFeatures extends TestRerankBase {
 
 	@BeforeClass
@@ -52,7 +47,7 @@ public class TestFeatures extends TestRerankBase {
 				"test_query_type_feature", 1);
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='query_has_topic:2.0'");
+				"/response/docs/[0]/fv=='@test_query_type_feature:1.0;query_has_topic:2.0'");
 	}
 
 	@Test
@@ -61,9 +56,9 @@ public class TestFeatures extends TestRerankBase {
 				"test_original_score_feature", 4);
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='original_score:0.7768564'");
+				"/response/docs/[0]/fv=='@test_original_score_feature:1.0;original_score:0.7768564'");
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[3]/fv=='original_score:0.3884282'");
+				"/response/docs/[3]/fv=='@test_original_score_feature:1.0;original_score:0.3884282'");
 	}
 
 	@Test
@@ -71,7 +66,7 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("title:bloomberg", "query_features", 4);
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='query_has_topic:0.0;original_score:0.7768564'");
+				"/response/docs/[0]/fv=='@query_features:1.0;query_has_topic:0.0;original_score:0.7768564'");
 	}
 
 	@Test
@@ -84,7 +79,7 @@ public class TestFeatures extends TestRerankBase {
 		// 
 		// see also: https://lucene.apache.org/core/5_2_0/core/org/apache/lucene/codecs/lucene50/Lucene50NormsFormat.html
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='title_length:4.0;description_length:1.0'");
+				"/response/docs/[0]/fv=='@test_field_length_feature:1.0;title_length:4.0;description_length:1.0'");
 	}
 	
 	@Test
@@ -92,9 +87,9 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("id:8 OR id:9", "test_content_field_length_feature", 4);
 		
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='content_length:0.0'");
+				"/response/docs/[0]/fv=='@test_content_field_length_feature:1.0;content_length:0.0'");
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[1]/fv=='content_length:0.0'");
+				"/response/docs/[1]/fv=='@test_content_field_length_feature:1.0;content_length:0.0'");
 	}
 	
 	
@@ -109,7 +104,7 @@ public class TestFeatures extends TestRerankBase {
 		float descriptionCharLength = "bloomberg".length();
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='title_char_length:" + titleCharLength
+				"/response/docs/[0]/fv=='@test_field_char_length_feature:1.0;title_char_length:" + titleCharLength
 						+ ";description_char_length:" + descriptionCharLength
 						+ "'");
 	}
@@ -119,9 +114,9 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("id:8 OR id:9", "test_content_field_char_length_feature", 4);
 		
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='content_char_length:0.0'");
+				"/response/docs/[0]/fv=='@test_content_field_char_length_feature:1.0;content_char_length:0.0'");
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[1]/fv=='content_char_length:0.0'");
+				"/response/docs/[1]/fv=='@test_content_field_char_length_feature:1.0;content_char_length:0.0'");
 	}
 
 	@Test
@@ -130,12 +125,12 @@ public class TestFeatures extends TestRerankBase {
 				"test_function_query_feature", 4);
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='powpolarity:9.0'");
+				"/response/docs/[0]/fv=='@test_function_query_feature:1.0;powpolarity:9.0'");
 
 		query.setQuery("popularity:5");
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='powpolarity:25.0'");
+				"/response/docs/[0]/fv=='@test_function_query_feature:1.0;powpolarity:25.0'");
 	}
 
 	@Test
@@ -143,7 +138,7 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("*:*", "test_constant_feature", 1);
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='c1:42.0'");
+				"/response/docs/[0]/fv=='@test_constant_feature:1.0;c1:42.0'");
 	}
 
 	@Test
@@ -154,11 +149,11 @@ public class TestFeatures extends TestRerankBase {
 		
 		// if the query is not not a term query, the feature return a default value
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:"+defaultValue+";companion2:"+defaultValue+"'");
+				"/response/docs/[0]/fv=='@test_companioncode_feature:1.0;companion:"+defaultValue+";companion2:"+defaultValue+"'");
 		
 		query.setQuery("title:bla title:bloomberg");
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:"+defaultValue+";companion2:"+defaultValue+"'");
+				"/response/docs/[0]/fv=='@test_companioncode_feature:1.0;companion:"+defaultValue+";companion2:"+defaultValue+"'");
 		
 	}
 	
@@ -169,7 +164,7 @@ public class TestFeatures extends TestRerankBase {
 		
 		// if the query is not not a term query, the feature return a default value
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:"+3.0+";companion2:"+42.0+"'");
+				"/response/docs/[0]/fv=='@test_companioncode_feature:1.0;companion:"+3.0+";companion2:"+42.0+"'");
 	}
 	
 	@Test
@@ -178,7 +173,7 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("id:8", "test_companioncode_feature", 4);
 		
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:"+0f+";companion2:"+0f+"'");
+				"/response/docs/[0]/fv=='@test_companioncode_feature:1.0;companion:"+0f+";companion2:"+0f+"'");
 	}
 	
 	@Test
@@ -188,7 +183,7 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("title:bla", "test_companioncode_not_matching", 4);
 		
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:"+0f+"'");
+				"/response/docs/[0]/fv=='@test_companioncode_not_matching:1.0;companion:"+0f+"'");
 	}
 	
 	@Test
@@ -198,7 +193,7 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("title:bla", "test_companioncode_not_matching_default_set_to_42", 4);
 		
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:"+42f+"'");
+				"/response/docs/[0]/fv=='@test_companioncode_not_matching_default_set_to_42:1.0;companion:"+42f+"'");
 	}
 	
 	@Test
@@ -207,7 +202,7 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("title:bla", "test_companioncode_feature_multiple_matches", 1);
 		
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='companion:111.0'");
+				"/response/docs/[0]/fv=='@test_companioncode_feature_multiple_matches:1.0;companion:111.0'");
 	}
 	
 	// used to check the output of assertJQ
@@ -224,11 +219,11 @@ public class TestFeatures extends TestRerankBase {
 		SolrQuery query = getQuery("id:9", "test_has_field_feature", 4);
 
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='has_title:1.0;has_description:0.0'");
+				"/response/docs/[0]/fv=='@test_has_field_feature:1.0;has_title:1.0;has_description:0.0'");
 
 		query.setQuery("popularity:1");
 		assertJQ("/query?" + query.toString(),
-				"/response/docs/[0]/fv=='has_title:1.0;has_description:1.0'");
+				"/response/docs/[0]/fv=='@test_has_field_feature:1.0;has_title:1.0;has_description:1.0'");
 	}
 
 }

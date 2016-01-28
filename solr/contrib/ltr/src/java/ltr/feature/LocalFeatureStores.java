@@ -8,79 +8,118 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ltr.feature.io.JsonFileFeatureLoader;
-import ltr.util.FeatureException;
 
+import org.apache.solr.core.SolrResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Local feature stores are loaded from the resources. 
- * Each feature store will be encoded in one json file, where the name of 
- * the file will match the name of the feature store (e.g., nws.json 
- * will contain the features for the feature store 'nws').
- * 
- * Local feature stores will be located in the folder '$LOCAL_FEATURE_FOLDER' 
+ * Local feature stores are loaded from the resources. Each feature store will
+ * be encoded in one json file, where the name of the file will match the name
+ * of the feature store (e.g., nws.json will contain the features for the
+ * feature store 'nws').
+ *
+ * Local feature stores will be located in the folder '$LOCAL_FEATURE_FOLDER'
  * inside src/resources
- * 
+ *
  */
 public class LocalFeatureStores {
-
+  
   private final static String LOCAL_FEATURE_FOLDER = "features";
+  // a cache with the loaded stores
+  private final Map<String,FeatureStore> stores;
+  // parse a json file and create a feature store
+  private final JsonFileFeatureLoader loader;
   
-  private Map<String,FeatureStore> stores = null;
-  private JsonFileFeatureLoader loader = null;
+  private static final Logger logger = LoggerFactory
+      .getLogger(LocalFeatureStores.class);
   
-  private static final Logger logger = LoggerFactory.getLogger(LocalFeatureStores.class);
-  private final static LocalFeatureStores instance = new LocalFeatureStores();
-
-  private LocalFeatureStores() {
-    stores = new HashMap<>();
-    loader = new JsonFileFeatureLoader();
+  public LocalFeatureStores() {
+    this.stores = new HashMap<>();
+    this.loader = new JsonFileFeatureLoader();
   }
-
-  public static LocalFeatureStores getInstance() {
-    return instance;
-  }
-
-  public FeatureStore getStore(String name) throws FeatureException {
-    return getStore("/"+LOCAL_FEATURE_FOLDER, name);
-  }
-
-  public synchronized FeatureStore getStore(String resourcePath, String name) throws FeatureException {
-
-    if (stores.containsKey(name)){
-      return stores.get(name);
+  
+  /***
+   * load a json encoded feature store given it's name and a reader on the json
+   *
+   * @param featureStoreName
+   *          the name of the feature store
+   * @param featureStoreReader
+   *          a reader of the json encoded feature store
+   * @return the feature store described in the configuration file. If there
+   *         reading the features, returns an empty feature store.
+   */
+  private FeatureStore loadStore(final String featureStoreName,
+      final Reader featureStoreReader) {
+    if (this.stores.containsKey(featureStoreName)) {
+      return this.stores.get(featureStoreName);
     }
-    FeatureStore f = load(resourcePath, name);
-    logger.debug("loading model in {} {} = ", resourcePath, name);
-    logger.debug("model = {}", f.getFeatures());
-    stores.put(name, f);
-    return f;
-  }
-
-  private FeatureStore load(String resourcePath, String name) throws FeatureException {
-    FeatureStore store = new FeatureStore(name);
+    final FeatureStore featureStore = new FeatureStore(featureStoreName);
+    try {
+      this.loader.loadFeatures(featureStoreReader, featureStore);
+    } catch (final IOException e) {
+      logger.error("loading the feature store {}: {}", featureStoreName, e);
+    }
     
-    String resource = resourcePath + "/" + name + ".json";
-
-    InputStream stream = getClass().getResourceAsStream(resource);
-    if (stream == null) {
-      logger.error("can not find local feature store in {}", resource);
-      // returns an empty store
-      return store;
-    }
-    Reader r = new InputStreamReader(stream);
-    try {
-      loader.loadFeatures(r, store);
-    } catch (IOException e) {
-      logger.error("loading the resource {}", resource);
-    }
-    try {
-      r.close();
-    } catch (IOException e) {
-      logger.error("loading the resource {}", resource);
-    }
-    return store;
+    this.stores.put(featureStoreName, featureStore);
+    return featureStore;
   }
-
+  
+  /**
+   * Loads a json feature store located in the solr config folder
+   * (in the directory LOCAL_FEATURE_FOLDER). The method will use the solrResourceLoader
+   * so it will try to load the feature store in order from: <ol>
+   * <li> inside config/ if path is not absolute</li>
+   * <li> otherwise searches at path.getAbsoluteFile() [not relevant in our case]</li>
+   * <li> uses the class loader to search [searches resources/ at this point]</li>
+   * </ol>
+   *
+   * @param featureStoreName
+   *          name of the feature store
+   * @param solrResourceLoader
+   *          the solr resource loader
+   * @return the feature store described in the json file, or an empty feature
+   *         store in case of error
+   */
+  public FeatureStore getFeatureStoreFromSolrConfigOrResources(
+      final String featureStoreName, final SolrResourceLoader solrResourceLoader) {
+    final FeatureStore featureStore = this.getFeatureStoreFromSolr(LOCAL_FEATURE_FOLDER,
+        featureStoreName, solrResourceLoader);
+    return featureStore;
+  }
+  
+  /**
+   * Loads a json feature store located in the solr config folder,
+   *
+   * @param featureStoreDirectory
+   *          the resource/solrconfig directory containing the feature file (or
+   *          null if the feature file is in the root folder)
+   * @param featureStoreName
+   *          name of the feature store
+   * @param solrResourceLoader
+   *          the solr resource loader
+   * @return the feature store described in the json file, or an empty feature
+   *         store in case of error
+   */
+  private FeatureStore getFeatureStoreFromSolr(
+      final String featureStoreDirectory, final String featureStoreName,
+      final SolrResourceLoader solrResourceLoader) {
+    FeatureStore featureStore = new FeatureStore(featureStoreName);
+    
+    final String featureStorePath = (featureStoreDirectory == null) ? featureStoreName
+        : featureStoreDirectory + "/" + featureStoreName;
+    try (InputStream is = solrResourceLoader.openResource(featureStorePath
+        + ".json")) {
+      try (Reader featureStoreReader = new InputStreamReader(is)) {
+        featureStore = this.loadStore(featureStoreName, featureStoreReader);
+      }
+      
+    } catch (final IOException e) {
+      logger.error("loading feature store in {}: \n{} ",featureStorePath, e);
+    }
+    
+    return featureStore;
+    
+  }
+  
 }
