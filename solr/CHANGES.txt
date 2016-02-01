@@ -581,6 +581,9 @@ Other Changes
 
 * SOLR-8597: add default, no-op QParserPlugin.init(NamedList) method (Christine Poerschke)
 
+* SOLR-8600: add & use ReRankQParserPlugin parameter [default] constants,
+  changed ReRankQuery.toString to use StringBuilder. (Christine Poerschke)
+
 ==================  5.4.1 ==================
 
 Bug Fixes
