@@ -29,12 +29,17 @@ import org.apache.zookeeper.ClientCnxn;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 // we use this class to expose nasty stuff for tests
 public class SolrZooKeeper extends ZooKeeper {
   final Set<Thread> spawnedThreads = new CopyOnWriteArraySet<>();
   
   // for test debug
   //static Map<SolrZooKeeper,Exception> clients = new ConcurrentHashMap<SolrZooKeeper,Exception>();
+
+  private static Logger log = LoggerFactory.getLogger(SolrZooKeeper.class);
 
   public SolrZooKeeper(String connectString, int sessionTimeout,
       Watcher watcher) throws IOException {
@@ -96,7 +101,9 @@ public class SolrZooKeeper extends ZooKeeper {
     for (Thread t : spawnedThreads) {
       if (t.isAlive()) t.interrupt();
     }
+    log.info("Closing Zookeeper session ...");
     super.close();
+    log.info("... closed Zookeeper session.");
   }
   
 //  public static void assertCloses() {

@@ -303,6 +303,7 @@ public abstract class CachingDirectoryFactory extends DirectoryFactory {
     try {
       log.info("Closing directory: " + val.path);
       val.directory.close();
+      log.info("Closed directory: " + val.path);
     } catch (Exception e) {
       SolrException.log(log, "Error closing directory", e);
     }
