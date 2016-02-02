@@ -54,6 +54,18 @@ public class PrefixQuery extends AutomatonQuery {
     assert automaton.isDeterministic();
     return automaton;
   }
+  
+  @Override
+  public final Query rewrite(IndexReader reader) throws IOException {
+    Query q; 
+    try{
+      q= rewriteMethod.rewrite(reader, this);
+    }catch(BooleanQuery.TooManyClauses ex){
+      log.info("Rewriting to TermQuery " + prefix + " due to " + ex.toString());
+      q= new TermQuery(prefix);
+    }
+    return q;
+  }
 
   /** Returns the prefix of this query. */
   public Term getPrefix() {

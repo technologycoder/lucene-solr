@@ -324,10 +324,7 @@ public abstract class MultiTermQuery extends Query {
    * to rewrite to a single term, return a {@link SingleTermsEnum}
    */
   @Override
-  public final Query rewrite(IndexReader reader) throws IOException {
-    if (getBoost() != 1f) {
-      return super.rewrite(reader);
-    }
+  public Query rewrite(IndexReader reader) throws IOException {
     return rewriteMethod.rewrite(reader, this);
   }
 
