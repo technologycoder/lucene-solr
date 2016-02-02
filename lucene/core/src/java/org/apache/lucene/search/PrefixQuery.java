@@ -19,11 +19,14 @@ package org.apache.lucene.search;
 
 import java.io.IOException;
 
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.ToStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** A Query that matches documents containing terms with a specified prefix. A PrefixQuery
  * is built by QueryParser for input like <code>app*</code>.
@@ -33,6 +36,7 @@ import org.apache.lucene.util.ToStringUtils;
  * rewrite method. */
 public class PrefixQuery extends MultiTermQuery {
   private Term prefix;
+  final static Logger log = LoggerFactory.getLogger(PrefixQuery.class);
 
   /** Constructs a query for terms starting with <code>prefix</code>. */
   public PrefixQuery(Term prefix) {
@@ -52,6 +56,18 @@ public class PrefixQuery extends MultiTermQuery {
       return tenum;
     }
     return new PrefixTermsEnum(tenum, prefix.bytes());
+  }
+  
+  @Override
+  public final Query rewrite(IndexReader reader) throws IOException {
+    Query q; 
+    try{
+      q= rewriteMethod.rewrite(reader, this);
+    }catch(BooleanQuery.TooManyClauses ex){
+      log.info("Rewriting to TermQuery " + prefix + " due to " + ex.toString());
+      q= new TermQuery(prefix);
+    }
+    return q;
   }
 
   /** Prints a user-readable version of this query. */

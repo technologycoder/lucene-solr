@@ -284,7 +284,7 @@ public abstract class MultiTermQuery extends FieldedQuery {
    * to rewrite to a single term, return a {@link SingleTermsEnum}
    */
   @Override
-  public final Query rewrite(IndexReader reader) throws IOException {
+  public Query rewrite(IndexReader reader) throws IOException {
     return rewriteMethod.rewrite(reader, this);
   }
 
