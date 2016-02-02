@@ -25,8 +25,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.ToStringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Logger;
 
 /** A Query that matches documents containing terms with a specified prefix. A PrefixQuery
  * is built by QueryParser for input like <code>app*</code>.
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * rewrite method. */
 public class PrefixQuery extends MultiTermQuery {
   private Term prefix;
-  final static Logger log = LoggerFactory.getLogger(PrefixQuery.class);
+  final static Logger log = Logger.getLogger(PrefixQuery.class.getName());
 
   /** Constructs a query for terms starting with <code>prefix</code>. */
   public PrefixQuery(Term prefix) {
