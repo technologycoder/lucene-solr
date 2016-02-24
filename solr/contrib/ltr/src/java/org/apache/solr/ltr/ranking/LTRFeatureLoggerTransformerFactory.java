@@ -68,7 +68,7 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
     SolrIndexSearcher searcher;
     ModelQuery reRankModel;
     ModelWeight modelWeight;
-    FeatureLogger<?> featurelLogger;
+    FeatureLogger<?> featurelLogger; // maybe rename to featureLogger?
 
     /**
      * @param name
@@ -89,13 +89,14 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
       super.setContext(context);
       if (context == null) return;
       if (context.getRequest() == null) return;
+      featurelLogger = (FeatureLogger) req.getContext()
+          .get(LTRComponent.LOGGER_NAME);
       reRankModel = (ModelQuery) req.getContext()
           .get(LTRQParser.MODEL);
       if (reRankModel == null) throw new SolrException(
           org.apache.solr.common.SolrException.ErrorCode.BAD_REQUEST,
           "model is null");
       reRankModel.setRequest(context.getRequest());
-      featurelLogger = reRankModel.getFeatureLogger();
       searcher = context.getSearcher();
       if (searcher == null) throw new SolrException(
           org.apache.solr.common.SolrException.ErrorCode.BAD_REQUEST,
@@ -120,6 +121,7 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
         throws IOException {
       Object fv = featurelLogger.getFeatureVector(docid, reRankModel, searcher);
       if (fv == null) { // FV for this document was not in the cache
+        // Could i suggest relocating the code from here ...
         int n = ReaderUtil.subIndex(docid, leafContexts);
         final LeafReaderContext atomicContext = leafContexts.get(n);
         int deBasedDoc = docid - atomicContext.docBase;
@@ -136,6 +138,8 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
           doc.addField(name,
               featurelLogger.makeFeatureVector(names, values, valuesUsed));
         }
+        // ... to here to elsewhere? Reason being that it's pretty logic-level intensive
+        // i.e. somewhat outside the remit of a simple transformer, in my opinion.
       } else {
         doc.addField(name, fv);
       }

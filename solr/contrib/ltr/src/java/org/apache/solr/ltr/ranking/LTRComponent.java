@@ -20,18 +20,22 @@ package org.apache.solr.ltr.ranking;
 import java.io.IOException;
 
 import org.apache.solr.common.SolrException;
+import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
+import org.apache.solr.ltr.log.FeatureLogger;
+import org.apache.solr.ltr.ranking.ModelQuery;
 import org.apache.solr.ltr.rest.ManagedFeatureStore;
 import org.apache.solr.ltr.rest.ManagedModelStore;
+import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.rest.ManagedResource;
 import org.apache.solr.rest.ManagedResourceObserver;
 import org.apache.solr.util.plugin.SolrCoreAware;
 
 /**
- * The FeatureVectorComponent is intended to be used for offline training of
+ * The ???FeatureVectorComponent??? is intended to be used for offline training of
  * your model in order to fetch the feature vectors of the top matching
  * documents.
  */
@@ -39,10 +43,13 @@ public class LTRComponent extends SearchComponent implements SolrCoreAware,
     ManagedResourceObserver {
 
   // TODO: This is the Solr way, move these to LTRParams in solr.common.params
+  // TODO: Add a LTRParamsTest test.
   public interface LTRParams {
     // Set to true to turn on feature vectors in the LTRComponent
     public static final String FV = "fv";
-    public static final String FV_RESPONSE_WRITER = "fvwt";
+    public static final boolean FV_DEFAULT = false;
+    public static final String FV_RESPONSE_WRITER = "fvwt"; // maybe FV+"."+CommonParams.WT ?
+    public static final String FV_RESPONSE_WRITER_DEFAULT = FeatureLogger.CSVFeatureLogger.FORMAT;
     public static final String FSTORE_END_POINT = "/schema/fstore";
     public static final String MSTORE_END_POINT = "/schema/mstore";
 
@@ -56,7 +63,23 @@ public class LTRComponent extends SearchComponent implements SolrCoreAware,
   public void init(NamedList args) {}
 
   @Override
-  public void prepare(ResponseBuilder rb) throws IOException {}
+  public void prepare(ResponseBuilder rb) throws IOException {
+    final SolrQueryRequest req = rb.req;
+    final SolrParams params = req.getParams();
+    if (params.getBool(LTRParams.FV, LTRParams.FV_DEFAULT)) {
+      final String featureVectorResponseWriter = params.get(LTRParams.FV_RESPONSE_WRITER, LTRParams.FV_RESPONSE_WRITER_DEFAULT);
+      final FeatureLogger<?> solrLogger = FeatureLogger.getFeatureLogger(featureVectorResponseWriter);
+      if (solrLogger == null) {
+        throw new SolrException(SolrException.ErrorCode.BAD_REQUEST,
+                                LTRParams.FV_RESPONSE_WRITER+"="+featureVectorResponseWriter+" not supported.");
+      }
+      req.getContext().put(LTRComponent.LOGGER_NAME, solrLogger);
+      final Object reRankModel = req.getContext().get(LTRQParserPlugin.LTRQParser.MODEL);
+      if (reRankModel instanceof ModelQuery) {
+        ((ModelQuery) reRankModel).setFeatureLogger(solrLogger);
+      }
+    }
+  }
 
   @Override
   public void process(ResponseBuilder rb) throws IOException {}

@@ -19,6 +19,7 @@ package org.apache.solr.ltr.feature.norm;
 
 import org.apache.lucene.search.Explanation;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
+import org.apache.solr.ltr.feature.norm.impl.MinMaxNormalizer;
 import org.apache.solr.ltr.feature.norm.impl.StandardNormalizer;
 import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.ltr.util.NormalizerException;
@@ -29,13 +30,14 @@ import org.apache.solr.ltr.util.NormalizerException;
  * will be received by the model.
  *
  * @see IdentityNormalizer
+ * @see MinMaxNormalizer
  * @see StandardNormalizer
  *
  */
 public abstract class Normalizer {
 
   protected String type = this.getClass().getCanonicalName();
-  NamedParams params;
+  protected NamedParams params;
 
   public String getType() {
     return type;
@@ -59,6 +61,9 @@ public abstract class Normalizer {
     float normalized = normalize(explain.getValue());
     String explainDesc = "normalized using " + type;
     if (params != null) explainDesc += " [params " + params + "]";
+    // instead of printing all params, might we (via toString)
+    // print only the parameters actually used?
+    // String explainDesc = "normalized using "+toString();
 
     return Explanation.match(normalized, explainDesc, explain);
   }

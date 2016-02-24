@@ -1,5 +1,3 @@
-package org.apache.solr.ltr.feature.norm.impl;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,34 +15,19 @@ package org.apache.solr.ltr.feature.norm.impl;
  * limitations under the License.
  */
 
-import org.apache.solr.ltr.feature.norm.Normalizer;
-import org.apache.solr.ltr.util.NamedParams;
-import org.apache.solr.ltr.util.NormalizerException;
+package org.apache.solr.ltr.common;
 
-public class IdentityNormalizer extends Normalizer {
+import static org.junit.Assert.assertEquals;
 
-  public static final IdentityNormalizer INSTANCE = new IdentityNormalizer();
+import org.junit.Test;
 
-  public IdentityNormalizer() {
-
+public class TestKeys {
+  @Test
+  public void testKeysUnchanged() {
+    assertEquals(Keys.STORE, "store");
+    assertEquals(Keys.NAME, "name");
+    assertEquals(Keys.TYPE, "type");
+    assertEquals(Keys.PARAMS, "params");
+    assertEquals(Keys.FEATURES, "features");
   }
-
-  public void init(NamedParams params) throws NormalizerException {
-    super.init(params);
-    if (!params.isEmpty()) {
-      throw new NormalizerException(
-        "IdentityNormalizer takes no parameters");
-    }
-  }
-
-  @Override
-  public float normalize(float value) {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return type;
-  }
-
 }

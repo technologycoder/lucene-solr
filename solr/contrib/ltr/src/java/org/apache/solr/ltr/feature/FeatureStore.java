@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.solr.ltr.common.Keys;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.util.FeatureException;
 
@@ -55,10 +56,10 @@ public class FeatureStore {
     List<Object> features = new ArrayList<Object>();
     for (Feature f : store.values()) {
       Map<String,Object> o = new LinkedHashMap<>();
-      o.put("name", f.getName());
-      o.put("type", f.getType());
-      o.put("store", storeName);
-      o.put("params", f.getParams());
+      o.put(Keys.NAME, f.getName());
+      o.put(Keys.TYPE, f.getType());
+      o.put(Keys.STORE, storeName);
+      o.put(Keys.PARAMS, f.getParams());
       features.add(o);
     }
     return features;

@@ -23,20 +23,26 @@ import org.apache.solr.ltr.util.NormalizerException;
 
 public class StandardNormalizer extends Normalizer {
 
-  private float avg;
-  private float std;
+  private static final String AVG_KEY = "avg";
+  private static final String STD_KEY = "std";
+
+  private static final float AVG_VALUE_DEFAULT = 0.0f;
+  private static final float STD_VALUE_DEFAULT = 1.0f;
+
+  private float avg = AVG_VALUE_DEFAULT;
+  private float std = STD_VALUE_DEFAULT;
 
   public void init(NamedParams params) throws NormalizerException {
     super.init(params);
-    if (!params.containsKey("avg")) {
-      throw new NormalizerException("missing param avg");
+    if (!params.containsKey(AVG_KEY)) {
+      throw new NormalizerException("missing param ["+AVG_KEY+"]");
     }
-    if (!params.containsKey("std")) {
-      throw new NormalizerException("missing param std");
+    if (!params.containsKey(STD_KEY)) {
+      throw new NormalizerException("missing param ["+STD_KEY+"]");
     }
-    avg = params.getFloat("avg", 0);
-    std = params.getFloat("std", 1);
-    if (std <= 0) throw new NormalizerException("std must be > 0");
+    avg = params.getFloat(AVG_KEY, AVG_VALUE_DEFAULT);
+    std = params.getFloat(STD_KEY, STD_VALUE_DEFAULT);
+    if (std <= 0.0f) throw new NormalizerException(STD_KEY+" must be > 0");
   }
 
   @Override
@@ -44,4 +50,10 @@ public class StandardNormalizer extends Normalizer {
     return (value - avg) / std;
   }
 
+  @Override
+  public String toString() {
+    return type + " ["
+      +AVG_KEY+"="+avg+","
+      +STD_KEY+"="+std+"]";
+  }
 }

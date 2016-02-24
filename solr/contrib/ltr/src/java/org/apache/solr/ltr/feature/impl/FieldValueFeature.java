@@ -48,14 +48,14 @@ public class FieldValueFeature extends Feature {
     if (!params.containsKey("field")) {
       throw new FeatureException("missing param field");
     }
+    this.fieldName = (String) params.get("field");
+    fields.add(this.fieldName);
   }
 
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    this.fieldName = (String) params.get("field");
-    fields.add(this.fieldName);
-    return new FieldValueFeatureWeight(searcher, name, params, norm, id);
+    return new FieldValueFeatureWeight(searcher, name, norm, id);
   }
 
   @Override
@@ -67,8 +67,8 @@ public class FieldValueFeature extends Feature {
   public class FieldValueFeatureWeight extends FeatureWeight {
 
     public FieldValueFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(FieldValueFeature.this, searcher, name, params, norm, id);
+        Normalizer norm, int id) {
+      super(FieldValueFeature.this, searcher, name, norm, id);
     }
 
     @Override
@@ -76,16 +76,14 @@ public class FieldValueFeature extends Feature {
       return new FieldValueFeatureScorer(this, context);
     }
 
-    public class FieldValueFeatureScorer extends FeatureScorer {
+    public class FieldValueFeatureScorer extends MatchAllIteratorFeatureScorer {
 
       LeafReaderContext context = null;
-      DocIdSetIterator itr;
 
       public FieldValueFeatureScorer(FeatureWeight weight,
           LeafReaderContext context) {
         super(weight);
         this.context = context;
-        this.itr = new MatchAllIterator();
       }
 
       @Override
@@ -125,16 +123,6 @@ public class FieldValueFeature extends Feature {
       @Override
       public String toString() {
         return "FieldValueFeature [name=" + name + " fields=" + fields + "]";
-      }
-
-      @Override
-      public int docID() {
-        return itr.docID();
-      }
-
-      @Override
-      public DocIdSetIterator iterator() {
-        return itr;
       }
 
     }

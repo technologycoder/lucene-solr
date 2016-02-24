@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.solr.ltr.common.Keys;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.util.ModelException;
@@ -67,27 +68,27 @@ public class ModelStore {
     List<Object> list = new ArrayList<>();
     for (ModelMetadata modelmeta : availableModels.values()) {
       Map<String,Object> modelMap = new HashMap<>();
-      modelMap.put("name", modelmeta.getName());
-      modelMap.put("type", modelmeta.getType());
-      modelMap.put("store", modelmeta.getFeatureStoreName());
+      modelMap.put(Keys.NAME, modelmeta.getName());
+      modelMap.put(Keys.TYPE, modelmeta.getType());
+      modelMap.put(Keys.STORE, modelmeta.getFeatureStoreName());
       List<Map<String,Object>> features = new ArrayList<>();
       for (Feature meta : modelmeta.getFeatures()) {
         Map<String,Object> map = new HashMap<String,Object>();
-        map.put("name", meta.getName());
+        map.put(Keys.NAME, meta.getName());
 
         Normalizer n = meta.getNorm();
 
         if (n != null) {
           Map<String,Object> normalizer = new HashMap<>();
-          normalizer.put("type", n.getType());
-          normalizer.put("params", n.getParams());
-          map.put("norm", normalizer);
+          normalizer.put(Keys.TYPE, n.getType());
+          normalizer.put(Keys.PARAMS, n.getParams());
+          map.put("norm", normalizer); // TODO: Keys.NORM needed?
         }
         features.add(map);
 
       }
-      modelMap.put("features", features);
-      modelMap.put("params", modelmeta.getParams());
+      modelMap.put(Keys.FEATURES, features);
+      modelMap.put(Keys.PARAMS, modelmeta.getParams());
 
       list.add(modelMap);
     }

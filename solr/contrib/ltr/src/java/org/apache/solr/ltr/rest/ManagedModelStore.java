@@ -29,6 +29,7 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
+import org.apache.solr.ltr.common.Keys;
 import org.apache.solr.ltr.feature.FeatureStore;
 import org.apache.solr.ltr.feature.ModelMetadata;
 import org.apache.solr.ltr.feature.ModelStore;
@@ -131,17 +132,17 @@ public class ManagedModelStore extends ManagedResource implements
       FeatureStore featureStore) throws NormalizerException, FeatureException,
       CloneNotSupportedException {
     // FIXME name shouldn't be be null, exception?
-    String name = (String) featureMap.get("name");
+    String name = (String) featureMap.get(Keys.NAME);
 
     Normalizer norm = IdentityNormalizer.INSTANCE;
     if (featureMap.containsKey("norm")) {
       logger.info("adding normalizer {}", featureMap);
       Map<String,Object> normMap = (Map<String,Object>) featureMap.get("norm");
       // FIXME type shouldn't be be null, exception?
-      String type = ((String) normMap.get("type"));
+      String type = ((String) normMap.get(Keys.TYPE));
       NamedParams params = null;
-      if (normMap.containsKey("params")) {
-        Object paramsObj = normMap.get("params");
+      if (normMap.containsKey(Keys.PARAMS)) {
+        Object paramsObj = normMap.get(Keys.PARAMS);
         if (paramsObj != null) {
           params = new NamedParams((Map<String,Object>) paramsObj);
         }
@@ -173,17 +174,17 @@ public class ManagedModelStore extends ManagedResource implements
   @SuppressWarnings("unchecked")
   public ModelMetadata makeModelMetaData(Map<String,Object> map)
       throws ModelException {
-    String name = (String) map.get("name");
-    Object o = map.get("store");
+    String name = (String) map.get(Keys.NAME);
+    Object o = map.get(Keys.STORE);
     String featureStoreName = (o == null) ? ManagedFeatureStore.DEFAULT_FSTORE
         : (String) o;
     NamedParams params = null;
     FeatureStore fstore = featureStores.getFeatureStore(featureStoreName);
-    if (!map.containsKey("features")) {
+    if (!map.containsKey(Keys.FEATURES)) {
       throw new SolrException(ErrorCode.BAD_REQUEST,
           "Missing mandatory field features");
     }
-    List<Object> featureList = (List<Object>) map.get("features");
+    List<Object> featureList = (List<Object>) map.get(Keys.FEATURES);
 
     List<Feature> features = new ArrayList<>();
 
@@ -202,12 +203,12 @@ public class ManagedModelStore extends ManagedResource implements
       }
     }
 
-    if (map.containsKey("params")) {
-      Map<String,Object> paramsMap = (Map<String,Object>) map.get("params");
+    if (map.containsKey(Keys.PARAMS)) {
+      Map<String,Object> paramsMap = (Map<String,Object>) map.get(Keys.PARAMS);
       params = new NamedParams(paramsMap);
     }
 
-    String type = (String) map.get("type");
+    String type = (String) map.get(Keys.TYPE);
     ModelMetadata meta = null;
     try {
       Class<?> cl = Class.forName(type);

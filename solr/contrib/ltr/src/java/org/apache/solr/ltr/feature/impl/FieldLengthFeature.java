@@ -67,13 +67,13 @@ public class FieldLengthFeature extends Feature {
     if (!params.containsKey("field")) {
       throw new FeatureException("missing param field");
     }
+    this.field = (String) params.get("field");
   }
 
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    this.field = (String) params.get("field");
-    return new FieldLengthFeatureWeight(searcher, name, params, norm, id);
+    return new FieldLengthFeatureWeight(searcher, name, norm, id);
   }
 
   @Override
@@ -85,8 +85,8 @@ public class FieldLengthFeature extends Feature {
   public class FieldLengthFeatureWeight extends FeatureWeight {
 
     public FieldLengthFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(FieldLengthFeature.this, searcher, name, params, norm, id);
+        Normalizer norm, int id) {
+      super(FieldLengthFeature.this, searcher, name, norm, id);
     }
 
     @Override
@@ -95,17 +95,15 @@ public class FieldLengthFeature extends Feature {
 
     }
 
-    public class FieldLengthFeatureScorer extends FeatureScorer {
+    public class FieldLengthFeatureScorer extends MatchAllIteratorFeatureScorer {
 
       LeafReaderContext context = null;
       NumericDocValues norms = null;
-      DocIdSetIterator itr;
 
       public FieldLengthFeatureScorer(FeatureWeight weight,
           LeafReaderContext context) throws IOException {
         super(weight);
         this.context = context;
-        this.itr = new MatchAllIterator();
         norms = context.reader().getNormValues(field);
 
         // In the constructor, docId is -1, so using 0 as default lookup
@@ -129,16 +127,6 @@ public class FieldLengthFeature extends Feature {
       @Override
       public String toString() {
         return "FieldLengthFeature [name=" + name + " field=" + field + "]";
-      }
-
-      @Override
-      public int docID() {
-        return itr.docID();
-      }
-
-      @Override
-      public DocIdSetIterator iterator() {
-        return itr;
       }
 
     }

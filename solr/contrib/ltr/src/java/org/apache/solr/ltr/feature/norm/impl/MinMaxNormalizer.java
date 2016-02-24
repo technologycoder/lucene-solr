@@ -23,20 +23,26 @@ import org.apache.solr.ltr.util.NormalizerException;
 
 public class MinMaxNormalizer extends Normalizer {
 
-  private float min;
-  private float max;
-  private float delta;
+  private static final String MIN_KEY = "min";
+  private static final String MAX_KEY = "max";
+
+  private static final float MIN_VALUE_DEFAULT = Float.MIN_VALUE;
+  private static final float MAX_VALUE_DEFAULT = Float.MAX_VALUE;
+
+  private float min = MIN_VALUE_DEFAULT;
+  private float max = MAX_VALUE_DEFAULT;
+  private float delta = max - min;
 
   public void init(NamedParams params) throws NormalizerException {
     super.init(params);
-    if (!params.containsKey("min")) throw new NormalizerException(
-        "missing required param [min] for normalizer MinMaxNormalizer");
-    if (!params.containsKey("max")) throw new NormalizerException(
-        "missing required param [max] for normalizer MinMaxNormalizer");
+    if (!params.containsKey(MIN_KEY)) throw new NormalizerException(
+        "missing required param ["+MIN_KEY+"] for normalizer MinMaxNormalizer");
+    if (!params.containsKey(MAX_KEY)) throw new NormalizerException(
+        "missing required param ["+MAX_KEY+"] for normalizer MinMaxNormalizer");
     try {
-      min = (float) params.getFloat("min");
+      min = (float) params.getFloat(MIN_KEY, MIN_VALUE_DEFAULT);
 
-      max = (float) params.getFloat("max");
+      max = (float) params.getFloat(MAX_KEY, MAX_VALUE_DEFAULT);
 
     } catch (Exception e) {
       throw new NormalizerException(
@@ -55,4 +61,10 @@ public class MinMaxNormalizer extends Normalizer {
     return (value - min) / delta;
   }
 
+  @Override
+  public String toString() {
+    return type + " ["
+      +MIN_KEY+"="+min+","
+      +MAX_KEY+"="+max+"]";
+  }
 }

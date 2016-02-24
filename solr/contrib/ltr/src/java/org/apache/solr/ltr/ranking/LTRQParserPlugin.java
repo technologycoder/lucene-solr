@@ -54,9 +54,6 @@ public class LTRQParserPlugin extends QParserPlugin {
 
 
   @Override
-  public void init(@SuppressWarnings("rawtypes") NamedList args) {}
-
-  @Override
   public QParser createParser(String qstr, SolrParams localParams,
       SolrParams params, SolrQueryRequest req) {
     return new LTRQParser(qstr, localParams, params, req);
@@ -68,12 +65,19 @@ public class LTRQParserPlugin extends QParserPlugin {
 
     // param for setting how many documents the should be reranked
     public static final String RERANK_DOCS = "reRankDocs";
+    public static final int RERANK_DOCS_DEFAULT = 200;
 
     // params for setting custom external info that features can use, like query
     // intent
     // TODO: Can we just pass the entire request all the way down to all
     // models/features?
-    public static final String EXTERNAL_FEATURE_INFO = "efi.";
+    public static final String EXTERNAL_FEATURE_INFO_PREFIX = "efi.";
+      // Currently it is the efi. in fq={!ltr model=... efi.something=...} that is used.
+      // However, we might have fv=true and no fq clause and the features that we wish
+      // to be returned in response to fv=true could reference external feature info.
+      // So i think params rather than local params would be the place for efi.something
+      // and yes probably might as well just pass the entire request to ModelQuery
+      // (it already has it now actually?)
 
     ManagedModelStore mr = null;
 
@@ -108,18 +112,22 @@ public class LTRQParserPlugin extends QParserPlugin {
       // Allow reranking more docs than shown, since the nth doc might be the
       // best one after reranking,
       // but not showing more than is reranked.
-      int reRankDocs = localParams.getInt(RERANK_DOCS, 200);
-      int start = params.getInt(CommonParams.START, 0);
-      int rows = params.getInt(CommonParams.ROWS, 10);
+      int reRankDocs = localParams.getInt(RERANK_DOCS, RERANK_DOCS_DEFAULT);
+      int start = params.getInt(CommonParams.START, CommonParams.START_DEFAULT);
+      int rows = params.getInt(CommonParams.ROWS, CommonParams.ROWS_DEFAULT);
       // Feature Vectors
       // FIXME: Exception if feature vectors requested without specifying what
       // features to return??
+      /*
       // For training a new model offline you need feature vectors, but dont yet
       // have a model. Should provide the FeatureStore name as an arg to the
       // feature vector
       // transformer and remove the duplicate fv=true arg
-      boolean returnFeatureVectors = params.getBool(LTRParams.FV, false);
+      ==> yes, fv=true being supported *without* need for a rq={!ltr model=...} makes sense to me
+      */
+      boolean returnFeatureVectors = params.getBool(LTRParams.FV, LTRParams.FV_DEFAULT);
 
+      // perhaps this block is movable to LTRComponent.prepare?
       if (returnFeatureVectors) {
 
         FeatureLogger<?> solrLogger = FeatureLogger.getFeatureLogger(params
@@ -129,6 +137,7 @@ public class LTRQParserPlugin extends QParserPlugin {
         req.getContext().put(MODEL, reRankModel);
       }
 
+      // how about making `reRankDocs` optional and if absent then start+rows will be used?
       if (start + rows > reRankDocs) {
         throw new SolrException(ErrorCode.BAD_REQUEST,
             "Requesting more documents than being reranked.");
@@ -140,9 +149,9 @@ public class LTRQParserPlugin extends QParserPlugin {
       for (Iterator<String> it = localParams.getParameterNamesIterator(); it
           .hasNext();) {
         final String name = it.next();
-        if (name.startsWith(EXTERNAL_FEATURE_INFO)) {
+        if (name.startsWith(EXTERNAL_FEATURE_INFO_PREFIX)) {
           externalFeatureInfo.put(
-              name.substring(EXTERNAL_FEATURE_INFO.length()),
+              name.substring(EXTERNAL_FEATURE_INFO_PREFIX.length()),
               localParams.get(name));
         }
       }

@@ -52,7 +52,7 @@ public class ModelQuery extends Query {
   // contains a description of the model
   protected ModelMetadata meta;
   // feature logger to output the features.
-  private FeatureLogger fl = null;
+  private FeatureLogger featureLogger = null; // renamed from fl to featureLogger for clarity and to avoid confusion with 'fl' parameter
   // Map of external parameters, such as query intent, that can be used by
   // features
   protected Map<String,String> efi;
@@ -69,12 +69,12 @@ public class ModelQuery extends Query {
     return meta;
   }
 
-  public void setFeatureLogger(FeatureLogger fl) {
-    this.fl = fl;
+  public void setFeatureLogger(FeatureLogger featureLogger) {
+    this.featureLogger = featureLogger;
   }
 
   public FeatureLogger getFeatureLogger() {
-    return this.fl;
+    return this.featureLogger;
   }
 
   public Collection<Feature> getAllFeatures() {

@@ -46,10 +46,20 @@ import org.apache.solr.search.SolrIndexSearcher.ProcessedFilter;
 
 public class SolrFeature extends Feature {
 
+  String df;
+
+  @Override
+  public void init(String name, NamedParams params, int id)
+      throws FeatureException {
+    super.init(name, params, id);
+    this.df = (String)params.get(CommonParams.DF);
+    // TODO: add more here
+  }
+
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    return new SolrFeatureWeight(searcher, name, params, norm, id);
+    return new SolrFeatureWeight(searcher, name, norm, id);
   }
 
   public class SolrFeatureWeight extends FeatureWeight {
@@ -58,14 +68,14 @@ public class SolrFeature extends Feature {
     List<Query> queryAndFilters;
 
     public SolrFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) throws IOException {
-      super(SolrFeature.this, searcher, name, params, norm, id);
+        Normalizer norm, int id) throws IOException {
+      super(SolrFeature.this, searcher, name, norm, id);
     }
 
     @Override
     public void process() throws FeatureException {
       try {
-        String df = (String) getParams().get(CommonParams.DF);
+        // from here ...
         String defaultParser = (String) getParams().get("defaultParser");
         String solrQuery = (String) getParams().get(CommonParams.Q);
         List<String> fqs = (List<String>) getParams().get(CommonParams.FQ);
@@ -74,6 +84,7 @@ public class SolrFeature extends Feature {
             && (fqs == null || fqs.isEmpty())) {
           throw new IOException("ERROR: FQ or Q have not been provided");
         }
+        // ... to here - could this be done in 'init' i.e. no getParams() use here?
 
         if (solrQuery == null || solrQuery.isEmpty()) {
           solrQuery = "*:*";

@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles;
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.ltr.TestRerankBase;
+import org.apache.solr.search.ReRankQParserPlugin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,6 +52,26 @@ public class TestLTRQParserPlugin extends TestRerankBase {
   }
 
   @Test
+  public void testLTRQParserPluginConstants() throws Exception {
+    assertEquals(LTRQParserPlugin.NAME, "ltr");
+
+    assertEquals(LTRQParserPlugin.LTRQParser.MODEL, "model");
+
+    assertEquals(LTRQParserPlugin.LTRQParser.RERANK_DOCS, "reRankDocs");
+    assertEquals(LTRQParserPlugin.LTRQParser.RERANK_DOCS_DEFAULT, 200);
+
+    assertEquals(LTRQParserPlugin.LTRQParser.EXTERNAL_FEATURE_INFO_PREFIX, "efi.");
+  }
+
+  @Test
+  public void testReRankAndLTRConstantsMatch() throws Exception {
+    // LTRQParser(Plugin) intends to mirror ReRankQParser(Plugin)
+    // (and perhaps in future there will be a ReRankParams class?)
+    assertEquals(ReRankQParserPlugin.RERANK_DOCS, LTRQParserPlugin.LTRQParser.RERANK_DOCS);
+    assertEquals(ReRankQParserPlugin.RERANK_DOCS_DEFAULT, LTRQParserPlugin.LTRQParser.RERANK_DOCS_DEFAULT);
+  }
+
+  @Test
   public void ltrModelIdMissingTest() throws Exception {
     String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
     // SolrQueryRequest req = req("q", solrQuery, "rows", "4", "fl", "*,score",
@@ -60,7 +81,7 @@ public class TestLTRQParserPlugin extends TestRerankBase {
     query.add("fl", "*, score");
     query.add("rows", "4");
     query.add("fv", "true");
-    query.add("rq", "{!ltr reRankDocs=100}");
+    query.add("rq", "{!"+LTRQParserPlugin.NAME+" "+LTRQParserPlugin.LTRQParser.RERANK_DOCS+"=100}");
 
     String res = restTestHarness.query("/query" + query.toQueryString());
     assert (res.contains("Must provide model in the request"));

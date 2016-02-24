@@ -64,7 +64,7 @@ public class ValueFeature extends Feature {
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    return new ValueFeatureWeight(searcher, name, params, norm, id);
+    return new ValueFeatureWeight(searcher, name, norm, id);
   }
 
   public class ValueFeatureWeight extends FeatureWeight {
@@ -72,8 +72,8 @@ public class ValueFeature extends Feature {
     protected float featureValue;
 
     public ValueFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(ValueFeature.this, searcher, name, params, norm, id);
+        Normalizer norm, int id) {
+      super(ValueFeature.this, searcher, name, norm, id);
     }
 
     @Override
@@ -100,18 +100,16 @@ public class ValueFeature extends Feature {
      * as a simple ValueFeature, or to return a default scorer in case an
      * underlying feature's scorer is null.
      */
-    public class ValueFeatureScorer extends FeatureScorer {
+    public class ValueFeatureScorer extends MatchAllIteratorFeatureScorer {
 
       float constScore;
       String featureType;
-      DocIdSetIterator itr;
 
       public ValueFeatureScorer(FeatureWeight weight, float constScore,
           String featureType) {
         super(weight);
         this.constScore = constScore;
         this.featureType = featureType;
-        this.itr = new MatchAllIterator();
       }
 
       @Override
@@ -122,16 +120,6 @@ public class ValueFeature extends Feature {
       @Override
       public String toString() {
         return featureType + " [name=" + name + " value=" + constScore + "]";
-      }
-
-      @Override
-      public int docID() {
-        return itr.docID();
-      }
-
-      @Override
-      public DocIdSetIterator iterator() {
-        return itr;
       }
 
     }

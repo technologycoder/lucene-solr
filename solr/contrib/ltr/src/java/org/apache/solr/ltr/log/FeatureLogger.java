@@ -69,18 +69,14 @@ public abstract class FeatureLogger<FV_TYPE> {
    * returns a FeatureLogger that logs the features in output, using the format
    * specified in the 'format' param: 'csv' will log the features as a unique
    * string in csv format 'json' will log the features in a map in a Map of
-   * featureName keys to featureValue values if format is null or empty, csv
-   * format will be selected.
+   * featureName keys to featureValue values.
    *
    * @return a feature logger for the format specified.
    */
   public static FeatureLogger<?> getFeatureLogger(String format) {
-    if (format == null || format.isEmpty()) return new CSVFeatureLogger();
-    if (format.equals("csv")) return new CSVFeatureLogger();
-    if (format.equals("json")) return new MapFeatureLogger();
-    logger.warn("unknown feature logger {}", format);
+    if (CSVFeatureLogger.FORMAT.equals(format)) return new CSVFeatureLogger();
+    if (JSONFeatureLogger.FORMAT.equals(format)) return new JSONFeatureLogger();
     return null;
-
   }
 
   public abstract FV_TYPE makeFeatureVector(String[] featureNames,
@@ -100,7 +96,8 @@ public abstract class FeatureLogger<FV_TYPE> {
         .hashCode() + 31 * docid);
   }
 
-  public static class MapFeatureLogger extends FeatureLogger<Map<String,Float>> {
+  public static class JSONFeatureLogger extends FeatureLogger<Map<String,Float>> {
+    public static final String FORMAT = "json";
 
     @Override
     public Map<String,Float> makeFeatureVector(String[] featureNames,
@@ -120,6 +117,7 @@ public abstract class FeatureLogger<FV_TYPE> {
   }
 
   public static class CSVFeatureLogger extends FeatureLogger<String> {
+    public static final String FORMAT = "csv";
     StringBuilder sb = new StringBuilder(500);
     char keyValueSep = ':';
     char featureSep = ';';

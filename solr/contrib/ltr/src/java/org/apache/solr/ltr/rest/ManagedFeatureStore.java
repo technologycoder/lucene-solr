@@ -27,6 +27,7 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
+import org.apache.solr.ltr.common.Keys;
 import org.apache.solr.ltr.feature.FeatureStore;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.util.FeatureException;
@@ -87,15 +88,15 @@ public class ManagedFeatureStore extends ManagedResource implements
   }
 
   public void update(Map<String,Object> map) {
-    String name = (String) map.get("name");
-    String type = (String) map.get("type");
-    String store = (String) map.get("store");
+    String name = (String) map.get(Keys.NAME);
+    String type = (String) map.get(Keys.TYPE);
+    String store = (String) map.get(Keys.STORE);
 
     NamedParams params = null;
 
-    if (map.containsKey("params")) {
+    if (map.containsKey(Keys.PARAMS)) {
       @SuppressWarnings("unchecked")
-      Map<String,Object> np = (Map<String,Object>) map.get("params");
+      Map<String,Object> np = (Map<String,Object>) map.get(Keys.PARAMS);
       params = new NamedParams(np);
     }
 

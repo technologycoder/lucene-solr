@@ -30,13 +30,11 @@ import org.apache.lucene.search.Weight;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.util.MacroExpander;
-import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.SolrQueryRequest;
 
 public abstract class FeatureWeight extends Weight {
 
   protected String name;
-  protected NamedParams params = NamedParams.EMPTY;
   protected Normalizer norm = IdentityNormalizer.INSTANCE;
   protected IndexSearcher searcher;
   protected SolrQueryRequest request;
@@ -49,7 +47,7 @@ public abstract class FeatureWeight extends Weight {
    * Initialize a feature without the normalizer from the feature file. This is
    * called on initial construction since multiple models share the same
    * features, but have different normalizers. A concrete model's feature is
-   * copied through featForNewModel().
+   * copied through ???featForNewModel()???.
    *
    * @param q
    *          Solr query associated with this FeatureWeight
@@ -57,8 +55,6 @@ public abstract class FeatureWeight extends Weight {
    *          Solr searcher available for features if they need them
    * @param name
    *          Name of the feature
-   * @param params
-   *          Custom parameters that the feature may use
    * @param norm
    *          Feature normalizer used to normalize the feature value
    * @param id
@@ -67,11 +63,10 @@ public abstract class FeatureWeight extends Weight {
    *          features.
    */
   public FeatureWeight(Query q, IndexSearcher searcher, String name,
-      NamedParams params, Normalizer norm, int id) {
+      Normalizer norm, int id) {
     super(q);
     this.searcher = searcher;
     this.name = name;
-    this.params = params;
     this.id = id;
     this.norm = norm;
   }
@@ -97,10 +92,6 @@ public abstract class FeatureWeight extends Weight {
 
   public Normalizer getNorm() {
     return norm;
-  }
-
-  public NamedParams getParams() {
-    return params;
   }
 
   public int getId() {
@@ -145,7 +136,7 @@ public abstract class FeatureWeight extends Weight {
 
   @Override
   public String toString() {
-    return this.getClass().getName() + " [name=" + name + ", params=" + params
+    return this.getClass().getName() + " [name=" + name
         + "]";
   }
 

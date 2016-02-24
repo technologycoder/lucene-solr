@@ -30,14 +30,13 @@ import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.ranking.FeatureScorer;
 import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.ranking.LTRRescorer;
-import org.apache.solr.ltr.util.NamedParams;
 
 public class OriginalScoreFeature extends Feature {
 
   @Override
   public OriginalScoreWeight createWeight(IndexSearcher searcher,
       boolean needsScores) throws IOException {
-    return new OriginalScoreWeight(searcher, name, params, norm, id);
+    return new OriginalScoreWeight(searcher, name, norm, id);
 
   }
 
@@ -46,8 +45,8 @@ public class OriginalScoreFeature extends Feature {
     Weight w = null;
 
     public OriginalScoreWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(OriginalScoreFeature.this, searcher, name, params, norm, id);
+        Normalizer norm, int id) {
+      super(OriginalScoreFeature.this, searcher, name, norm, id);
 
     }
 
