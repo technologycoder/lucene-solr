@@ -38,10 +38,12 @@ public class TestJapaneseNumberFilterFactory extends BaseTokenStreamTestCase {
     JapaneseTokenizerFactory tokenizerFactory = new JapaneseTokenizerFactory(args);
 
     tokenizerFactory.inform(new StringMockResourceLoader(""));
-    TokenStream tokenStream = tokenizerFactory.create(new StringReader("昨日のお寿司は1０万円でした。"));
+    StringReader reader = new StringReader("昨日のお寿司は1０万円でした。");
+    Tokenizer tokenizer = tokenizerFactory.create(newAttributeFactory(random()));
+    tokenizer.setReader(reader);
 
     JapaneseNumberFilterFactory factory = new JapaneseNumberFilterFactory(new HashMap<String, String>());
-    tokenStream = factory.create(tokenStream);
+    TokenStream tokenStream = factory.create(tokenizer);
     assertTokenStreamContents(tokenStream,
         new String[] { "昨日", "の", "お", "寿司", "は", "100000", "円", "でし", "た", "。" }
     );
