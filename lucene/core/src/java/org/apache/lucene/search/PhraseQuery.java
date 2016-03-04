@@ -272,6 +272,7 @@ public class PhraseQuery extends Query {
   public boolean isEmpty() {
     return terms.isEmpty();
   }
+
   /**
    * Returns the relative positions of terms in this phrase.
    */
