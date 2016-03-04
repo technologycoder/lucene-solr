@@ -38,8 +38,9 @@ public class TestRepeatingTokenFilter extends LuceneTestCase{
     Map<String,String> initParams = new HashMap<>();
     initParams.put(RepeatingTokenFilterFactory.DELIMITER_ATTR, delimiter);
     RepeatingTokenFilterFactory factory = new RepeatingTokenFilterFactory(initParams);
-    TokenStream stream = new MockTokenizer(reader);
-    stream = factory.create(stream);
+    MockTokenizer mock= new MockTokenizer();
+    mock.setReader(reader);
+    TokenStream stream = factory.create(mock);
     
     CharTermAttribute termAtt = null;
     assertTrue("has no CharTermAttribute", stream.hasAttribute(CharTermAttribute.class));
