@@ -18,17 +18,13 @@
 package org.apache.lucene.analysis.standard;
 
 import java.io.IOException;
-import java.io.Reader;
 
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.standard.std31.StandardTokenizerImpl31;
-import org.apache.lucene.analysis.standard.std34.StandardTokenizerImpl34;
-import org.apache.lucene.analysis.standard.std40.StandardTokenizerImpl40;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
 import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
-import org.apache.lucene.util.Version;
+import org.apache.lucene.util.AttributeFactory;
 
 /** Custom tokenizer copied from StandardTokenizer and modified
  * to use a BBFinancialStandardTokenizerImpl scanner. 
@@ -36,7 +32,7 @@ import org.apache.lucene.util.Version;
  */
 public final class BBFinancialStandardTokenizer extends Tokenizer {
   /** A private instance of the JFlex-constructed scanner */
-  private StandardTokenizerInterface scanner;
+  private BBFinancialStandardTokenizerImpl scanner;
 
   public static final int ALPHANUM          = 0;
   /** @deprecated (3.1) */
@@ -106,25 +102,22 @@ public final class BBFinancialStandardTokenizer extends Tokenizer {
   /**
    * Creates a new instance of the {@link org.apache.lucene.analysis.standard.StandardTokenizer}.  Attaches
    * the <code>input</code> to the newly created JFlex scanner.
-   *
-   * @param input The input reader
-   *
+
    * See http://issues.apache.org/jira/browse/LUCENE-1068
    */
-  public BBFinancialStandardTokenizer(Version matchVersion, Reader input) {
-    super(input);
-    init(matchVersion);
+  public BBFinancialStandardTokenizer() {
+    init();
   }
 
   /**
-   * Creates a new StandardTokenizer with a given {@link org.apache.lucene.util.AttributeSource.AttributeFactory} 
+   * Creates a new StandardTokenizer with a given {@link org.apache.lucene.util.AttributeFactory} 
    */
-  public BBFinancialStandardTokenizer(Version matchVersion, AttributeFactory factory, Reader input) {
-    super(factory, input);
-    init(matchVersion);
+  public BBFinancialStandardTokenizer(AttributeFactory factory) {
+    super(factory);
+    init();
   }
 
-  private final void init(Version matchVersion) {
+  private final void init() {
     this.scanner = new BBFinancialStandardTokenizerImpl(input);
   }
 
@@ -148,7 +141,7 @@ public final class BBFinancialStandardTokenizer extends Tokenizer {
     while(true) {
       int tokenType = scanner.getNextToken();
 
-      if (tokenType == StandardTokenizerInterface.YYEOF) {
+      if (tokenType == BBFinancialStandardTokenizerImpl.YYEOF) {
         return false;
       }
 
