@@ -5,6 +5,7 @@ package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.queryparser.xml.DOMUtils;
@@ -52,16 +53,16 @@ public class BooleanQueryBuilder implements QueryBuilder {
     bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
 
     NodeList nl = e.getChildNodes();
-    final int nl_len = nl.getLength();
-    
-    boolean matchAllDocsExists = false; 
+
+    boolean matchAllDocsExists = false;
     boolean shouldOrMustExists = false;
-    
-    for (int i = 0; i < nl_len; i++) {
+
+    for (int i = 0; i < nl.getLength(); i++) {
       Node node = nl.item(i);
       if (node.getNodeName().equals("Clause")) {
         Element clauseElem = (Element) node;
         BooleanClause.Occur occurs = getOccursValue(clauseElem);
+
         Element clauseQuery = DOMUtils.getFirstChildOrFail(clauseElem);
         Query q = factory.getQuery(clauseQuery);
         if (q instanceof MatchAllDocsQuery) {
@@ -74,15 +75,22 @@ public class BooleanQueryBuilder implements QueryBuilder {
         bq.add(new BooleanClause(q, occurs));
       }
     }
+
     //MatchallDocs query needs to be added only if there is no other must or should clauses in the query.
     //At least we prerserve the users intention to execute the rest of the query. instead of flooding him with all the documents.
     if (matchAllDocsExists && !shouldOrMustExists) {
       bq.add(new BooleanClause(new MatchAllDocsQuery(), BooleanClause.Occur.MUST));
     }
-    if(bq.clauses().size() == 1)
-      return bq.clauses().get(0).getQuery();
-    else
-      return bq;
+    Query q = bq.build();
+
+    if (((BooleanQuery)q).clauses().size() == 1)
+      q = ((BooleanQuery)q).clauses().get(0).getQuery();
+
+    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+    if (boost != 1f) {
+      q = new BoostQuery(q, boost);
+    }
+    return q;
   }
 
   static BooleanClause.Occur getOccursValue(Element clauseElem) throws ParserException {

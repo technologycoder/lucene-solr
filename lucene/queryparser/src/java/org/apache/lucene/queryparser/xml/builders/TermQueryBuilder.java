@@ -1,5 +1,6 @@
 package org.apache.lucene.queryparser.xml.builders;
 
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.queryparser.xml.DOMUtils;
@@ -41,19 +42,15 @@ public class TermQueryBuilder implements QueryBuilder {
   public Query getQuery(Element e) throws ParserException {
     SingleTermProcessor tp = new SingleTermProcessor();
     String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    //extract the value and fail if there is no value. 
-    //This is a query builder for one and only one term
     String value =  DOMUtils.getNonBlankTextOrFail(e);
     this.termBuilder.extractTerms(tp, field, value);
-    
-    try {
-      TermQuery q = new TermQuery(tp.getTerm());
-      q.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
-      return q;
-    } catch (ParserException ex){
-      throw new ParserException(ex.getMessage() + " field:" + field 
-          + " value:" + value + ". Check the query anlyser configured on this field." );
-    }
-  }
 
+    Query tq = new TermQuery(tp.getTerm());
+    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+    if (boost != 1f) {
+      tq = new BoostQuery(tq, boost);
+    }
+
+    return tq;
+  }
 }

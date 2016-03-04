@@ -51,9 +51,9 @@ public class DisjunctionMaxQueryBuilder implements QueryBuilder {
 
     boolean matchAllDocsExists = false; 
     boolean anyOtherQueryExists = false;
+    List<Query> disjuncts = new ArrayList<>();
     NodeList nl = e.getChildNodes();
-    final int nl_len = nl.getLength();
-    for (int i = 0; i < nl_len; i++) {
+    for (int i = 0; i < nl.getLength(); i++) {
       Node node = nl.item(i);
       if (node instanceof Element) { // all elements are disjuncts.
         Element queryElem = (Element) node;
@@ -65,14 +65,20 @@ public class DisjunctionMaxQueryBuilder implements QueryBuilder {
         else {
           anyOtherQueryExists = true;
         }
-        dq.add(q);
+        disjuncts.add(q);
       }
     }
+
     //MatchallDocs query needs to be added only if there is no other queries inside the DisjunctionMaxQuery.
     //At least we preserve the users intention to execute the rest of the query. instead of flooding him with all the documents.
-    if (matchAllDocsExists && !anyOtherQueryExists) 
+    if (matchAllDocsExists && !anyOtherQueryExists)
       return new MatchAllDocsQuery();
-    else
-      return dq;
+
+    Query q = new DisjunctionMaxQuery(disjuncts, tieBreaker);
+    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+    if (boost != 1f) {
+      q = new BoostQuery(q, boost);
+    }
+    return q;
   }
 }
