@@ -15,10 +15,8 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.FieldedQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
-import org.apache.lucene.search.intervals.OrderedNearQuery;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
 
@@ -169,7 +167,6 @@ public class WildcardNearQueryParser {
         int positionIncrement = (posIncrAtt != null) ? posIncrAtt
             .getPositionIncrement() : 1;
         currentPosition += positionIncrement;
-        termAtt.fillBytesRef();
         FieldedQuery q = new TermQuery(new Term(field, BytesRef.deepCopyOf(bytes)));
         if (q != null) {
             queries.add(q);
@@ -280,7 +277,6 @@ public class WildcardNearQueryParser {
           }
         }
 
-        termAtt.fillBytesRef();
         lastOffset = offsetAtt.endOffset();
         if (isAllWhitespace(bytes)) {
           // On an all-whitespace token, this breaks concatentation and drops the token.

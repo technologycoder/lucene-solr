@@ -15,10 +15,8 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.FieldedQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
-import org.apache.lucene.search.intervals.OrderedNearQuery;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
 
@@ -79,8 +77,7 @@ public class KeywordNearQueryParser {
     // TODO: this would have been much nicer if we could chain the whitespacetokenizer 
     // to the main analyser chain just before the tokenizer of the main chain and breaking out of the analysis on finding wildcards.
     if (!ignoreWildcard && checkWildcard(text) != WildcardState.NON_WILDCARD) {
-      WhitespaceAnalyzer wa = new WhitespaceAnalyzer(
-          org.apache.lucene.util.Version.LUCENE_CURRENT);
+      WhitespaceAnalyzer wa = new WhitespaceAnalyzer();
       TokenStream source = null;
       try {
         source = wa.tokenStream("ws_delimiter", text);//field name here is anyway a dummy name
@@ -96,7 +93,6 @@ public class KeywordNearQueryParser {
             + ", text:" + text);
         
         while (source.incrementToken()) {
-          termAtt.fillBytesRef();
           String token = bytes.utf8ToString();
           WildcardState wcs = checkWildcard(token);
           switch (wcs) {
@@ -196,7 +192,6 @@ public class KeywordNearQueryParser {
         int positionIncrement = (posIncrAtt != null) ? posIncrAtt
             .getPositionIncrement() : 1;
         currentPosition += positionIncrement;
-        termAtt.fillBytesRef();
         queries.add(new TermQuery(new Term(field, BytesRef.deepCopyOf(bytes))));
         positions.add(currentPosition);
       }
