@@ -20,7 +20,6 @@ package org.apache.lucene.analysis.standard;
 import java.io.Reader;
 import java.io.StringReader;
 
-import org.apache.lucene.analysis.MockTokenizer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.util.BaseTokenStreamFactoryTestCase;
@@ -60,14 +59,16 @@ public class TestStandardFactories extends BaseTokenStreamFactoryTestCase {
    */
   public void testBBFinancialStandardTokenizer() throws Exception {
     Reader reader = new StringReader("What's this thing do?");
-    TokenStream stream = tokenizerFactory("BBFinancialStandard").create(reader);
+    Tokenizer stream = tokenizerFactory("BBFinancialStandard").create(newAttributeFactory());
+    stream.setReader(reader);
     assertTokenStreamContents(stream,
         new String[] { "What's", "this", "thing", "do" });
   }
 
   public void testBBFinancialStandardTokenizerCurrencySymbols() throws Exception {
     Reader reader = new StringReader("\u00A310 $10 \u20AC10 \u00A510");
-    TokenStream stream = tokenizerFactory("BBFinancialStandard").create(reader);
+    Tokenizer stream = tokenizerFactory("BBFinancialStandard").create(newAttributeFactory());
+    stream.setReader(reader);
     assertTokenStreamContents(stream,
         new String[] { "\u00A310", "$10", "\u20AC10", "\u00A510" });
   }
