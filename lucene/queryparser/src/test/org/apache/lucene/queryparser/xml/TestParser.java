@@ -383,11 +383,6 @@ public class TestParser extends LuceneTestCase {
     dumpResults("ComplexPhraseQuery with a single prefix query term", q, 5);
   }
   
-  public void testComplexPhraseNearQueryXML() throws Exception {
-    Query q = parse("ComplexPhraseNearQuery.xml");
-    dumpResults("ComplexPhraseNearQuery", q, 5);
-  }
-  
   /* test cases for keyword near query */
   public void testKWNearQuery() throws Exception {
     Query q = parse("KeywordNear.xml");
