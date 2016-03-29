@@ -78,7 +78,6 @@ public final class ZookeeperInfoServlet extends BaseSolrServlet {
       return;
     }
 
-    log.info("doGet params={}", params);
     String path = params.get("path");
     String addr = params.get("addr");
 
