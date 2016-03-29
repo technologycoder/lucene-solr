@@ -37,6 +37,8 @@ import org.apache.solr.schema.SchemaField;
 import org.apache.solr.schema.DateField;
 import org.apache.solr.search.DocList;
 import org.apache.solr.search.ReturnFields;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Base class for text-oriented response writers.
  *
@@ -51,7 +53,8 @@ public abstract class TextResponseWriter {
     indentChars[0] = '\n';  // start with a newline
   }
 
-  
+  static final Logger log = LoggerFactory.getLogger(TextResponseWriter.class);
+
   protected final FastWriter writer;
   protected final IndexSchema schema;
   protected final SolrQueryRequest req;
@@ -219,7 +222,15 @@ public abstract class TextResponseWriter {
   {
     writeStartDocumentList(name, docs.getStart(), docs.size(), docs.getNumFound(), docs.getMaxScore() );
     for( int i=0; i<docs.size(); i++ ) {
-      writeSolrDocument( null, docs.get(i), returnFields, i );
+      SolrDocument doc = docs.get(i);
+      if (doc != null)
+      {
+        writeSolrDocument( null, doc, returnFields, i );
+      }
+      else
+      {
+        log.info("Found null SolrDocument at position: {}, in SolrDocumentList of size {}, with numFound {}", i, docs.size(), docs.getNumFound());
+      }
     }
     writeEndDocumentList();
   }
