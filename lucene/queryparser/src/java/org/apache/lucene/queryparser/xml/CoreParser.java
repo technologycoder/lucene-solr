@@ -9,7 +9,6 @@ import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
 import java.io.InputStream;
 
 /*
@@ -36,8 +35,6 @@ public class CoreParser implements QueryBuilder {
 
   protected Analyzer analyzer;
   protected QueryParser parser;
-  protected TermBuilder termBuilder;
-
   protected QueryBuilderFactory queryFactory;
   protected FilterBuilderFactory filterFactory;
   //Controls the max size of the LRU cache used for QueryFilter objects parsed.
@@ -66,23 +63,13 @@ public class CoreParser implements QueryBuilder {
   protected CoreParser(String defaultField, Analyzer analyzer, QueryParser parser) {
     this.analyzer = analyzer;
     this.parser = parser;
-    this.termBuilder = new TermBuilder(analyzer);
-
     filterFactory = new FilterBuilderFactory();
     filterFactory.addBuilder("RangeFilter", new RangeFilterBuilder());
     filterFactory.addBuilder("NumericRangeFilter", new NumericRangeFilterBuilder());
 
     queryFactory = new QueryBuilderFactory();
-    {
-      QueryBuilder termQueryBuilder = new BBTermQueryBuilder(termBuilder);
-      queryFactory.addBuilder("TermQuery", termQueryBuilder);
-      queryFactory.addBuilder("TermFreqQuery", new TermFreqBuilder(null /* termFilterBuilder */, termQueryBuilder));
-    }
-    {
-      QueryBuilder termsQueryBuilder = new BBTermsQueryBuilder(termBuilder);
-      queryFactory.addBuilder("TermsQuery", termsQueryBuilder);
-      queryFactory.addBuilder("TermsFreqQuery", new TermFreqBuilder(null /* termsFilterBuilder */, termsQueryBuilder));
-    }
+    queryFactory.addBuilder("TermQuery", new TermQueryBuilder());
+    queryFactory.addBuilder("TermsQuery", new TermsQueryBuilder(analyzer));
     queryFactory.addBuilder("MatchAllDocsQuery", new MatchAllDocsQueryBuilder());
     queryFactory.addBuilder("BooleanQuery", new BooleanQueryBuilder(queryFactory));
     queryFactory.addBuilder("NumericRangeQuery", new NumericRangeQueryBuilder());
@@ -94,16 +81,6 @@ public class CoreParser implements QueryBuilder {
     }
     queryFactory.addBuilder("FilteredQuery", new FilteredQueryBuilder(filterFactory, queryFactory));
     queryFactory.addBuilder("ConstantScoreQuery", new ConstantScoreQueryBuilder(filterFactory));
-    queryFactory.addBuilder("PhraseQuery", new PhraseQueryBuilder(analyzer));
-    //GenericTextQuery is a error tolerant version of PhraseQuery
-    queryFactory.addBuilder("GenericTextQuery", new GenericTextQueryBuilder(analyzer));
-    
-    queryFactory.addBuilder("ComplexPhraseQuery", new ComplexPhraseQueryBuilder(analyzer));
-    
-    queryFactory.addBuilder("NearQuery", new NearQueryBuilder(queryFactory));
-    queryFactory.addBuilder("NearFirstQuery", new NearFirstQueryBuilder(queryFactory));
-    queryFactory.addBuilder("KeywordNearQuery", new KeywordNearQueryBuilder(analyzer));
-    queryFactory.addBuilder("WildcardNearQuery", new WildcardNearQueryBuilder(analyzer));
 
     filterFactory.addBuilder("CachedFilter", new CachedFilterBuilder(queryFactory,
         filterFactory, maxNumCachedFilters));

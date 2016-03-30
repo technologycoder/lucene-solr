@@ -1,6 +1,6 @@
 package org.apache.solr.search;
 
-import org.apache.lucene.queryparser.xml.CorePlusQueriesParser;
+import org.apache.lucene.queryparser.xml.BBCoreParser;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.search.Query;
 
@@ -58,7 +58,7 @@ public class XmlQParserPlugin extends QParserPlugin {
       final IndexSchema schema = req.getSchema();
       SolrCoreParser solr_parser = new SolrCoreParser(
           req,
-          new CorePlusQueriesParser(
+          new BBCoreParser(
               QueryParsing.getDefaultField(schema, getParam(CommonParams.DF)),
               schema.getQueryAnalyzer()));
 
