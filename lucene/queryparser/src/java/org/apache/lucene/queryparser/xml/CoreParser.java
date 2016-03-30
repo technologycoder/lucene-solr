@@ -74,12 +74,12 @@ public class CoreParser implements QueryBuilder {
 
     queryFactory = new QueryBuilderFactory();
     {
-      QueryBuilder termQueryBuilder = new TermQueryBuilder(termBuilder);
+      QueryBuilder termQueryBuilder = new BBTermQueryBuilder(termBuilder);
       queryFactory.addBuilder("TermQuery", termQueryBuilder);
       queryFactory.addBuilder("TermFreqQuery", new TermFreqBuilder(null /* termFilterBuilder */, termQueryBuilder));
     }
     {
-      QueryBuilder termsQueryBuilder = new TermsQueryBuilder(termBuilder);
+      QueryBuilder termsQueryBuilder = new BBTermsQueryBuilder(termBuilder);
       queryFactory.addBuilder("TermsQuery", termsQueryBuilder);
       queryFactory.addBuilder("TermsFreqQuery", new TermFreqBuilder(null /* termsFilterBuilder */, termsQueryBuilder));
     }
