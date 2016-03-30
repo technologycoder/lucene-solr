@@ -29,11 +29,11 @@ import org.w3c.dom.Element;
 /**
  * Builder for {@link TermFilter}
  */
-public class TermFilterBuilder implements FilterBuilder {
+public class BBTermFilterBuilder implements FilterBuilder {
 
   protected final TermBuilder termBuilder;
 
-  public TermFilterBuilder(TermBuilder termBuilder) {
+  public BBTermFilterBuilder(TermBuilder termBuilder) {
     this.termBuilder = termBuilder;
   }
 
