@@ -2,8 +2,12 @@ package org.apache.lucene.queryparser.xml;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.xml.builders.BooleanFilterBuilder;
+import org.apache.lucene.queryparser.xml.builders.BoostingQueryBuilder;
 import org.apache.lucene.queryparser.xml.builders.DuplicateFilterBuilder;
 import org.apache.lucene.queryparser.xml.builders.FuzzyLikeThisQueryBuilder;
+import org.apache.lucene.queryparser.xml.builders.LikeThisQueryBuilder;
+import org.apache.lucene.queryparser.xml.builders.TermsFilterBuilder;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -27,7 +31,7 @@ import org.apache.lucene.queryparser.xml.builders.FuzzyLikeThisQueryBuilder;
  * Lucene's <code>sandbox</code> and <code>queries</code>
  * modules in addition to core queries.
  */
-public class CorePlusExtensionsParser extends CorePlusQueriesParser {
+public class CorePlusExtensionsParser extends CoreParser {
 
   /**
    * Construct an XML parser that uses a single instance QueryParser for handling
@@ -50,7 +54,12 @@ public class CorePlusExtensionsParser extends CorePlusQueriesParser {
 
   private CorePlusExtensionsParser(String defaultField, Analyzer analyzer, QueryParser parser) {
     super(defaultField, analyzer, parser);
+    filterFactory.addBuilder("TermsFilter", new TermsFilterBuilder(analyzer));
+    filterFactory.addBuilder("BooleanFilter", new BooleanFilterBuilder(filterFactory));
     filterFactory.addBuilder("DuplicateFilter", new DuplicateFilterBuilder());
+    String fields[] = {"contents"};
+    queryFactory.addBuilder("LikeThisQuery", new LikeThisQueryBuilder(analyzer, fields));
+    queryFactory.addBuilder("BoostingQuery", new BoostingQueryBuilder(queryFactory));
     queryFactory.addBuilder("FuzzyLikeThisQuery", new FuzzyLikeThisQueryBuilder(analyzer));
 
   }

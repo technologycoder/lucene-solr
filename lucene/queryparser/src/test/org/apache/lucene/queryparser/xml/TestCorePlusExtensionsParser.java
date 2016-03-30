@@ -24,9 +24,29 @@ import org.junit.Assume;
 import java.io.IOException;
 import java.util.List;
 
-public class TestCorePlusExtensionsParser extends TestCorePlusQueriesParser {
+public class TestCorePlusExtensionsParser extends TestCoreParser {
 
   private CoreParser corePlusExtensionsParser;
+
+  public void testLikeThisQueryXML() throws Exception {
+    Query q = parse("LikeThisQuery.xml");
+    dumpResults("like this", q, 5);
+  }
+
+  public void testBoostingQueryXML() throws Exception {
+    Query q = parse("BoostingQuery.xml");
+    dumpResults("boosting ", q, 5);
+  }
+
+  public void testTermsFilterXML() throws Exception {
+    Query q = parse("TermsFilterQuery.xml");
+    dumpResults("Terms Filter", q, 5);
+  }
+
+  public void testBooleanFilterXML() throws ParserException, IOException {
+    Query q = parse("BooleanFilter.xml");
+    dumpResults("Boolean filter", q, 5);
+  }
 
   public void testFuzzyLikeThisQueryXML() throws Exception {
     Query q = parse("FuzzyLikeThisQuery.xml");

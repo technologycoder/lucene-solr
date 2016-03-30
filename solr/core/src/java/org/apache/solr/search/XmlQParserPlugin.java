@@ -1,5 +1,18 @@
 package org.apache.solr.search;
 
+import org.apache.lucene.queryparser.xml.BBCoreParser;
+import org.apache.lucene.queryparser.xml.ParserException;
+import org.apache.lucene.search.Query;
+import org.apache.solr.common.params.CommonParams;
+import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.util.NamedList;
+import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.schema.IndexSchema;
+import org.apache.solr.search.xml.SolrCoreParser;
+
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,18 +30,6 @@ package org.apache.solr.search;
  * limitations under the License.
  */
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryparser.xml.ParserException;
-import org.apache.lucene.search.Query;
-
-import org.apache.solr.common.params.CommonParams;
-import org.apache.solr.common.params.SolrParams;
-import org.apache.solr.common.util.NamedList;
-import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.schema.IndexSchema;
 
 public class XmlQParserPlugin extends QParserPlugin {
   public static final String NAME = "xmlparser";
@@ -46,11 +47,14 @@ public class XmlQParserPlugin extends QParserPlugin {
         return null;
       }
       final IndexSchema schema = req.getSchema();
-      final String defaultField = QueryParsing.getDefaultField(schema, getParam(CommonParams.DF));
-      final Analyzer analyzer = schema.getQueryAnalyzer();
-      final SolrCoreParser solrParser = new SolrCoreParser(defaultField, analyzer, req);
+      SolrCoreParser solr_parser = new SolrCoreParser(
+          req,
+          new BBCoreParser(
+              QueryParsing.getDefaultField(schema, getParam(CommonParams.DF)),
+              schema.getQueryAnalyzer()));
+
       try {
-        return solrParser.parse(new ByteArrayInputStream(qstr.getBytes(StandardCharsets.UTF_8)));
+        return solr_parser.parse(new ByteArrayInputStream(qstr.getBytes(StandardCharsets.UTF_8)));
       } catch (ParserException e) {
         throw new SyntaxError(e.getMessage() + " in " + req.toString());
       }

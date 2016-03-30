@@ -22,14 +22,11 @@ import org.apache.lucene.queryparser.xml.builders.*;
  */
 
 /**
- * Assembles a QueryBuilder which uses Query objects from
- * Lucene's <code>queries</code> module in addition to core
- * queries.
- *
- * Unlike CorePlusExtensionsParser this QueryBuilder does not use
- * Query objects from Lucene's <code>sandbox</code> module.
+ * CoreParser + custom builders
  */
-public class CorePlusQueriesParser extends CoreParser {
+public class BBCoreParser extends CoreParser {
+
+  protected TermBuilder termBuilder;
 
   /**
    * Construct an XML parser that uses a single instance QueryParser for handling
@@ -37,7 +34,7 @@ public class CorePlusQueriesParser extends CoreParser {
    *
    * @param parser A QueryParser which will be synchronized on during parse calls.
    */
-  public CorePlusQueriesParser(Analyzer analyzer, QueryParser parser) {
+  public BBCoreParser(Analyzer analyzer, QueryParser parser) {
     this(null, analyzer, parser);
   }
 
@@ -46,13 +43,25 @@ public class CorePlusQueriesParser extends CoreParser {
    *
    * @param defaultField The default field name used by QueryParsers constructed for UserQuery tags
    */
-  public CorePlusQueriesParser(String defaultField, Analyzer analyzer) {
+  public BBCoreParser(String defaultField, Analyzer analyzer) {
     this(defaultField, analyzer, null);
   }
 
-  protected CorePlusQueriesParser(String defaultField, Analyzer analyzer, QueryParser parser) {
+  protected BBCoreParser(String defaultField, Analyzer analyzer, QueryParser parser) {
     super(defaultField, analyzer, parser);
 
+    this.termBuilder = new TermBuilder(analyzer);
+
+    {
+      QueryBuilder termQueryBuilder = new BBTermQueryBuilder(termBuilder);
+      queryFactory.addBuilder("TermQuery", termQueryBuilder);
+      queryFactory.addBuilder("TermFreqQuery", new TermFreqBuilder(null /* termFilterBuilder */, termQueryBuilder));
+    }
+    {
+      QueryBuilder termsQueryBuilder = new BBTermsQueryBuilder(termBuilder);
+      queryFactory.addBuilder("TermsQuery", termsQueryBuilder);
+      queryFactory.addBuilder("TermsFreqQuery", new TermFreqBuilder(null /* termsFilterBuilder */, termsQueryBuilder));
+    }
     {
       FilterBuilder termFilterBuilder = new BBTermFilterBuilder(termBuilder);
       filterFactory.addBuilder("TermFilter", termFilterBuilder);
@@ -63,10 +72,20 @@ public class CorePlusQueriesParser extends CoreParser {
       filterFactory.addBuilder("TermsFilter", termsFilterBuilder);
       filterFactory.addBuilder("TermsFreqFilter", new TermFreqBuilder(termsFilterBuilder, null /* termsQueryBuilder */));
     }
+    
+    // from CorePlusQueriesParser (which also contains LikeThisQuery and BoostingQuery which we don't need)
     filterFactory.addBuilder("BooleanFilter", new BooleanFilterBuilder(filterFactory));
-    String fields[] = {"contents"};
-    queryFactory.addBuilder("LikeThisQuery", new LikeThisQueryBuilder(analyzer, fields));
-    queryFactory.addBuilder("BoostingQuery", new BoostingQueryBuilder(queryFactory));
+
+    queryFactory.addBuilder("PhraseQuery", new PhraseQueryBuilder(analyzer));
+    //GenericTextQuery is a error tolerant version of PhraseQuery
+    queryFactory.addBuilder("GenericTextQuery", new GenericTextQueryBuilder(analyzer));
+    
+    queryFactory.addBuilder("ComplexPhraseQuery", new ComplexPhraseQueryBuilder(analyzer));
+    
+    queryFactory.addBuilder("NearQuery", new NearQueryBuilder(queryFactory));
+    queryFactory.addBuilder("NearFirstQuery", new NearFirstQueryBuilder(queryFactory));
+    queryFactory.addBuilder("KeywordNearQuery", new KeywordNearQueryBuilder(analyzer));
+    queryFactory.addBuilder("WildcardNearQuery", new WildcardNearQueryBuilder(analyzer));
 
   }
 }
