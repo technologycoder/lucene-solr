@@ -119,13 +119,6 @@ public class QueryComponent extends SearchComponent
     }
     SolrQueryResponse rsp = rb.rsp;
 
-    if (params.get(ShardParams.IDS) != null &&
-        params.get(CommonParams.Q) == null &&
-        params.get(CommonParams.FQ) == null) {
-      // just a plain get-fields query, nothing to prepare for that
-      return;
-    }
-    
     // Set field flags    
     ReturnFields returnFields = new SolrReturnFields( req );
     rsp.setReturnFields( returnFields );
@@ -138,8 +131,6 @@ public class QueryComponent extends SearchComponent
       flags |= SolrIndexSearcher.SEGMENT_TERMINATE_EARLY;
     }
     rb.setFieldFlags( flags );
-
-    rb.setNeedQueryInGetFields(params.getBool(CommonParams.NEED_QUERY_IN_GET_FIELDS, CommonParams.NEED_QUERY_IN_GET_FIELDS_DEFAULT));
 
     String defType = params.get(QueryParsing.DEFTYPE, QParserPlugin.DEFAULT_QTYPE);
 
@@ -340,12 +331,7 @@ public class QueryComponent extends SearchComponent
       
       ResultContext ctx = new ResultContext();
       ctx.docs = rb.getResults().docList;
-      ctx.query = null; // anything?
-
-      if (params.getBool(CommonParams.NEED_QUERY_IN_GET_FIELDS, CommonParams.NEED_QUERY_IN_GET_FIELDS_DEFAULT)) {
-        // send the query to the shards in order to allow the docTrasformers to use it
-        ctx.query = rb.getQuery();
-      }
+      ctx.query = rb.getQuery();
 
 
       rsp.add("response", ctx);
@@ -1187,10 +1173,6 @@ public class QueryComponent extends SearchComponent
       // we already have the field sort values
       sreq.params.remove(ResponseBuilder.FIELD_SORT_VALUES);
 
-      if (!rb.isNeedDocSet() && !rb.isNeedQueryInGetFields()) {
-        sreq.params.remove(CommonParams.Q);        
-        sreq.params.remove(CommonParams.FQ);        
-      }
       
       if(!rb.rsp.getReturnFields().wantsField(uniqueField.getName())) {
         sreq.params.add(CommonParams.FL, uniqueField.getName());
