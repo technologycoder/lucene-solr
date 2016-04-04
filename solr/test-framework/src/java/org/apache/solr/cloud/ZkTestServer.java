@@ -293,7 +293,7 @@ public class ZkTestServer {
         // create a file logger url from the command line args
         FileTxnSnapLog ftxn = new FileTxnSnapLog(new File(
             config.getDataLogDir()), new File(config.getDataDir()));
-        zooKeeperServer = new ZooKeeperServer(ftxn, config.getTickTime(),
+        zooKeeperServer = new TestZooKeeperServer(ftxn, config.getTickTime(),
             config.getMinSessionTimeout(), config.getMaxSessionTimeout(),
             null /* this is not used */, new TestZKDatabase(ftxn, limiter));
         cnxnFactory = new TestServerCnxnFactory(limiter);
@@ -481,7 +481,6 @@ public class ZkTestServer {
     log.info("start zk server on port:" + port);
   }
 
-  @SuppressWarnings("deprecation")
   public void shutdown() throws IOException, InterruptedException {
     // TODO: this can log an exception while trying to unregister a JMX MBean
     zkServer.shutdown();
@@ -594,5 +593,24 @@ public class ZkTestServer {
 
   public ZKServerMain.WatchLimiter getLimiter() {
     return zkServer.getLimiter();
+  }
+
+  private class TestZooKeeperServer extends ZooKeeperServer {
+    @Override
+    protected void registerJMX() {
+      // no-op - super.registerJMX() is called in overridden startup()
+    }
+
+    @Override
+    public void startup() {
+      super.registerJMX(); // Register this server's node before doing anything else
+      super.startup();
+    }
+
+    public TestZooKeeperServer(FileTxnSnapLog txnLogFactory, int tickTime,
+                               int minSessionTimeout, int maxSessionTimeout,
+                               DataTreeBuilder treeBuilder, ZKDatabase zkDb) {
+      super(txnLogFactory, tickTime, minSessionTimeout, maxSessionTimeout, treeBuilder, zkDb);
+    }
   }
 }
