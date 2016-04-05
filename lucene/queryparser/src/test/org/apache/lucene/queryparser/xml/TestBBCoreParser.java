@@ -71,7 +71,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 public class TestBBCoreParser extends LuceneTestCase {
 
-  private static CoreParser builder;
+  private static Analyzer analyzer;
+  private static CoreParser bbCoreParser;
   private static Directory dir;
   private static IndexReader reader;
   private static IndexSearcher searcher;
@@ -83,7 +84,6 @@ public class TestBBCoreParser extends LuceneTestCase {
   @BeforeClass
   public static void beforeClass() throws Exception {
     String analyserToUse = System.getProperty(ANALYSER_PARAM, DEFAULT_ANALYSER);
-    Analyzer analyzer =  null;
     if (analyserToUse.equals(STANDARD_ANALYSER))
     {
       analyzer = new StandardAnalyzer();
@@ -98,11 +98,11 @@ public class TestBBCoreParser extends LuceneTestCase {
       // TODO: rewrite test (this needs to set QueryParser.enablePositionIncrements, too, for work with CURRENT):
       analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
     }
-    builder = new BBCoreParser("contents", analyzer);
+    bbCoreParser = new BBCoreParser("contents", analyzer);
     
     //MatchAllDocsFilter is not yet in side the builderFactory
     //Remove this when we have MatchAllDocsFilter within CorePlusExtensionsParser
-    builder.filterFactory.addBuilder("MatchAllDocsFilter", new FilterBuilder() {
+    bbCoreParser.filterFactory.addBuilder("MatchAllDocsFilter", new FilterBuilder() {
       
       @Override
       public Filter getFilter(Element e) throws ParserException {
@@ -140,7 +140,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     reader = null;
     searcher = null;
     dir = null;
-    builder = null;
+    bbCoreParser = null;
   }
 
   public void testTermQueryXML() throws ParserException, IOException {
@@ -181,7 +181,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   //term appears like single term but results in two terms when it runs through standard analyzer
   public void testTermsQueryWithStopwords() throws ParserException, IOException {
     Query q = parse("TermsQueryStopwords.xml");
-    if (builder.analyzer instanceof StandardAnalyzer)
+    if (analyzer() instanceof StandardAnalyzer)
       assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     dumpResults("TermsQueryWithStopwords", q, 5);
     }
@@ -194,7 +194,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   public void testTermsQueryWithOnlyStopwords() throws ParserException, IOException {
     Query q = parse("TermsQueryOnlyStopwords.xml");
-    if (builder.analyzer instanceof StandardAnalyzer)
+    if (analyzer() instanceof StandardAnalyzer)
       assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
     dumpResults("TermsQuery with only stopwords", q, 5);
   }
@@ -274,7 +274,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   }
   
   public void testPhraseQueryXMLWithStopwordsXML() throws Exception {
-    if (builder.analyzer instanceof StandardAnalyzer) {
+    if (analyzer() instanceof StandardAnalyzer) {
       parse("PhraseQueryStopwords.xml", true/*shouldfail*/);
     }
   }
@@ -303,7 +303,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   public void testGenericTextQueryWithAllStopwordsXML() throws Exception {
     Query q = parse("GenericTextQueryAllStopwords.xml");
-    if (builder.analyzer instanceof StandardAnalyzer)
+    if (analyzer() instanceof StandardAnalyzer)
       assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
     dumpResults("GenericTextQuery with just stopwords", q, 5);
   }
@@ -393,7 +393,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   //TODO: move this test along with the KeywordNearQueryParser to an appropriate parser names space
   public void testKeywordNearQueryParser() throws Exception {
     
-    KeywordNearQueryParser p = new KeywordNearQueryParser("contents", builder.analyzer);
+    KeywordNearQueryParser p = new KeywordNearQueryParser("contents", analyzer());
     Query q = p.parse("to");
     dumpResults("KeywordNearQueryParser stop word", q, 5);
     q = p.parse("");
@@ -602,13 +602,13 @@ public class TestBBCoreParser extends LuceneTestCase {
         + "<Clause occurs='should'><TermFilter>janeiro</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
     
-    Filter f = builder.filterFactory.getFilter(parseXML(text));
+    Filter f = coreParser().filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a TermFilter, but resulted in " + f.getClass(), f instanceof TermFilter);
   
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><TermFilter>rio</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
-    f = builder.filterFactory.getFilter(parseXML(text));
+    f = coreParser().filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a TermFilter, but resulted in " + f.getClass(), f instanceof TermFilter);
     
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
@@ -616,7 +616,7 @@ public class TestBBCoreParser extends LuceneTestCase {
         + "<Clause occurs='must'><TermFilter>janeiro</TermFilter></Clause>"
         + "<Clause occurs='must'><TermFilter>summit</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
-    f = builder.filterFactory.getFilter(parseXML(text));
+    f = coreParser().filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a BooleanFilter, but resulted in " + f.getClass(), f instanceof BooleanFilter);
     BooleanFilter bf = (BooleanFilter)f;
     int size = bf.clauses().size();
@@ -629,13 +629,13 @@ public class TestBBCoreParser extends LuceneTestCase {
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><MatchAllDocsFilter/></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";
-    f = builder.filterFactory.getFilter(parseXML(text));
+    f = coreParser().filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a MatchAllDocsFilter, but resulted in " + f.getClass(), f instanceof MatchAllDocsFilter);
     
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><MatchAllDocsFilter/></Clause>"
         + "<Clause occurs='mustnot'><TermFilter>summit</TermFilter></Clause></BooleanFilter>";
-    f = builder.filterFactory.getFilter(parseXML(text));
+    f = coreParser().filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a BooleanFilter, but resulted in " + f.getClass(), f instanceof BooleanFilter);
     bf = (BooleanFilter)f;
     size = bf.clauses().size();
@@ -710,6 +710,14 @@ public class TestBBCoreParser extends LuceneTestCase {
 
   //================= Helper methods ===================================
 
+  protected Analyzer analyzer() {
+    return analyzer;
+  }
+
+  protected CoreParser coreParser() {
+    return bbCoreParser;
+  }
+
   private Query parse(String xmlFileName) throws IOException {
     return parse(xmlFileName, false);
   }
@@ -731,7 +739,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   {
     Query result = null;
     try {
-      result = builder.parse(xmlStream);
+      result = coreParser().parse(xmlStream);
     } catch (ParserException ex) {
       assertTrue("Parser exception " + ex, shouldFail);
     }
