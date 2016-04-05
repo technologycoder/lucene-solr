@@ -232,25 +232,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     assertEquals("UserInputQueryCustomField should produce 0 result ", 0, h);
   }
 
-  public void testLikeThisQueryXML() throws Exception {
-    Query q = parse("LikeThisQuery.xml");
-    dumpResults("like this", q, 5);
-  }
-
-  public void testBoostingQueryXML() throws Exception {
-    Query q = parse("BoostingQuery.xml");
-    dumpResults("boosting ", q, 5);
-  }
-
-  public void testFuzzyLikeThisQueryXML() throws Exception {
-    Query q = parse("FuzzyLikeThisQuery.xml");
-    //show rewritten fuzzyLikeThisQuery - see what is being matched on
-    if (VERBOSE) {
-      System.out.println(q.rewrite(reader));
-    }
-    dumpResults("FuzzyLikeThis", q, 5);
-  }
-
   public void testTermsFilterXML() throws Exception {
     Query q = parse("TermsFilterQuery.xml");
     dumpResults("Terms Filter", q, 5);
@@ -446,14 +427,6 @@ public class TestBBCoreParser extends LuceneTestCase {
   public void testCachedFilterXML() throws ParserException, IOException {
     Query q = parse("CachedFilter.xml");
     dumpResults("Cached filter", q, 5);
-  }
-
-  public void testDuplicateFilterQueryXML() throws ParserException, IOException {
-    List<LeafReaderContext> leaves = searcher.getTopReaderContext().leaves();
-    Assume.assumeTrue(leaves.size() == 1);
-    Query q = parse("DuplicateFilterQuery.xml");
-    int h = searcher.search(q, 1000).totalHits;
-    assertEquals("DuplicateFilterQuery should produce 1 result ", 1, h);
   }
 
   public void testNumericRangeFilterQueryXML() throws ParserException, IOException {
