@@ -359,11 +359,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("ComplexPhraseQuery with a single prefix query term", q, 5);
   }
   
-  public void testKWNearViaGenericTextQuery() throws Exception {
-    Query q = parse("KeywordNearThroughGenericTextQuery.xml");
-    dumpResults("GenericTextQuery with multiple terms containing wildcards", q, 5);
-  }
-  
   //TODO: move this test along with the KeywordNearQueryParser to an appropriate parser names space
   public void testKeywordNearQueryParser() throws Exception {
     
