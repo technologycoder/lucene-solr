@@ -460,9 +460,9 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   public void testDisjunctionMaxQuery_MatchAllDocsQuery() throws IOException {
     String text = "<DisjunctionMaxQuery fieldName='content'>"
-        + "<KeywordNearQuery>rio de janeiro</KeywordNearQuery>"
-        + "<KeywordNearQuery>summit</KeywordNearQuery>"
-        + "<KeywordNearQuery> </KeywordNearQuery></DisjunctionMaxQuery>";
+        + "<WildcardNearQuery>rio de janeiro</WildcardNearQuery>"
+        + "<WildcardNearQuery>summit</WildcardNearQuery>"
+        + "<WildcardNearQuery> </WildcardNearQuery></DisjunctionMaxQuery>";
     Query q = parseText(text, false);
     int size = ((DisjunctionMaxQuery)q).getDisjuncts().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
@@ -474,7 +474,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     
     text = "<DisjunctionMaxQuery fieldName='content' >"
         + "<MatchAllDocsQuery/>"
-        + "<KeywordNearQuery> </KeywordNearQuery></DisjunctionMaxQuery>";
+        + "<WildcardNearQuery> </WildcardNearQuery></DisjunctionMaxQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
 
@@ -484,13 +484,13 @@ public class TestBBCoreParser extends LuceneTestCase {
   public void testNearBooleanNear() throws IOException, ParserException {
     String text = ""
                   +"<NearQuery fieldName=\"contents\" slop=\"4\" inOrder=\"false\">"
-                  +"<KeywordNearQuery>bank</KeywordNearQuery>"
+                  +"<WildcardNearQuery>bank</WildcardNearQuery>"
                   +"<BooleanQuery disableCoord=\"true\"> "
                   +"<Clause occurs=\"should\"><TermQuery>quarter</TermQuery></Clause>"
                   +"<Clause occurs=\"should\">"
                   +"<NearQuery slop=\"2\" inOrder=\"false\">"
-                  +"<KeywordNearQuery>earlier,</KeywordNearQuery>"
-                  +"<KeywordNearQuery>april</KeywordNearQuery>"
+                  +"<WildcardNearQuery>earlier,</WildcardNearQuery>"
+                  +"<WildcardNearQuery>april</WildcardNearQuery>"
                   +"</NearQuery>"
                   +"</Clause>"
                   +"</BooleanQuery>"
@@ -518,8 +518,8 @@ public class TestBBCoreParser extends LuceneTestCase {
     String text = ""
                   +"<NearFirstQuery fieldName=\"contents\" end=\"5\">"
                   +"<BooleanQuery disableCoord=\"true\"> "
-                  +"<Clause occurs=\"must\"><KeywordNearQuery>ban*</KeywordNearQuery></Clause>"
-                  +"<Clause occurs=\"must\"><KeywordNearQuery>sa*</KeywordNearQuery></Clause>"
+                  +"<Clause occurs=\"must\"><WildcardNearQuery>ban*</WildcardNearQuery></Clause>"
+                  +"<Clause occurs=\"must\"><WildcardNearQuery>sa*</WildcardNearQuery></Clause>"
                   +"</BooleanQuery>"
                   +"</NearFirstQuery>"
                   ;
@@ -541,9 +541,9 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
     String text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='should'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery>summit</KeywordNearQuery></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+        + "<Clause occurs='should'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
+        + "<Clause occurs='should'><WildcardNearQuery>summit</WildcardNearQuery></Clause>"
+        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
     Query q = parseText(text, false);
     int size = ((BooleanQuery)q).clauses().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
@@ -554,15 +554,15 @@ public class TestBBCoreParser extends LuceneTestCase {
     }
   
     text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='must'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+        + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
+        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a IntervalFilterQuery, but resulted in " + q.getClass(), q instanceof IntervalFilterQuery);
     
     text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='must'><KeywordNearQuery>rio de janeiro</KeywordNearQuery></Clause>"
-        + "<Clause occurs='must'><KeywordNearQuery>summit</KeywordNearQuery></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+        + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
+        + "<Clause occurs='must'><WildcardNearQuery>summit</WildcardNearQuery></Clause>"
+        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     bq = (BooleanQuery)q;
@@ -575,7 +575,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     
     text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><MatchAllDocsQuery/></Clause>"
-        + "<Clause occurs='should'><KeywordNearQuery> </KeywordNearQuery></Clause></BooleanQuery>";
+        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
     
