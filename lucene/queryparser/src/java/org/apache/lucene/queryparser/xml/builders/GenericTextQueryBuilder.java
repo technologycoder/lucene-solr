@@ -68,19 +68,12 @@ public class GenericTextQueryBuilder implements QueryBuilder {
       Query q = null;
       if (!ignoreWildcard && containsWildcard(text))
       {
-        //send all wildcard queries to either KeywordNearQueryBuilder or ComplexPhraseQueryParser
-        //KeywordNearQueryBuilder is supposed to yield in Ordered Interval queries where as  ComplexPhraseQueryParser can result in SpanQuery queries.
+        //send all wildcard queries to either WildcardNearQueryParser or ComplexPhraseQueryParser
         boolean useWildcardNearQuery = DOMUtils.getAttribute(e, "wnq", false);
-        boolean useIntervalQuery = DOMUtils.getAttribute(e, "iq", false);
 
         if(useWildcardNearQuery)
         {
           WildcardNearQueryParser p = new WildcardNearQueryParser(field, analyzer);
-          q = p.parse(text);
-        }
-        else if(useIntervalQuery)
-        {
-          KeywordNearQueryParser p = new KeywordNearQueryParser(field, analyzer);
           q = p.parse(text);
         }
         else
