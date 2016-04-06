@@ -359,35 +359,9 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("ComplexPhraseQuery with a single prefix query term", q, 5);
   }
   
-  /* test cases for keyword near query */
-  public void testKWNearQuery() throws Exception {
-    Query q = parse("KeywordNear.xml");
-    dumpResults("KeywordNear query", q, 5);
-  }
-  
-  public void testKWNearQueryWildcard() throws Exception {
-    Query q = parse("KeywordNearWildcard.xml");
-    dumpResults("KeywordNear with wildcard terms", q, 5);
-  }
-  
-  public void testKWNearQuerySpecialChar() throws Exception {
-    Query q = parse("KeywordNearSpecialChars.xml");
-    dumpResults("KeywordNear with special characters", q, 5);
-  }
-  
-  public void testKWNearQuerywithStopwords() throws Exception {
-    Query q = parse("KeywordNearStopwords.xml");
-    dumpResults("KeywordNear with stopwords", q, 5);
-  }
-  
   public void testKWNearViaGenericTextQuery() throws Exception {
     Query q = parse("KeywordNearThroughGenericTextQuery.xml");
     dumpResults("GenericTextQuery with multiple terms containing wildcards", q, 5);
-  }
-  
-  public void testKWNearQuerywithEmptytokens() throws Exception {
-    Query q = parse("KeywordNearEmptyQuery.xml");
-    dumpResults("Keyword Near with empty tokens", q, 5);
   }
   
   //TODO: move this test along with the KeywordNearQueryParser to an appropriate parser names space
@@ -647,36 +621,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     }
     assertTrue("Expecting MatchAllDocsFilter ", bMatchAllDocsFound);
     
-  }
-  
-  public void testNearFirstXML() throws ParserException, IOException {
-    Query q = parse("NearFirst.xml");
-    dumpResults("Near First (Interval)", q, 5);
-  }
-  
-  public void testNearNotFirstXML() throws ParserException, IOException {
-    Query q = parse("NearNotFirst.xml");
-    dumpResults("Near Not First (Interval)", q, 5);
-  }
-  
-  public void testNearNearXML() throws ParserException, IOException {
-    Query q = parse("NearNear.xml");
-    dumpResults("Near Near (Interval)", q, 5);
-  }
-  
-  public void testNearOrXML() throws ParserException, IOException {
-    Query q = parse("NearOr.xml");
-    dumpResults("Near Or (Interval)", q, 5);
-  }
-  
-  public void testNearPhraseXML() throws ParserException, IOException {
-    Query q = parse("NearPhrase.xml");
-    dumpResults("Near Phrase (Interval)", q, 5);
-  }
-  
-  public void testNearWildcardXML() throws ParserException, IOException {
-    Query q = parse("NearWildcard.xml");
-    dumpResults("NearWildcard (Interval)", q, 5);
   }
   
   public void testNearTermQuery() throws ParserException, IOException {
