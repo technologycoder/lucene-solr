@@ -34,8 +34,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.queries.FilterClause;
 import org.apache.lucene.queries.TermFilter;
-import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
-import org.apache.lucene.queryparser.xml.builders.KeywordNearQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
@@ -359,25 +357,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("ComplexPhraseQuery with a single prefix query term", q, 5);
   }
   
-  //TODO: move this test along with the KeywordNearQueryParser to an appropriate parser names space
-  public void testKeywordNearQueryParser() throws Exception {
-    
-    KeywordNearQueryParser p = new KeywordNearQueryParser("contents", analyzer());
-    Query q = p.parse("to");
-    dumpResults("KeywordNearQueryParser stop word", q, 5);
-    q = p.parse("");
-    assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
-    dumpResults("KeywordNearQueryParser empty query", q, 5);
-    q = p.parse("<TRUMP PLAZA>");
-    dumpResults("KeywordNearQueryParser special char1", q, 5);
-    q = p.parse("7/8");
-    dumpResults("KeywordNearQueryParser special char2", q, 5);
-    q = p.parse("ACQUIR* BY ZENEX <Zenex Oil Pty Ltd> said it acquired the interests of E?so S*h Africa, the local subsidiary");
-    dumpResults("KeywordNearQueryParser wildcard", q, 5);
-  }
-
-  /* end of keyword near query test cases*/
-
   public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
     Query q = parse("MatchAllDocsQuery.xml");
     dumpResults("MatchAllDocsQuery with range filter", q, 5);
