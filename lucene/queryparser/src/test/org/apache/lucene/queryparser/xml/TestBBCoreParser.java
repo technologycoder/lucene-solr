@@ -353,16 +353,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("GenericTextQuery. BooleanQuery containing multiple GenericTextQuery clauses with different boost factors", q, 5);
   }
 
-  public void testComplexPhraseQueryXML() throws Exception {
-    Query q = parse("ComplexPhraseQuery.xml");
-    dumpResults("ComplexPhraseQuery", q, 5);
-  }
-  
-  public void testComplexPhraseQueryPrefixQueryXML() throws Exception {
-    Query q = parse("ComplexPhraseQueryPrefixQuery.xml");
-    dumpResults("ComplexPhraseQuery with a single prefix query term", q, 5);
-  }
-  
   public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
     Query q = parse("MatchAllDocsQuery.xml");
     dumpResults("MatchAllDocsQuery with range filter", q, 5);
