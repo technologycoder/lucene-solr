@@ -9,8 +9,6 @@ import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.function.BoostedQuery;
 import org.apache.lucene.queries.function.valuesource.ConstValueSource;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.complexPhrase.ComplexPhraseQueryParser;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -20,7 +18,6 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
-import org.apache.lucene.util.Version;
 import org.w3c.dom.Element;
 
 /*
@@ -68,28 +65,8 @@ public class GenericTextQueryBuilder implements QueryBuilder {
       Query q = null;
       if (!ignoreWildcard && containsWildcard(text))
       {
-        //send all wildcard queries to either WildcardNearQueryParser or ComplexPhraseQueryParser
-        boolean useWildcardNearQuery = DOMUtils.getAttribute(e, "wnq", false);
-
-        if(useWildcardNearQuery)
-        {
-          WildcardNearQueryParser p = new WildcardNearQueryParser(field, analyzer);
-          q = p.parse(text);
-        }
-        else
-        {
-          ComplexPhraseQueryParser p = new ComplexPhraseQueryParser(Version.LUCENE_CURRENT, field, analyzer);
-          p.setInOrder(DOMUtils.getAttribute(e, "inOrder", true));
-          text = "\"" + text + "\"";
-          p.setAllowLeadingWildcard(true);
-          
-          try {
-              q = p.parse(text);
-          } catch (ParseException pe){
-              throw new ParserException("GenericTextQueryBuilder error parsing ComplexPhraseQuery: " + text, pe);
-          }
-        }
-        
+        WildcardNearQueryParser p = new WildcardNearQueryParser(field, analyzer);
+        q = p.parse(text);
         
         float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
         if (boost != 1.0f) {
