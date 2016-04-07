@@ -8,7 +8,8 @@
     <field name="popularity" type="int" indexed="true" stored="true" />
     <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
     <field name="content" type="text_general" indexed="true" stored="true"/>
-
+    <field name="ticker" type="text_general" indexed="true" stored="true"  multiValued="true"/>
+    
     <field name="text_not_indexed" type="text_general" indexed="false" stored="true" multiValued="true"/>
     <field name="date" type="date" indexed="true" stored="true" multiValued="false"/>
     <field name="_version_" type="long" indexed="true" stored="true"/>
@@ -18,11 +19,9 @@
   </fields>
 
   <uniqueKey>id</uniqueKey>
-
   <copyField source="title" dest="text"/>
   <copyField source="description" dest="text"/>
-
-	<types>
+  <types>
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
     <fieldType name="int" class="solr.TrieIntField" precisionStep="0" positionIncrementGap="0"/>

@@ -1,0 +1,15 @@
+{
+"version":1.0,
+"features":
+[
+    {
+        "type": "ltr.feature.impl.CompaniesPerDocumentFeature", 
+        "params": {
+            "field":"ticker"
+        }, 
+        "name": "companies",
+        "default":0.0
+    }
+]
+}
+
