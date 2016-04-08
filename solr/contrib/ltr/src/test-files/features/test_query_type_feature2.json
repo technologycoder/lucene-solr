@@ -1,0 +1,13 @@
+{
+"version":1.0,
+"features":[
+    {
+        "type": "ltr.feature.impl.QueryTypeFeature", 
+        "params": {
+            "querytype": "TOPIC"
+        }, 
+        "name": "query_has_topic",
+        "default": -50.0
+    }
+]
+}

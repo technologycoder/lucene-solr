@@ -82,7 +82,14 @@ public class QueryTypeFeature extends Feature {
     @Override
     public void setOriginalQuery(final Query originalQuery) {
       if (originalQuery != null) {
-        originalQuery.extractTerms(this.terms);
+        try {
+          originalQuery.extractTerms(this.terms);
+        } catch (final UnsupportedOperationException e) {
+          // if the query does not support extract terms (e.g., PrefixQuery)
+          // we return the default value
+          this.queryTypeFreq = QueryTypeFeature.this.defaultValue;
+          return;
+        }
         for (final Term term : this.terms) {
           final String text = term.text();
           if ((text != null) && text.startsWith(QueryTypeFeature.this.querytype)) {

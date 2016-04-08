@@ -64,9 +64,17 @@ public class TestFeatures extends TestRerankBase {
   @Test
   public void testQueryFeatures() throws Exception {
     final SolrQuery query = this.getQuery("title:bloomberg", "query_features", 4);
-    
+
     assertJQ("/query?" + query.toString(),
         "/response/docs/[0]/fv=='@query_features:1.0;query_has_topic:0.0;original_score:0.7768564'");
+  }
+  
+  @Test
+  public void testQueryTypeFeatureShouldReturnDefaultValueIfQueryDoesntSupportExtractTerms() throws Exception {
+    final SolrQuery query = this.getQuery("title:bloom*", "test_query_type_feature2", 4);
+
+    assertJQ("/query?" + query.toString(),
+        "/response/docs/[0]/fv=='@test_query_type_feature2:1.0;query_has_topic:-50.0'");
   }
   
   @Test
