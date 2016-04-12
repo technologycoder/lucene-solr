@@ -205,6 +205,12 @@ public class ZkControllerTest extends SolrTestCaseJ4 {
   }
 
   @Test
+  public void testConstants() throws Exception {
+    assertEquals("/configs", ZkController.CONFIGS_ZKNODE);
+    assertEquals("^\\..*$", ZkController.UPLOAD_FILENAME_EXCLUDE_REGEX);
+  }
+
+  @Test
   public void testUploadToCloud() throws Exception {
     String zkDir = createTempDir("zkData").getAbsolutePath();
 

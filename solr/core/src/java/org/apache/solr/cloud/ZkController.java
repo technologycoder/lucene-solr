@@ -73,6 +73,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 /**
  * Handle ZooKeeper interactions.
@@ -99,6 +100,9 @@ public final class ZkController {
   private final DistributedMap overseerFailureMap;
   
   public static final String CONFIGS_ZKNODE = "/configs";
+
+  public static final String UPLOAD_FILENAME_EXCLUDE_REGEX = "^\\..*$";
+  public static final Pattern UPLOAD_FILENAME_EXCLUDE_PATTERN = Pattern.compile(UPLOAD_FILENAME_EXCLUDE_REGEX);
 
   public final static String COLLECTION_PARAM_PREFIX="collection.";
   public final static String CONFIGNAME_PROP="configName";
@@ -1307,16 +1311,23 @@ public final class ZkController {
   }
   
   public static void uploadToZK(SolrZkClient zkClient, File dir, String zkPath) throws IOException, KeeperException, InterruptedException {
+    uploadToZK(zkClient, dir, zkPath, UPLOAD_FILENAME_EXCLUDE_PATTERN);
+  }
+
+  public static void uploadToZK(SolrZkClient zkClient, File dir, String zkPath,
+      final Pattern filenameExclusions) throws IOException, KeeperException, InterruptedException {
     File[] files = dir.listFiles();
     if (files == null) {
       throw new IllegalArgumentException("Illegal directory: " + dir);
     }
     for(File file : files) {
-      if (!file.getName().startsWith(".")) {
+      if (filenameExclusions != null && filenameExclusions.matcher(file.getName()).matches()) {
+        log.info("uploadToZK skipping '{}' due to filenameExclusions '{}'", file.getName(), filenameExclusions);
+      } else {
         if (!file.isDirectory()) {
           zkClient.makePath(zkPath + "/" + file.getName(), file, false, true);
         } else {
-          uploadToZK(zkClient, file, zkPath + "/" + file.getName());
+          uploadToZK(zkClient, file, zkPath + "/" + file.getName(), filenameExclusions);
         }
       }
     }
@@ -1352,6 +1363,11 @@ public final class ZkController {
   
   public static void uploadConfigDir(SolrZkClient zkClient, File dir, String configName) throws IOException, KeeperException, InterruptedException {
     uploadToZK(zkClient, dir, ZkController.CONFIGS_ZKNODE + "/" + configName);
+  }
+
+  public static void uploadConfigDir(SolrZkClient zkClient, File dir, String configName,
+      Pattern filenameExclusions) throws IOException, KeeperException, InterruptedException {
+    uploadToZK(zkClient, dir, ZkController.CONFIGS_ZKNODE + "/" + configName, filenameExclusions);
   }
   
   public static void downloadConfigDir(SolrZkClient zkClient, String configName, File dir) throws IOException, KeeperException, InterruptedException {

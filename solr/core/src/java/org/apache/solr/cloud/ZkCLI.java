@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -65,7 +66,9 @@ public class ZkCLI {
   private static final String SOLRHOME = "solrhome";
   private static final String BOOTSTRAP = "bootstrap";
   private static final String SOLR_XML = "solr.xml";
-  private static final String UPCONFIG = "upconfig";
+  static final String UPCONFIG = "upconfig";
+  static final String EXCLUDE_REGEX = "excluderegex";
+  static final String EXCLUDE_REGEX_DEFAULT = ZkController.UPLOAD_FILENAME_EXCLUDE_REGEX;
   private static final String COLLECTION = "collection";
   private static final String CLEAR = "clear";
   private static final String LIST = "list";
@@ -116,6 +119,9 @@ public class ZkCLI {
     options.addOption("c", COLLECTION, true,
         "for " + LINKCONFIG + ": name of the collection");
     
+    options.addOption(EXCLUDE_REGEX, true,
+        "for " + UPCONFIG + ": files matching this regular expression won't be uploaded");
+
     options
         .addOption(
             "r",
@@ -205,13 +211,15 @@ public class ZkCLI {
           }
           String confDir = line.getOptionValue(CONFDIR);
           String confName = line.getOptionValue(CONFNAME);
+          final String excludeExpr = line.getOptionValue(EXCLUDE_REGEX, EXCLUDE_REGEX_DEFAULT);
           
           if(!ZkController.checkChrootPath(zkServerAddress, true)) {
             System.out.println("A chroot was specified in zkHost but the znode doesn't exist. ");
             System.exit(1);
           }
           
-          ZkController.uploadConfigDir(zkClient, new File(confDir), confName);
+          final Pattern excludePattern = Pattern.compile(excludeExpr);
+          ZkController.uploadConfigDir(zkClient, new File(confDir), confName, excludePattern);
         } else if (line.getOptionValue(CMD).equals(DOWNCONFIG)) {
           if (!line.hasOption(CONFDIR) || !line.hasOption(CONFNAME)) {
             System.out.println("-" + CONFDIR + " and -" + CONFNAME
