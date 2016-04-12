@@ -30,11 +30,9 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
-import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.spans.SpanNearQuery;
 import org.apache.lucene.search.spans.SpanNotQuery;
 import org.apache.lucene.search.spans.SpanOrQuery;
@@ -110,13 +108,7 @@ public class ComplexPhraseQueryParser extends QueryParser {
         // state change should not
         // present an issue
         setMultiTermRewriteMethod(MultiTermQuery.SCORING_BOOLEAN_QUERY_REWRITE);
-        Query q = super.parse(query);
-        if (q instanceof PrefixQuery || q instanceof WildcardQuery) {
-          // reset to oldMethod for non-BooleanQuery's which are allowed by 
-          // ComplexPhraseQuery.rewrite but which don't need conversion  
-          ((MultiTermQuery)q).setRewriteMethod(oldMethod); 
-        }
-        return q;
+        return super.parse(query);
       } finally {
         setMultiTermRewriteMethod(oldMethod);
       }
@@ -259,7 +251,7 @@ public class ComplexPhraseQueryParser extends QueryParser {
     @Override
     public Query rewrite(IndexReader reader) throws IOException {
       // ArrayList spanClauses = new ArrayList();
-      if ((contents instanceof TermQuery) || (contents instanceof PrefixQuery) || (contents instanceof WildcardQuery)) {
+      if (contents instanceof TermQuery) {
         return contents;
       }
       // Build a sequence of Span clauses arranged in a SpanNear - child
