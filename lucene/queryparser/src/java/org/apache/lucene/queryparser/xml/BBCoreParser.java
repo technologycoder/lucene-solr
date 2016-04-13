@@ -73,8 +73,8 @@ public class BBCoreParser extends CoreParser {
       filterFactory.addBuilder("TermsFreqFilter", new TermFreqBuilder(termsFilterBuilder, null /* termsQueryBuilder */));
     }
     
-    // from CorePlusQueriesParser (which also contains LikeThisQuery and BoostingQuery which we don't need)
-    filterFactory.addBuilder("BooleanFilter", new BooleanFilterBuilder(filterFactory));
+    queryFactory.addBuilder("BooleanQuery", new BBBooleanQueryBuilder(queryFactory));
+    filterFactory.addBuilder("BooleanFilter", new BBBooleanFilterBuilder(filterFactory));
 
     queryFactory.addBuilder("PhraseQuery", new PhraseQueryBuilder(analyzer));
     //GenericTextQuery is a error tolerant version of PhraseQuery

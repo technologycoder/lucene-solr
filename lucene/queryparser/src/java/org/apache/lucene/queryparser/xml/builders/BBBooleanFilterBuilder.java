@@ -4,6 +4,7 @@
 package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.MatchAllDocsFilter;
 import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.queries.FilterClause;
@@ -34,20 +35,25 @@ import org.w3c.dom.NodeList;
 /**
  * Builder for {@link BooleanFilter}
  */
-public class BooleanFilterBuilder implements FilterBuilder {
+public class BBBooleanFilterBuilder implements FilterBuilder {
 
   private final FilterBuilder factory;
 
-  public BooleanFilterBuilder(FilterBuilder factory) {
+  public BBBooleanFilterBuilder(FilterBuilder factory) {
     this.factory = factory;
   }
 
   @Override
   public Filter getFilter(Element e) throws ParserException {
     BooleanFilter bf = new BooleanFilter();
+
+    boolean matchAllDocsExists = false;
+    boolean shouldOrMustExists = false;
+
     NodeList nl = e.getChildNodes();
 
-    for (int i = 0; i < nl.getLength(); i++) {
+    final int nlLen = nl.getLength();
+    for (int i = 0; i < nlLen; i++) {
       Node node = nl.item(i);
       if (node.getNodeName().equals("Clause")) {
         Element clauseElem = (Element) node;
@@ -55,9 +61,26 @@ public class BooleanFilterBuilder implements FilterBuilder {
 
         Element clauseFilter = DOMUtils.getFirstChildOrFail(clauseElem);
         Filter f = factory.getFilter(clauseFilter);
+        
+        //MatchAllDocs needs to be added back only if there is no other should or must clause and there is no need to have duplicates of them.
+        if (f instanceof MatchAllDocsFilter) {
+          matchAllDocsExists = true;
+          continue;
+        }
+        else if ((occurs == BooleanClause.Occur.SHOULD) || (occurs == BooleanClause.Occur.MUST)){
+          shouldOrMustExists = true;
+        }
         bf.add(new FilterClause(f, occurs));
       }
     }
+
+    // MatchAllDocsFilter needs to be added only if there is no other must or should clauses in the filter.
+    // At least we preserve the user's intention to execute the rest of the filter, instead of flooding them with all the documents.
+    if (matchAllDocsExists && !shouldOrMustExists) {
+      bf.add(new FilterClause(new MatchAllDocsFilter(), BooleanClause.Occur.MUST));
+    }
+    if(bf.clauses().size() == 1)
+      return bf.clauses().get(0).getFilter();
 
     return bf;
   }
