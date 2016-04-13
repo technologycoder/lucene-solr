@@ -5,6 +5,7 @@ package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
@@ -32,11 +33,11 @@ import org.w3c.dom.NodeList;
 /**
  * Builder for {@link BooleanQuery}
  */
-public class BooleanQueryBuilder implements QueryBuilder {
+public class BBBooleanQueryBuilder implements QueryBuilder {
 
   private final QueryBuilder factory;
 
-  public BooleanQueryBuilder(QueryBuilder factory) {
+  public BBBooleanQueryBuilder(QueryBuilder factory) {
     this.factory = factory;
   }
 
@@ -50,8 +51,12 @@ public class BooleanQueryBuilder implements QueryBuilder {
     bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
     bq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
 
+    boolean matchAllDocsExists = false;
+    boolean shouldOrMustExists = false;
+
     NodeList nl = e.getChildNodes();
-    for (int i = 0; i < nl.getLength(); i++) {
+    final int nlLen = nl.getLength();
+    for (int i = 0; i < nlLen; i++) {
       Node node = nl.item(i);
       if (node.getNodeName().equals("Clause")) {
         Element clauseElem = (Element) node;
@@ -59,9 +64,24 @@ public class BooleanQueryBuilder implements QueryBuilder {
 
         Element clauseQuery = DOMUtils.getFirstChildOrFail(clauseElem);
         Query q = factory.getQuery(clauseQuery);
+        if (q instanceof MatchAllDocsQuery) {
+          matchAllDocsExists = true;
+          continue;// we will add this MAD query later if necessary
+        }
+        else if ((occurs == BooleanClause.Occur.SHOULD) || (occurs == BooleanClause.Occur.MUST)){
+          shouldOrMustExists = true;
+        }
         bq.add(new BooleanClause(q, occurs));
       }
     }
+
+    // MatchAllDocsQuery needs to be added only if there is no other must or should clauses in the query.
+    // At least we preserve the user's intention to execute the rest of the query, instead of flooding them with all the documents.
+    if (matchAllDocsExists && !shouldOrMustExists) {
+      bq.add(new BooleanClause(new MatchAllDocsQuery(), BooleanClause.Occur.MUST));
+    }
+    if(bq.clauses().size() == 1)
+      return bq.clauses().get(0).getQuery();
 
     return bq;
   }
