@@ -48,6 +48,10 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
@@ -455,11 +459,11 @@ public class TestBBCoreParser extends LuceneTestCase {
     qb.add(new TermQuery(new Term("contents", "iranian")), BooleanClause.Occur.SHOULD);
     qb.add(new TermQuery(new Term("contents", "north")), BooleanClause.Occur.SHOULD);
 
-    FieldedQuery[] subQueries = new FieldedQuery[2];
+    SpanQuery[] subQueries = new SpanQuery[2];
     subQueries[0] = FieldedBooleanQuery.toFieldedQuery(qb.build());
-    subQueries[1] = FieldedBooleanQuery.toFieldedQuery(new TermQuery(new Term("contents", "akbar")));
-    FieldedQuery fq = new UnorderedNearQuery(5, subQueries);
-    dumpResults("testNearBoolean", fq, 5);
+    subQueries[1] = new SpanTermQuery(new Term("contents", "akbar"));
+    SpanQuery sq = new SpanNearQuery(subQueries, 5, true);
+    dumpResults("testNearBoolean", sq, 5);
   }
   
   public void testNearFirstBooleanMustXml() throws IOException, ParserException {
@@ -480,11 +484,11 @@ public class TestBBCoreParser extends LuceneTestCase {
     qb.add(new TermQuery(new Term("contents", "upholds")), BooleanClause.Occur.MUST);
     qb.add(new TermQuery(new Term("contents", "building")), BooleanClause.Occur.MUST);
 
-    FieldedQuery[] subQueries = new FieldedQuery[2];
+    SpanQuery[] subQueries = new SpanQuery[2];
     subQueries[0] = FieldedBooleanQuery.toFieldedQuery(qb.build());
-    subQueries[1] = FieldedBooleanQuery.toFieldedQuery(new TermQuery(new Term("contents", "bank")));
-    FieldedQuery fq = new UnorderedNearQuery(7, subQueries);
-    dumpResults("testNearFirstBooleanMust", fq, 5);
+    subQueries[1] = new SpanTermQuery(new Term("contents", "bank"));
+    SpanQuery sq = new SpanNearQuery(subQueries, 7, false);
+    dumpResults("testNearFirstBooleanMust", sq, 5);
   }
   
   public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
@@ -505,7 +509,7 @@ public class TestBBCoreParser extends LuceneTestCase {
         + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
         + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
     q = parseText(text, false);
-    assertTrue("Expecting a IntervalFilterQuery, but resulted in " + q.getClass(), q instanceof IntervalFilterQuery);
+    assertTrue("Expecting a SpanQuery, but resulted in " + q.getClass(), q instanceof SpanQuery);
     
     text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
@@ -599,21 +603,21 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   public void testNearTermQuery() throws ParserException, IOException {
     int slop = 1;
-    FieldedQuery[] subqueries = new FieldedQuery[2];
-    subqueries[0] = new TermQuery(new Term("contents", "keihanshin"));
-    subqueries[1] = new TermQuery(new Term("contents", "real"));
-    Query q = new OrderedNearQuery(slop, true, subqueries);
+    SpanQuery[] subqueries = new SpanQuery[2];
+    subqueries[0] = new SpanTermQuery(new Term("contents", "keihanshin"));
+    subqueries[1] = new SpanTermQuery(new Term("contents", "real"));
+    Query q = new SpanNearQuery(subqueries, slop, true);
     dumpResults("NearPrefixQuery", q, 5);
   }
   
   public void testPrefixedNearQuery() throws ParserException, IOException {
     int slop = 1;
-    FieldedQuery[] subqueries = new FieldedQuery[2];
-    subqueries[0] = new PrefixQuery(new Term("contents", "keihanshi"));
-    ((MultiTermQuery)subqueries[0]).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
-    subqueries[1] = new PrefixQuery(new Term("contents", "rea"));
-    ((MultiTermQuery)subqueries[1]).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
-    Query q = new OrderedNearQuery(slop, true, subqueries);
+    SpanQuery[] subqueries = new SpanQuery[2];
+    subqueries[0] = new SpanMultiTermQueryWrapper<PrefixQuery>(new PrefixQuery(new Term("contents", "keihanshi")));
+    ((MultiTermQuery)subqueries[0]).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
+    subqueries[1] = new SpanMultiTermQueryWrapper<PrefixQuery>(new PrefixQuery(new Term("contents", "rea")));
+    ((MultiTermQuery)subqueries[1]).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
+    Query q = new SpanNearQuery(subqueries, slop, true);
     dumpResults("NearPrefixQuery", q, 5);
   }
   

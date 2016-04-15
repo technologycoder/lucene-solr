@@ -37,11 +37,13 @@ import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
-import java.io.Reader;
 
 public class TestWildParser extends LuceneTestCase {
   private final class BBFinancialStandardAnalyzer extends Analyzer {
@@ -145,7 +147,7 @@ public class TestWildParser extends LuceneTestCase {
   }
 
   private static MultiTermQuery fixRewrite(MultiTermQuery q) {
-    q.setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
+    q.setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
     return q;
   }
 
@@ -158,57 +160,57 @@ public class TestWildParser extends LuceneTestCase {
     checkQueryEqual(p, "?", fixRewrite(new WildcardQuery(new Term(field, "?"))), ignoreWC);
 
     // Made up:
-    FieldedQuery q = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        new TermQuery(new Term(field, "city")),
-        new TermQuery(new Term(field, "airport"))
-    });
+    SpanQuery q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanTermQuery(new Term(field, "city")),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London-City-Airport", q, ignoreWC);
     checkQueryEqual(p, "London City Airport", q, ignoreWC);
 
-    q = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        fixRewrite(new PrefixQuery(new Term(field, "cit"))),
-        new TermQuery(new Term(field, "airport"))
-    });
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "cit")))),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London-Cit*-Airport", q, ignoreWC);
 
-    q = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        fixRewrite(new WildcardQuery(new Term(field, "*ty"))),
-        new TermQuery(new Term(field, "airport"))
-    });
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new WildcardQuery(new Term(field, "*ty")))),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London-*ty-Airport", q, ignoreWC);
 
-    q = new OrderedNearQuery(1, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        new TermQuery(new Term(field, "airport"))
-    });
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 1, true);
     checkQueryEqual(p, "London-*-Airport", q, ignoreWC);
     checkQueryEqual(p, "London-* Airport", q, ignoreWC);
     checkQueryEqual(p, "London *-Airport", q, ignoreWC);
     checkQueryEqual(p, "London * Airport", q, ignoreWC);
 
-    q = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        fixRewrite(new WildcardQuery(new Term(field, "?"))),
-        new TermQuery(new Term(field, "airport"))
-    });
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new WildcardQuery(new Term(field, "?")))),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London ? Airport", q, ignoreWC);
 
-    q = new OrderedNearQuery(0, new FieldedQuery[] {
-        fixRewrite(new WildcardQuery(new Term(field, "??"))),
-        new TermQuery(new Term(field, "london")),
-        fixRewrite(new WildcardQuery(new Term(field, "??")))
-    });
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new WildcardQuery(new Term(field, "??")))),
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new WildcardQuery(new Term(field, "??"))))
+    }, 0, true);
     checkQueryEqual(p, "?? London ??", q, ignoreWC);
 
     checkQuery(p, "London City * Airport", "OrderedNear/1:Filtered(+OrderedNear/0:Filtered(+headline:london +headline:city) +headline:airport)");
 
-    q = new OrderedNearQuery(1, new FieldedQuery[] {
-        fixRewrite(new PrefixQuery(new Term(field, "lon"))),
-        fixRewrite(new WildcardQuery(new Term(field, "*port"))),
-    });
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "lon")))),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new WildcardQuery(new Term(field, "*port")))),
+    }, 1, true);
     checkQueryEqual(p, "Lon*-* *port", q, ignoreWC);
 
     checkQuery(p, "Lon*-* Airport", "OrderedNear/1:Filtered(+headline:lon* +headline:airport)");
@@ -255,9 +257,9 @@ public class TestWildParser extends LuceneTestCase {
     checkQuery(p, "vietnam-singapore industrial* park*", "OrderedNear/0:Filtered(+headline:vietnam +headline:singapore +headline:industrial* +headline:park*)");
     checkQuery(p, "prorated* or pro-rated", "OrderedNear/0:Filtered(+headline:prorated* +headline:or +headline:pro +headline:rated)");
 
-    q = new TermQuery(new Term(field, "opiniao"));
+    q = new SpanTermQuery(new Term(field, "opiniao"));
     checkQueryEqual(p, "opinião", q, ignoreWC);
-    q = fixRewrite(new PrefixQuery(new Term(field, "publico")));
+    q = new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "publico"))));
     checkQueryEqual(p, "público*", q, ignoreWC);
     checkQuery(p, "público* opinião", "OrderedNear/0:Filtered(+headline:publico* +headline:opiniao)");
 
@@ -337,11 +339,11 @@ public class TestWildParser extends LuceneTestCase {
     boolean ignoreWC = false;
     WildcardNearQueryParser p = new WildcardNearQueryParser(field, new JapaneseAnalyzerDiscardPunct());
 
-    FieldedQuery q2 = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        fixRewrite(new PrefixQuery(new Term(field, "cit"))),
-        new TermQuery(new Term(field, "airport"))
-    });
+    SpanQuery q2 = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "cit")))),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London Cit* Airport", q2, ignoreWC);
     checkQueryEqual(p, "London  Cit*  Airport  ", q2, ignoreWC);
     
@@ -349,19 +351,19 @@ public class TestWildParser extends LuceneTestCase {
     checkQueryEqual(p, "?", fixRewrite(new WildcardQuery(new Term(field, "?"))), ignoreWC);
 
     // Made up:
-    FieldedQuery q = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        new TermQuery(new Term(field, "city")),
-        new TermQuery(new Term(field, "airport"))
-    });    
+    SpanQuery q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanTermQuery(new Term(field, "city")),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London-City-Airport", q, ignoreWC);
     checkQueryEqual(p, "London City Airport", q, ignoreWC);
     
-    q = new OrderedNearQuery(0, new FieldedQuery[] {
-        new TermQuery(new Term(field, "london")),
-        fixRewrite(new PrefixQuery(new Term(field, "cit"))),
-        new TermQuery(new Term(field, "airport"))
-    });    
+    q = new SpanNearQuery(new SpanQuery[] {
+        new SpanTermQuery(new Term(field, "london")),
+        new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "cit")))),
+        new SpanTermQuery(new Term(field, "airport"))
+    }, 0, true);
     checkQueryEqual(p, "London-Cit*-Airport", q, ignoreWC);
     checkQueryEqual(p, "London Cit* Airport", q, ignoreWC);
     
@@ -410,11 +412,11 @@ public void testWildcardNearQueryParserJapaneseDontDiscardPunct() throws Excepti
   boolean ignoreWC = false;
   WildcardNearQueryParser p = new WildcardNearQueryParser(field, new JapaneseAnalyzerDontDiscardPunct());
 
-  FieldedQuery q2 = new OrderedNearQuery(0, new FieldedQuery[] {
-      new TermQuery(new Term(field, "london")),
-      fixRewrite(new PrefixQuery(new Term(field, "cit"))),
-      new TermQuery(new Term(field, "airport"))
-  });
+  SpanQuery q2 = new SpanNearQuery(new SpanQuery[] {
+      new SpanTermQuery(new Term(field, "london")),
+      new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "cit")))),
+      new SpanTermQuery(new Term(field, "airport"))
+  }, 0, true);
   checkQueryEqual(p, "London Cit* Airport", q2, ignoreWC);
   checkQueryEqual(p, "London  Cit*  Airport  ", q2, ignoreWC);
   
@@ -422,33 +424,33 @@ public void testWildcardNearQueryParserJapaneseDontDiscardPunct() throws Excepti
   checkQueryEqual(p, "?", fixRewrite(new WildcardQuery(new Term(field, "?"))), ignoreWC);
 
   // Made up:
-  FieldedQuery q = new OrderedNearQuery(0, new FieldedQuery[] {
-      new TermQuery(new Term(field, "london")),
-      new TermQuery(new Term(field, "-")),
-      new TermQuery(new Term(field, "city")),
-      new TermQuery(new Term(field, "-")),
-      new TermQuery(new Term(field, "airport"))
-  });    
+  SpanQuery q = new SpanNearQuery(new SpanQuery[] {
+      new SpanTermQuery(new Term(field, "london")),
+      new SpanTermQuery(new Term(field, "-")),
+      new SpanTermQuery(new Term(field, "city")),
+      new SpanTermQuery(new Term(field, "-")),
+      new SpanTermQuery(new Term(field, "airport"))
+  }, 0, true);
   checkQueryEqual(p, "London-City-Airport", q, ignoreWC);
-  q = new OrderedNearQuery(0, new FieldedQuery[] {
-      new TermQuery(new Term(field, "london")),
-      new TermQuery(new Term(field, "city")),
-      new TermQuery(new Term(field, "airport"))
-  });    
+  q = new SpanNearQuery(new SpanQuery[] {
+      new SpanTermQuery(new Term(field, "london")),
+      new SpanTermQuery(new Term(field, "city")),
+      new SpanTermQuery(new Term(field, "airport"))
+  }, 0, true);
   checkQueryEqual(p, "London City Airport", q, ignoreWC);
   
-  q = new OrderedNearQuery(0, new FieldedQuery[] {
-      new TermQuery(new Term(field, "london")),
-      fixRewrite(new PrefixQuery(new Term(field, "cit"))),
-      new TermQuery(new Term(field, "airport"))
-  });    
+  q = new SpanNearQuery(new SpanQuery[] {
+      new SpanTermQuery(new Term(field, "london")),
+      new SpanMultiTermQueryWrapper<>(fixRewrite(new PrefixQuery(new Term(field, "cit")))),
+      new SpanTermQuery(new Term(field, "airport"))
+  }, 0, true);
   checkQueryEqual(p, "London Cit* Airport", q, ignoreWC);
 
-  q = new OrderedNearQuery(0, new FieldedQuery[] {
-      new TermQuery(new Term(field, "london")),
-      new TermQuery(new Term(field, "-")),
-      fixRewrite(new WildcardQuery(new Term(field, "cit*-airport")))
-  });    
+  q = new SpanNearQuery(new SpanQuery[] {
+      new SpanTermQuery(new Term(field, "london")),
+      new SpanTermQuery(new Term(field, "-")),
+      new SpanMultiTermQueryWrapper<>(fixRewrite(new WildcardQuery(new Term(field, "cit*-airport"))))
+  }, 0, true);
   checkQueryEqual(p, "London-Cit*-Airport", q, ignoreWC);
 
   checkQueryEqual(p, "Lon*", fixRewrite(new PrefixQuery(new Term(field, "lon"))), ignoreWC);

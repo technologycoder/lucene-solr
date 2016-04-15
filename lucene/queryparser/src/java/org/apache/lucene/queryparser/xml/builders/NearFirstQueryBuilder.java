@@ -1,15 +1,10 @@
 package org.apache.lucene.queryparser.xml.builders;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
-import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.apache.lucene.search.spans.SpanFirstQuery;
 import org.apache.lucene.search.spans.SpanQuery;
 
@@ -30,23 +25,25 @@ import org.apache.lucene.search.spans.SpanQuery;
  * limitations under the License.
  */
 
-public class NearFirstQueryBuilder implements QueryBuilder{
-  final private QueryBuilder factory;
+public class NearFirstQueryBuilder extends SpanBuilderBase {
+  final private SpanQueryBuilder factory;
 
-  public NearFirstQueryBuilder(QueryBuilder factory) {
+  public NearFirstQueryBuilder(SpanQueryBuilder factory) {
     super();
     this.factory = factory;
   }
   
   @Override
-  public Query getQuery(Element e) throws ParserException {
+  public SpanQuery getSpanQuery(Element e) throws ParserException {
     int end = DOMUtils.getAttribute(e, "end", 1);
     Element child = DOMUtils.getFirstChildElement(e);
     Query q = factory.getQuery((Element) child);
     if (q instanceof MatchAllDocsQuery)
-      return q;
-    FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(q);
-    return new IntervalFilterQuery( fq, new RangeIntervalFilter(0, end) );
+      return null;
+
+    SpanQuery sq = factory.getSpanQuery(child);
+
+    return new SpanFirstQuery(sq, end);
   }
   
 }

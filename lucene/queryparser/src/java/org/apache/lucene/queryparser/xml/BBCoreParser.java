@@ -82,8 +82,8 @@ public class BBCoreParser extends CoreParser {
     
     queryFactory.addBuilder("ComplexPhraseQuery", new ComplexPhraseQueryBuilder(analyzer));
     
-    queryFactory.addBuilder("NearQuery", new NearQueryBuilder(queryFactory));
-    queryFactory.addBuilder("NearFirstQuery", new NearFirstQueryBuilder(queryFactory));
+    queryFactory.addBuilder("NearQuery", new NearQueryBuilder(spanFactory));
+    queryFactory.addBuilder("NearFirstQuery", new NearFirstQueryBuilder(spanFactory));
     queryFactory.addBuilder("WildcardNearQuery", new WildcardNearQueryBuilder(analyzer));
 
   }

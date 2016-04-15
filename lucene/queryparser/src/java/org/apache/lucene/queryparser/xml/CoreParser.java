@@ -37,6 +37,7 @@ public class CoreParser implements QueryBuilder {
   protected QueryParser parser;
   protected QueryBuilderFactory queryFactory;
   protected FilterBuilderFactory filterFactory;
+  protected SpanQueryBuilderFactory spanFactory;
   //Controls the max size of the LRU cache used for QueryFilter objects parsed.
   public static int maxNumCachedFilters = 20;
 
@@ -87,34 +88,34 @@ public class CoreParser implements QueryBuilder {
         filterFactory, maxNumCachedFilters));
 
 
-    SpanQueryBuilderFactory sqof = new SpanQueryBuilderFactory();
+    spanFactory = new SpanQueryBuilderFactory();
 
-    SpanNearBuilder snb = new SpanNearBuilder(sqof);
-    sqof.addBuilder("SpanNear", snb);
+    SpanNearBuilder snb = new SpanNearBuilder(spanFactory);
+    spanFactory.addBuilder("SpanNear", snb);
     queryFactory.addBuilder("SpanNear", snb);
 
     BoostingTermBuilder btb = new BoostingTermBuilder();
-    sqof.addBuilder("BoostingTermQuery", btb);
+    spanFactory.addBuilder("BoostingTermQuery", btb);
     queryFactory.addBuilder("BoostingTermQuery", btb);
 
     SpanTermBuilder snt = new SpanTermBuilder();
-    sqof.addBuilder("SpanTerm", snt);
+    spanFactory.addBuilder("SpanTerm", snt);
     queryFactory.addBuilder("SpanTerm", snt);
 
-    SpanOrBuilder sot = new SpanOrBuilder(sqof);
-    sqof.addBuilder("SpanOr", sot);
+    SpanOrBuilder sot = new SpanOrBuilder(spanFactory);
+    spanFactory.addBuilder("SpanOr", sot);
     queryFactory.addBuilder("SpanOr", sot);
 
     SpanOrTermsBuilder sots = new SpanOrTermsBuilder(analyzer);
-    sqof.addBuilder("SpanOrTerms", sots);
+    spanFactory.addBuilder("SpanOrTerms", sots);
     queryFactory.addBuilder("SpanOrTerms", sots);
 
-    SpanFirstBuilder sft = new SpanFirstBuilder(sqof);
-    sqof.addBuilder("SpanFirst", sft);
+    SpanFirstBuilder sft = new SpanFirstBuilder(spanFactory);
+    spanFactory.addBuilder("SpanFirst", sft);
     queryFactory.addBuilder("SpanFirst", sft);
 
-    SpanNotBuilder snot = new SpanNotBuilder(sqof);
-    sqof.addBuilder("SpanNot", snot);
+    SpanNotBuilder snot = new SpanNotBuilder(spanFactory);
+    spanFactory.addBuilder("SpanNot", snot);
     queryFactory.addBuilder("SpanNot", snot);
   }
 

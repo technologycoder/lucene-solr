@@ -15,8 +15,11 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
 
@@ -77,7 +80,7 @@ public class WildcardNearQueryParser {
 
   public Query parse(String unanalyzedText, boolean ignoreWildcard) throws ParserException {
     // to hold the sub queries until we generate the NearQuery
-    ArrayList<FieldedQuery> queries = new ArrayList<>();
+    ArrayList<SpanQuery> queries = new ArrayList<>();
     ArrayList<Integer> positions = new ArrayList<>();
 
     TokenStream source = null;
@@ -86,7 +89,7 @@ public class WildcardNearQueryParser {
       if (ignoreWildcard) {
         analysePhrases(source, unanalyzedText, queries, positions);
       } else if (!fieldHasOffsetAtt(source)) {
-        FieldedQuery q = BuildWildcardQuery(unanalyzedText);
+        SpanQuery q = BuildWildcardQuery(unanalyzedText);
         if (q != null) {
           queries.add(q);
           positions.add(0);
@@ -95,11 +98,6 @@ public class WildcardNearQueryParser {
         // The field has an offsetAtt
         analyseWildcardPhrases(source, unanalyzedText, queries, positions);
       }
-    } catch (IOException ioe) {
-      ParserException p = new ParserException("Cannot build query on field:"
-          + field + ", text:" + unanalyzedText);
-      p.initCause(ioe);
-      throw p;
     } finally {
       IOUtils.closeWhileHandlingException(source);
     }
@@ -112,7 +110,7 @@ public class WildcardNearQueryParser {
   }
 
   //
-  private FieldedQuery makeSubQuery(ArrayList<FieldedQuery> queries, ArrayList<Integer> positions, int startIndex, int stopIndex){
+  private SpanQuery makeSubQuery(ArrayList<SpanQuery> queries, ArrayList<Integer> positions, int startIndex, int stopIndex){
     if(startIndex == stopIndex)
       return queries.get(startIndex);
 
@@ -125,26 +123,26 @@ public class WildcardNearQueryParser {
         continue;
       }
       else {
-        FieldedQuery[] subQueries = new FieldedQuery[2];
+        SpanQuery[] subQueries = new SpanQuery[2];
         subQueries[0] = makeSubQuery(queries, positions, startIndex, index);
         subQueries[1] = makeSubQuery(queries, positions, index+1, stopIndex);
-        return new OrderedNearQuery(distance-1, subQueries);
+        return new SpanNearQuery(subQueries, distance-1, true);
       }
     }
 
     final int numberOfElementstoCopy= stopIndex-startIndex+1;
-    FieldedQuery[] subQueries = new FieldedQuery[numberOfElementstoCopy];
+    SpanQuery[] subQueries = new SpanQuery[numberOfElementstoCopy];
     for(int i=0; i < numberOfElementstoCopy; i++)
     {
       subQueries[i] = queries.get(startIndex + i);
     }
-    return new OrderedNearQuery(groupable_distance-1/*slop*/, subQueries);
+    return new SpanNearQuery(subQueries, groupable_distance-1/*slop*/, true);
   }
 
   //analyses the text and fills up the individual term queries and positions in the respective array lists
   //and returns the position increment after the last query token. This increment can be used to chain up the rest of the phrases to this query list.
   private int analysePhrases(TokenStream source, String unanalyzedText,
-      ArrayList<FieldedQuery> queries, ArrayList<Integer> positions) throws ParserException {
+      ArrayList<SpanQuery> queries, ArrayList<Integer> positions) throws ParserException {
     int currentPosition = -1;
     try {
       source.reset();
@@ -167,7 +165,7 @@ public class WildcardNearQueryParser {
         int positionIncrement = (posIncrAtt != null) ? posIncrAtt
             .getPositionIncrement() : 1;
         currentPosition += positionIncrement;
-        FieldedQuery q = new TermQuery(new Term(field, BytesRef.deepCopyOf(bytes)));
+        SpanQuery q = new SpanTermQuery(new Term(field, BytesRef.deepCopyOf(bytes)));
         if (q != null) {
             queries.add(q);
         }
@@ -204,7 +202,7 @@ public class WildcardNearQueryParser {
   //increment after the last query token. This increment can be used
   //to chain up the rest of the phrases to this query list.
   private int analyseWildcardPhrases(TokenStream source, String unanalyzedText,
-     ArrayList<FieldedQuery> queries, ArrayList<Integer> positions) throws ParserException {
+     ArrayList<SpanQuery> queries, ArrayList<Integer> positions) throws ParserException {
     int currentPosition = -1;
     ArrayList<WildcardType> wildcards = findWildcards(unanalyzedText);
     try {
@@ -264,7 +262,7 @@ public class WildcardNearQueryParser {
               lastOffset = j;
               currentPosition += lastPositionIncrement;
               lastPositionIncrement = 1;
-              FieldedQuery wq = BuildWildcardQuery(reconstructed);
+              SpanQuery wq = BuildWildcardQuery(reconstructed);
               if (wq != null) {
                 queries.add(wq);
                 positions.add(currentPosition);
@@ -287,7 +285,7 @@ public class WildcardNearQueryParser {
             lastOffset = offsetAtt.startOffset();
             currentPosition += lastPositionIncrement;
             lastPositionIncrement = 1;
-            FieldedQuery wq = BuildWildcardQuery(reconstructed);
+            SpanQuery wq = BuildWildcardQuery(reconstructed);
             if (wq != null) {
               queries.add(wq);
               positions.add(currentPosition);
@@ -311,7 +309,7 @@ public class WildcardNearQueryParser {
           // or after it, so create it.
           currentPosition += lastPositionIncrement;
           lastPositionIncrement = 1;
-          FieldedQuery q = BuildWildcardQuery(bytes.utf8ToString());
+          SpanQuery q = BuildWildcardQuery(bytes.utf8ToString());
           if (q != null) {
             queries.add(q);
             positions.add(currentPosition);
@@ -327,7 +325,7 @@ public class WildcardNearQueryParser {
             currentPosition += lastPositionIncrement;
             lastPositionIncrement = 1;
             lastOffset = j;
-            FieldedQuery wq = BuildWildcardQuery(reconstructed);
+            SpanQuery wq = BuildWildcardQuery(reconstructed);
             if (wq != null) {
               queries.add(wq);
               positions.add(currentPosition);
@@ -345,7 +343,7 @@ public class WildcardNearQueryParser {
         currentPosition += lastPositionIncrement;
         lastPositionIncrement = 1;
         lastOffset = wildcards.size();
-        FieldedQuery wq = BuildWildcardQuery(reconstructed);
+        SpanQuery wq = BuildWildcardQuery(reconstructed);
         if (wq != null) {
           queries.add(wq);
           positions.add(currentPosition);
@@ -440,23 +438,23 @@ public class WildcardNearQueryParser {
     return aWildcardString;
   }
 
-  private FieldedQuery BuildWildcardQuery(String token) {
+  private SpanQuery BuildWildcardQuery(String token) {
     if (equalsWildcardString(token)) {
       // We don't need to build an actual Query for these
       return null;
     }
     WildcardState ws = checkWildcard(token);
     if (ws == WildcardState.NON_WILDCARD) {
-      return new TermQuery(new Term(field, token));
+      return new SpanTermQuery(new Term(field, token));
     }
     if (token.length() > 1 && ws == WildcardState.TRAILING_WILDCARD) {
       PrefixQuery pq = new PrefixQuery(new Term(field, token.substring(
           0, token.length() - 1)));
-      ((MultiTermQuery)pq).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
-      return pq;
+      pq.setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
+      return new SpanMultiTermQueryWrapper<PrefixQuery>(pq);
     }
     WildcardQuery wq = new WildcardQuery(new Term(field, token));
-    ((MultiTermQuery)wq).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
-    return wq;
+    wq.setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
+    return new SpanMultiTermQueryWrapper<WildcardQuery>(wq);
   }
 }

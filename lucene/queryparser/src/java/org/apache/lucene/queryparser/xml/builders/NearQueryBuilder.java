@@ -5,9 +5,10 @@ import java.util.List;
 
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
-import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanQuery;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -28,43 +29,39 @@ import org.w3c.dom.Node;
  * limitations under the License.
  */
 
-public class NearQueryBuilder implements QueryBuilder{
-  final private QueryBuilder factory;
+public class NearQueryBuilder extends SpanBuilderBase {
+  final private SpanQueryBuilder factory;
 
-  public NearQueryBuilder(QueryBuilder factory) {
+  public NearQueryBuilder(SpanQueryBuilder factory) {
     super();
     this.factory = factory;
   }
-  
+
   @Override
-  public Query getQuery(Element e) throws ParserException {
+  public SpanQuery getSpanQuery(Element e) throws ParserException {
     int slop = DOMUtils.getAttribute(e, "slop", 0);
     boolean inOrder = DOMUtils.getAttribute(e, "inOrder", false);
     
-    List<Query> subQueriesList = new ArrayList<>();
+    List<SpanQuery> spans = new ArrayList<>();
     for (Node kid = e.getFirstChild(); kid != null; kid = kid.getNextSibling()) {
       if (kid.getNodeType() == Node.ELEMENT_NODE) {
         Query q = factory.getQuery((Element) kid);
         if (!(q instanceof MatchAllDocsQuery)) {
-          FieldedQuery fq = FieldedBooleanQuery.toFieldedQuery(factory.getQuery((Element) kid));
-          subQueriesList.add(fq);
+          SpanQuery sq = factory.getSpanQuery((Element)kid);
+          spans.add(sq);
         }
-        
       }
     }
-    switch (subQueriesList.size())
+
+    switch (spans.size())
     {
       case 0:
-        return new MatchAllDocsQuery();
+        return null;
       case 1:
-        return subQueriesList.get(0);
-        default:
-          FieldedQuery[] subQueries = subQueriesList.toArray(new FieldedQuery[subQueriesList.size()]);
-          if (inOrder)
-            return new OrderedNearQuery(slop, subQueries);
-          else
-            return new UnorderedNearQuery(slop, subQueries);
+        return spans.get(0);
+     default:
+       SpanQuery[] spanQueries = spans.toArray(new SpanQuery[spans.size()]);
+       return new SpanNearQuery(spanQueries, slop, inOrder);
     }
   }
-  
 }
