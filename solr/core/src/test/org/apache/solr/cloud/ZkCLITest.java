@@ -125,6 +125,7 @@ public class ZkCLITest extends SolrTestCaseJ4 {
   @Test
   public void testCmdConstants() throws Exception {
     assertEquals("upconfig", ZkCLI.UPCONFIG);
+    assertEquals("x", ZkCLI.EXCLUDE_REGEX_SHORT);
     assertEquals("excluderegex", ZkCLI.EXCLUDE_REGEX);
     assertEquals(ZkController.UPLOAD_FILENAME_EXCLUDE_REGEX, ZkCLI.EXCLUDE_REGEX_DEFAULT);
   }
@@ -223,10 +224,11 @@ public class ZkCLITest extends SolrTestCaseJ4 {
           "-confdir", ExternalPaths.EXAMPLE_HOME + File.separator + "collection1" + File.separator + "conf",
           "-confname", confsetname};
     } else {
+      final String excluderegexOption = (random().nextBoolean() ? "--"+ZkCLI.EXCLUDE_REGEX : "-"+ZkCLI.EXCLUDE_REGEX_SHORT);
       upconfigArgs = new String[] {
           "-zkhost", zkServer.getZkAddress(),
           "-cmd", ZkCLI.UPCONFIG,
-          "-"+ZkCLI.EXCLUDE_REGEX, ZkCLI.EXCLUDE_REGEX_DEFAULT,
+          excluderegexOption, ZkCLI.EXCLUDE_REGEX_DEFAULT,
           "-confdir", ExternalPaths.EXAMPLE_HOME + File.separator + "collection1" + File.separator + "conf",
           "-confname", confsetname};
     }
