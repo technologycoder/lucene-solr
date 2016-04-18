@@ -32,10 +32,11 @@
   <path id="test.classpath">
     <pathelement path="${analyzers-common.jar}"/>
     <pathelement path="${analyzers-kuromoji.jar}"/>
+    <pathelement path="${analyzers-icu.jar}"/>
     <path refid="test.base.classpath"/>
   </path>
 
-  <target name="compile-core" depends="jar-queries,jar-sandbox,common.compile-core"/>
+  <target name="compile-core" depends="jar-queries,jar-sandbox,jar-analyzers-common,common.compile-core"/>
 
   <target name="javadocs" depends="javadocs-queries,javadocs-sandbox,compile-core,check-javadocs-uptodate"
           unless="javadocs-uptodate-${name}">
