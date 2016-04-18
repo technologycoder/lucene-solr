@@ -26,7 +26,6 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntField;
-import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -41,7 +40,6 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsFilter;
 import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
@@ -50,12 +48,12 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
 import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanOrQuery;
 import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.w3c.dom.Element;
 
@@ -65,7 +63,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -455,12 +452,12 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   //working version of (A OR B) N/5 C
   public void testNearBoolean() throws IOException {
-    BooleanQuery.Builder qb = new BooleanQuery.Builder();
-    qb.add(new TermQuery(new Term("contents", "iranian")), BooleanClause.Occur.SHOULD);
-    qb.add(new TermQuery(new Term("contents", "north")), BooleanClause.Occur.SHOULD);
+    SpanQuery[] clauses = new SpanQuery[2];
+    clauses[0] = new SpanTermQuery(new Term("contents", "iranian"));
+    clauses[1] = new SpanTermQuery(new Term("contents", "north"));
 
     SpanQuery[] subQueries = new SpanQuery[2];
-    subQueries[0] = FieldedBooleanQuery.toFieldedQuery(qb.build());
+    subQueries[0] = new SpanOrQuery(clauses);
     subQueries[1] = new SpanTermQuery(new Term("contents", "akbar"));
     SpanQuery sq = new SpanNearQuery(subQueries, 5, true);
     dumpResults("testNearBoolean", sq, 5);
@@ -480,12 +477,12 @@ public class TestBBCoreParser extends LuceneTestCase {
   }
   
   public void testNearFirstBooleanMust() throws IOException {
-    BooleanQuery.Builder qb = new BooleanQuery.Builder();
-    qb.add(new TermQuery(new Term("contents", "upholds")), BooleanClause.Occur.MUST);
-    qb.add(new TermQuery(new Term("contents", "building")), BooleanClause.Occur.MUST);
+    SpanQuery[] clauses = new SpanQuery[2];
+    clauses[0] = new SpanTermQuery(new Term("contents", "upholds"));
+    clauses[1] = new SpanTermQuery(new Term("contents", "building"));
 
     SpanQuery[] subQueries = new SpanQuery[2];
-    subQueries[0] = FieldedBooleanQuery.toFieldedQuery(qb.build());
+    subQueries[0] = new SpanNearQuery(clauses, 10, false);
     subQueries[1] = new SpanTermQuery(new Term("contents", "bank"));
     SpanQuery sq = new SpanNearQuery(subQueries, 7, false);
     dumpResults("testNearFirstBooleanMust", sq, 5);
@@ -614,9 +611,9 @@ public class TestBBCoreParser extends LuceneTestCase {
     int slop = 1;
     SpanQuery[] subqueries = new SpanQuery[2];
     subqueries[0] = new SpanMultiTermQueryWrapper<PrefixQuery>(new PrefixQuery(new Term("contents", "keihanshi")));
-    ((MultiTermQuery)subqueries[0]).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
+    ((SpanMultiTermQueryWrapper<PrefixQuery>)subqueries[0]).setRewriteMethod(SpanMultiTermQueryWrapper.SCORING_SPAN_QUERY_REWRITE);
     subqueries[1] = new SpanMultiTermQueryWrapper<PrefixQuery>(new PrefixQuery(new Term("contents", "rea")));
-    ((MultiTermQuery)subqueries[1]).setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_REWRITE);
+    ((SpanMultiTermQueryWrapper<PrefixQuery>)subqueries[1]).setRewriteMethod(SpanMultiTermQueryWrapper.SCORING_SPAN_QUERY_REWRITE);
     Query q = new SpanNearQuery(subqueries, slop, true);
     dumpResults("NearPrefixQuery", q, 5);
   }
