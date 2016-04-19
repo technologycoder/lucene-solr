@@ -7,9 +7,9 @@ package org.apache.lucene.queryparser.xml;
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -108,7 +108,7 @@ public class TestParser extends LuceneTestCase {
     Query q = parse("BooleanQuery.xml");
     dumpResults("BooleanQuery", q, 5);
   }
-
+  
   public void testDisjunctionMaxQueryXML() throws ParserException, IOException {
     Query q = parse("DisjunctionMaxQuery.xml");
     assertTrue(q instanceof DisjunctionMaxQuery);
@@ -118,6 +118,11 @@ public class TestParser extends LuceneTestCase {
     DisjunctionMaxQuery ndq = (DisjunctionMaxQuery) d.getDisjuncts().get(1);
     assertEquals(1.2f, ndq.getTieBreakerMultiplier(), 0.0001f);
     assertEquals(1, ndq.getDisjuncts().size());
+  }
+
+  public void testRangeQueryXML() throws ParserException, IOException {
+    Query q = parse("RangeQuery.xml");
+    dumpResults("RangeQuery", q, 5);
   }
 
   public void testRangeFilterQueryXML() throws ParserException, IOException {

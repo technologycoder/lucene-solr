@@ -5,6 +5,7 @@ package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
@@ -63,7 +64,12 @@ public class BooleanQueryBuilder implements QueryBuilder {
       }
     }
 
-    return bq.build();
+    Query q = bq.build();
+    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+    if (boost != 1f) {
+      q = new BoostQuery(q, boost);
+    }
+    return q;
   }
 
   static BooleanClause.Occur getOccursValue(Element clauseElem) throws ParserException {

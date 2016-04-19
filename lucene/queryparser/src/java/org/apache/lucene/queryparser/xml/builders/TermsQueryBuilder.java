@@ -6,10 +6,10 @@ import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -50,29 +50,26 @@ public class TermsQueryBuilder implements QueryBuilder {
     String fieldName = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
     String text = DOMUtils.getNonBlankTextOrFail(e);
 
-    BooleanQuery bq = new BooleanQuery(DOMUtils.getAttribute(e, "disableCoord", false));
+    BooleanQuery.Builder bq = new BooleanQuery.Builder();
+    bq.setDisableCoord(DOMUtils.getAttribute(e, "disableCoord", false));
     bq.setMinimumNumberShouldMatch(DOMUtils.getAttribute(e, "minimumNumberShouldMatch", 0));
-    TokenStream ts = null;
-    try {
-      ts = analyzer.tokenStream(fieldName, text);
+    try (TokenStream ts = analyzer.tokenStream(fieldName, text)) {
       TermToBytesRefAttribute termAtt = ts.addAttribute(TermToBytesRefAttribute.class);
       Term term = null;
-      BytesRef bytes = termAtt.getBytesRef();
       ts.reset();
       while (ts.incrementToken()) {
-        term = new Term(fieldName, BytesRef.deepCopyOf(bytes));
+        term = new Term(fieldName, BytesRef.deepCopyOf(termAtt.getBytesRef()));
         bq.add(new BooleanClause(new TermQuery(term), BooleanClause.Occur.SHOULD));
       }
       ts.end();
     }
     catch (IOException ioe) {
       throw new RuntimeException("Error constructing terms from index:" + ioe);
-    } finally {
-      IOUtils.closeWhileHandlingException(ts);
     }
 
-    bq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
-    return bq;
+    Query q = bq.build();
+    float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+    return new BoostQuery(q, boost);
   }
 
 }

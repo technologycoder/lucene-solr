@@ -54,7 +54,7 @@ public class PrefixQuery extends AutomatonQuery {
     assert automaton.isDeterministic();
     return automaton;
   }
-  
+
   /** Returns the prefix of this query. */
   public Term getPrefix() {
     return term;
