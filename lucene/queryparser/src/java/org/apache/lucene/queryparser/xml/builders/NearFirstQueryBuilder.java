@@ -37,7 +37,7 @@ public class NearFirstQueryBuilder extends SpanBuilderBase {
   public SpanQuery getSpanQuery(Element e) throws ParserException {
     int end = DOMUtils.getAttribute(e, "end", 1);
     Element child = DOMUtils.getFirstChildElement(e);
-    Query q = factory.getQuery((Element) child);
+    Query q = factory.getQuery(child);
     if (q instanceof MatchAllDocsQuery)
       return null;
 

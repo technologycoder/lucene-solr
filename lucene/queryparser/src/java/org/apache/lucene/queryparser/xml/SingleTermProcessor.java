@@ -1,7 +1,7 @@
+package org.apache.lucene.queryparser.xml;
 /**
  * 
  */
-package org.apache.lucene.queryparser.xml;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.TermBuilder.TermProcessor;
