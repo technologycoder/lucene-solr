@@ -121,7 +121,7 @@ public class TestBBCoreParser extends LuceneTestCase {
       Document doc = new Document();
       doc.add(newTextField("date", date, Field.Store.YES));
       doc.add(newTextField("contents", content, Field.Store.YES));
-      doc.add(new IntField("date2", Integer.valueOf(date), Field.Store.YES));
+      doc.add(new IntField("date2", Integer.valueOf(date), Field.Store.NO));
       writer.addDocument(doc);
       line = d.readLine();
     }
@@ -213,6 +213,11 @@ public class TestBBCoreParser extends LuceneTestCase {
     DisjunctionMaxQuery ndq = (DisjunctionMaxQuery) d.getDisjuncts().get(1);
     assertEquals(1.2f, ndq.getTieBreakerMultiplier(), 0.0001f);
     assertEquals(1, ndq.getDisjuncts().size());
+  }
+
+  public void testRangeQueryXML() throws ParserException, IOException {
+    Query q = parse("RangeQuery.xml");
+    dumpResults("RangeQuery", q, 5);
   }
 
   public void testRangeFilterQueryXML() throws ParserException, IOException {
