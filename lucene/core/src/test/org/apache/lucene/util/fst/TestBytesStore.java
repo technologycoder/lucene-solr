@@ -208,12 +208,6 @@ public class TestBytesStore extends LuceneTestCase {
         }
       }
 
-      verify(bytes, expected, pos);
-      if (random().nextBoolean()) {
-        bytes.finish();
-        verify(bytes, expected, pos);
-      }
-
       BytesStore bytesToVerify;
 
       if (random().nextBoolean()) {
