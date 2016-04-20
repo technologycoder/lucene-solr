@@ -159,13 +159,13 @@ public class TestBBCoreParser extends LuceneTestCase {
     parse("TermQueryMultipleTerms.xml", true/*shouldFail*/);
   }
 
-  public void testSimpleTermsQueryXML() throws ParserException, IOException {
+  public void testTermsQueryXML() throws ParserException, IOException {
     Query q = parse("TermsQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     dumpResults("TermsQuery", q, 5);
   }
 
-  public void testSimpleTermsQueryWithTermElementXML() throws ParserException, IOException {
+  public void testTermsQueryWithTermElementXML() throws ParserException, IOException {
     Query q = parse("TermsQueryWithTermElement.xml");
     dumpResults("TermsQuery", q, 5);
   }
@@ -271,6 +271,26 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("ConstantScoreQuery", q, 5);
   }
   
+  public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
+    Query q = parse("MatchAllDocsQuery.xml");
+    dumpResults("MatchAllDocsQuery with range filter", q, 5);
+  }
+
+  public void testBooleanFilterXML() throws ParserException, IOException {
+    Query q = parse("BooleanFilter.xml");
+    dumpResults("Boolean filter", q, 5);
+  }
+
+  public void testNestedBooleanQuery() throws ParserException, IOException {
+    Query q = parse("NestedBooleanQuery.xml");
+    dumpResults("Nested Boolean query", q, 5);
+  }
+
+  public void testCachedFilterXML() throws ParserException, IOException {
+    Query q = parse("CachedFilter.xml");
+    dumpResults("Cached filter", q, 5);
+  }
+
   public void testPhraseQueryXML() throws Exception {
     Query q = parse("PhraseQuery.xml");
     assertTrue("Expecting a PhraseQuery, but resulted in " + q.getClass(), q instanceof PhraseQuery);
@@ -351,26 +371,6 @@ public class TestBBCoreParser extends LuceneTestCase {
   public void testGenericTextQueryMultiClauseXML() throws Exception {
     Query q = parse("GenericTextQueryMultiClause.xml");
     dumpResults("GenericTextQuery. BooleanQuery containing multiple GenericTextQuery clauses with different boost factors", q, 5);
-  }
-
-  public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
-    Query q = parse("MatchAllDocsQuery.xml");
-    dumpResults("MatchAllDocsQuery with range filter", q, 5);
-  }
-
-  public void testBooleanFilterXML() throws ParserException, IOException {
-    Query q = parse("BooleanFilter.xml");
-    dumpResults("Boolean filter", q, 5);
-  }
-
-  public void testNestedBooleanQuery() throws ParserException, IOException {
-    Query q = parse("NestedBooleanQuery.xml");
-    dumpResults("Nested Boolean query", q, 5);
-  }
-
-  public void testCachedFilterXML() throws ParserException, IOException {
-    Query q = parse("CachedFilter.xml");
-    dumpResults("Cached filter", q, 5);
   }
 
   public void testNumericRangeFilterQueryXML() throws ParserException, IOException {
