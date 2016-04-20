@@ -151,7 +151,6 @@ public class WildcardNearQueryParser {
       BytesRef bytes = null;
       if (source.hasAttribute(TermToBytesRefAttribute.class)) {
         termAtt = source.getAttribute(TermToBytesRefAttribute.class);
-        bytes = termAtt.getBytesRef();
       } else throw new ParserException(
           "Cannot build query token stream has no TermToBytesRefAttribute. field:"
               + field + ", text:" + unanalyzedText);
@@ -165,6 +164,7 @@ public class WildcardNearQueryParser {
         int positionIncrement = (posIncrAtt != null) ? posIncrAtt
             .getPositionIncrement() : 1;
         currentPosition += positionIncrement;
+        bytes = termAtt.getBytesRef();
         SpanQuery q = new SpanTermQuery(new Term(field, BytesRef.deepCopyOf(bytes)));
         if (q != null) {
             queries.add(q);
@@ -214,7 +214,6 @@ public class WildcardNearQueryParser {
       BytesRef bytes = null;
       if (source.hasAttribute(TermToBytesRefAttribute.class)) {
         termAtt = source.getAttribute(TermToBytesRefAttribute.class);
-        bytes = termAtt.getBytesRef();
       } else throw new ParserException(
           "Cannot build query token stream has no TermToBytesRefAttribute. field:"
               + field + ", text:" + unanalyzedText);
@@ -275,6 +274,7 @@ public class WildcardNearQueryParser {
           }
         }
 
+        bytes = termAtt.getBytesRef();
         lastOffset = offsetAtt.endOffset();
         if (isAllWhitespace(bytes)) {
           // On an all-whitespace token, this breaks concatentation and drops the token.
