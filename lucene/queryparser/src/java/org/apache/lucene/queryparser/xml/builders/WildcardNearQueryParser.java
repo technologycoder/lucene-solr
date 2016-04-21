@@ -194,7 +194,7 @@ public class WildcardNearQueryParser {
   
   private boolean isAllWhitespace(BytesRef bytes) {
     String full = bytes.utf8ToString();
-    return !full.matches("\\S+");
+    return full.matches("^\\s*$");
   }
 
   //analyses the text and fills up the individual term queries and
