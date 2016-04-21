@@ -110,7 +110,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     });
 
     BufferedReader d = new BufferedReader(new InputStreamReader(
-        TestParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
+        TestCoreParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
     dir = newDirectory();
     IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(analyzer));
     String line = d.readLine();
@@ -637,7 +637,7 @@ public class TestBBCoreParser extends LuceneTestCase {
   }
   
   private Query parse(String xmlFileName, Boolean shouldFail) throws IOException {
-    InputStream xmlStream = TestParser.class.getResourceAsStream(xmlFileName);
+    InputStream xmlStream = TestCoreParser.class.getResourceAsStream(xmlFileName);
     assertTrue("Test XML file " + xmlFileName + " cannot be found", xmlStream != null);
     Query result = parse(xmlStream, shouldFail);
     xmlStream.close();
