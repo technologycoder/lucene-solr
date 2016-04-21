@@ -133,12 +133,23 @@ public class RecoveryStrategy extends Thread implements ClosableThread {
     }
   }
   
-  private void replicate(String nodeName, SolrCore core, ZkNodeProps leaderprops)
+  private String storageNetworkUrl(String url) {
+    int slashSlash = url.indexOf("//");
+    if (slashSlash == -1) return url;
+    int portColon = url.indexOf(":", slashSlash);
+    if (portColon == -1) return url;
+    return url.substring(0, portColon) + "-s" + url.substring(portColon);
+  }
+  
+  private void replicate(String nodeName, SolrCore core, ZkNodeProps leaderprops,
+      Boolean replicateOverStorageNetwork)
       throws SolrServerException, IOException {
 
     ZkCoreNodeProps leaderCNodeProps = new ZkCoreNodeProps(leaderprops);
     String leaderUrl = leaderCNodeProps.getCoreUrl();
-    
+    if (replicateOverStorageNetwork) {
+      leaderUrl = storageNetworkUrl(leaderCNodeProps.getCoreUrl());
+    }
     log.info("Attempting to replicate from " + leaderUrl + ". core=" + coreName);
     
     // send commit
@@ -443,7 +454,7 @@ public class RecoveryStrategy extends Thread implements ClosableThread {
         
         try {
 
-          replicate(zkController.getNodeName(), core, leaderprops);
+          replicate(zkController.getNodeName(), core, leaderprops, ulog.getReplicateOverStorageNetwork());
 
           if (isClosed()) {
             log.info("Recovery was cancelled");

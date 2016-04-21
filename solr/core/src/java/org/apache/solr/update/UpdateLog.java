@@ -143,6 +143,7 @@ public class UpdateLog implements PluginInfoInitialized {
   private int numRecordsToKeep;
   private int maxNumLogsToKeep;
   protected int numVersionBuckets;
+  private boolean replicateOverStorageNetwork;
 
   // keep track of deletes only... this is not updated on an add
   protected LinkedHashMap<BytesRef, LogPtr> oldDeletes = new LinkedHashMap<BytesRef, LogPtr>(numDeletesToKeep) {
@@ -225,10 +226,20 @@ public class UpdateLog implements PluginInfoInitialized {
     return numVersionBuckets;
   }
 
+  public boolean getReplicateOverStorageNetwork() {
+    return replicateOverStorageNetwork;
+  }
 
   static private int objToInt(Object obj, int def) {
     if (obj != null) {
       return Integer.parseInt(obj.toString());
+    }
+    else return def;
+  }
+
+  static private boolean objToBoolean(Object obj, boolean def) {
+    if (obj != null) {
+      return Boolean.parseBoolean(obj.toString());
     }
     else return def;
   }
@@ -241,6 +252,7 @@ public class UpdateLog implements PluginInfoInitialized {
     numRecordsToKeep = objToInt(info.initArgs.get("numRecordsToKeep"), 100);
     maxNumLogsToKeep = objToInt(info.initArgs.get("maxNumLogsToKeep"), 10);
     numVersionBuckets = objToInt(info.initArgs.get("numVersionBuckets"), 256);
+    replicateOverStorageNetwork = objToBoolean(info.initArgs.get("replicateOverStorageNetwork"), false);
     if (numVersionBuckets <= 0)
       throw new SolrException(SolrException.ErrorCode.SERVER_ERROR,
           "Number of version buckets must be greater than 0!");
