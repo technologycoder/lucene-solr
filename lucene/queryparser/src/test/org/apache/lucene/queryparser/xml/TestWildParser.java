@@ -86,11 +86,11 @@ public class TestWildParser extends LuceneTestCase {
     protected TokenStreamComponents createComponents(final String fieldName) {
       final JapaneseTokenizer src = new JapaneseTokenizer(null, true, JapaneseTokenizer.Mode.SEARCH);
       TokenStream tok = new JapaneseNumberFilter(src);
-      tok = new JapaneseBaseFormFilter(src);
-      tok = new CJKWidthFilter(src);
-      tok = new JapaneseKatakanaStemFilter(src);
+      tok = new JapaneseBaseFormFilter(tok);
+      tok = new CJKWidthFilter(tok);
+      tok = new JapaneseKatakanaStemFilter(tok);
       //      tok = new SynonymFilter(src, null, true);
-      tok = new LowerCaseFilter(src);
+      tok = new LowerCaseFilter(tok);
       return new TokenStreamComponents(src, tok);
     }
   }
@@ -105,11 +105,11 @@ public class TestWildParser extends LuceneTestCase {
     protected TokenStreamComponents createComponents(final String fieldName) {
       final JapaneseTokenizer src = new JapaneseTokenizer( null, false, JapaneseTokenizer.Mode.SEARCH);
       TokenStream tok = new JapaneseNumberFilter(src);
-      tok = new JapaneseBaseFormFilter(src);
-      tok = new CJKWidthFilter(src);
-      tok = new JapaneseKatakanaStemFilter(src);
+      tok = new JapaneseBaseFormFilter(tok);
+      tok = new CJKWidthFilter(tok);
+      tok = new JapaneseKatakanaStemFilter(tok);
       //      tok = new SynonymFilter(src, null, true);
-      tok = new LowerCaseFilter( src);
+      tok = new LowerCaseFilter(tok);
       return new TokenStreamComponents(src, tok);
     }
   }
