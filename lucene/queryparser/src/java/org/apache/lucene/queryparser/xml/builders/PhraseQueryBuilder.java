@@ -12,6 +12,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
@@ -58,10 +59,8 @@ public class PhraseQueryBuilder implements QueryBuilder {
             source.reset();
 
             TermToBytesRefAttribute termAtt = null;
-            BytesRef bytes = null;
             if (source.hasAttribute(TermToBytesRefAttribute.class)) {
                 termAtt = source.getAttribute(TermToBytesRefAttribute.class);
-                bytes = termAtt.getBytesRef();
             }
             else throw new ParserException("Cannot build phrase query, "
                 + "token stream has no TermToBytesRefAttribute. field:" + field
@@ -75,9 +74,8 @@ public class PhraseQueryBuilder implements QueryBuilder {
             int position = -1;
             while (source.incrementToken()) {
               int positionIncrement = (posIncrAtt != null) ? posIncrAtt.getPositionIncrement() : 1;
-              if (positionIncrement <= 0) positionIncrement = 1;
               position += positionIncrement;
-              pq.add(new Term(field, BytesRef.deepCopyOf(bytes)), position);
+              pq.add(new Term(field, BytesRef.deepCopyOf(termAtt.getBytesRef())), position);
             }
 
             source.end();
@@ -96,10 +94,12 @@ public class PhraseQueryBuilder implements QueryBuilder {
           throw new ParserException("Empty phrase query generated for field:" + field
                             + ", phrase:" + phrase);
         }
-        pq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
+
         // TODO pq.setSlop(phraseSlop);
+        float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+        if (boost != 1f) {
+          return new BoostQuery(pq, boost);
+        }
         return pq;
-
     }
-
 }

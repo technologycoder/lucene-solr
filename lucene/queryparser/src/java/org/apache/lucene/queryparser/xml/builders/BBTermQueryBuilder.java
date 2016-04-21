@@ -1,5 +1,6 @@
 package org.apache.lucene.queryparser.xml.builders;
 
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.queryparser.xml.DOMUtils;
@@ -47,8 +48,11 @@ public class BBTermQueryBuilder implements QueryBuilder {
     this.termBuilder.extractTerms(tp, field, value);
     
     try {
-      TermQuery q = new TermQuery(tp.getTerm());
-      q.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
+      Query q = new TermQuery(tp.getTerm());
+      float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+      if (boost != 1f) {
+        q = new BoostQuery(q, boost);
+      }
       return q;
     } catch (ParserException ex){
       throw new ParserException(ex.getMessage() + " field:" + field 

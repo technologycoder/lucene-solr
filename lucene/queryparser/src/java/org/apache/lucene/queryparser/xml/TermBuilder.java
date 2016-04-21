@@ -56,10 +56,10 @@ public class TermBuilder {
         ts = analyzer.tokenStream(field, value);
         TermToBytesRefAttribute termsRefAtt = ts
             .addAttribute(TermToBytesRefAttribute.class);
-        BytesRef bytes = termsRefAtt.getBytesRef();
         ts.reset();
 
         while (ts.incrementToken()) {
+          BytesRef bytes = termsRefAtt.getBytesRef();
           tp.process(new Term(field, BytesRef.deepCopyOf(bytes)));
         }
         ts.end();

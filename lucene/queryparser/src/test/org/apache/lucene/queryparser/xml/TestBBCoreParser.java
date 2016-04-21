@@ -35,6 +35,7 @@ import org.apache.lucene.queries.FilterClause;
 import org.apache.lucene.queries.TermFilter;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
@@ -158,13 +159,13 @@ public class TestBBCoreParser extends LuceneTestCase {
   public void testTermQueryMultipleTermsXML() throws ParserException, IOException {
     parse("TermQueryMultipleTerms.xml", true/*shouldFail*/);
   }
-
+  
   public void testTermsQueryXML() throws ParserException, IOException {
     Query q = parse("TermsQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     dumpResults("TermsQuery", q, 5);
   }
-
+  
   public void testTermsQueryWithTermElementXML() throws ParserException, IOException {
     Query q = parse("TermsQueryWithTermElement.xml");
     dumpResults("TermsQuery", q, 5);
@@ -176,14 +177,13 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("TermsQueryWithSingleTerm", q, 5);
   }
   
-  
   //term appears like single term but results in two terms when it runs through standard analyzer
   public void testTermsQueryWithStopwords() throws ParserException, IOException {
     Query q = parse("TermsQueryStopwords.xml");
     if (analyzer() instanceof StandardAnalyzer)
       assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     dumpResults("TermsQueryWithStopwords", q, 5);
-    }
+  }
   
   public void testTermsQueryEmpty() throws ParserException, IOException {
     Query q = parse("TermsQueryEmpty.xml");
@@ -198,12 +198,11 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("TermsQuery with only stopwords", q, 5);
   }
   
-
   public void testBooleanQueryXML() throws ParserException, IOException {
     Query q = parse("BooleanQuery.xml");
     dumpResults("BooleanQuery", q, 5);
   }
-
+  
   public void testDisjunctionMaxQueryXML() throws ParserException, IOException {
     Query q = parse("DisjunctionMaxQuery.xml");
     assertTrue(q instanceof DisjunctionMaxQuery);
@@ -214,28 +213,28 @@ public class TestBBCoreParser extends LuceneTestCase {
     assertEquals(1.2f, ndq.getTieBreakerMultiplier(), 0.0001f);
     assertEquals(1, ndq.getDisjuncts().size());
   }
-
+  
   public void testRangeQueryXML() throws ParserException, IOException {
     Query q = parse("RangeQuery.xml");
     dumpResults("RangeQuery", q, 5);
   }
-
+  
   public void testRangeFilterQueryXML() throws ParserException, IOException {
     Query q = parse("RangeFilterQuery.xml");
     dumpResults("RangeFilter", q, 5);
   }
-
+  
   public void testUserQueryXML() throws ParserException, IOException {
     Query q = parse("UserInputQuery.xml");
     dumpResults("UserInput with Filter", q, 5);
   }
-
+  
   public void testCustomFieldUserQueryXML() throws ParserException, IOException {
     Query q = parse("UserInputQueryCustomField.xml");
     int h = searcher.search(q, 1000).totalHits;
     assertEquals("UserInputQueryCustomField should produce 0 result ", 0, h);
   }
-
+  
   public void testTermsFilterXML() throws Exception {
     Query q = parse("TermsFilterQuery.xml");
     dumpResults("Terms Filter", q, 5);
@@ -260,12 +259,12 @@ public class TestBBCoreParser extends LuceneTestCase {
     Query q = parse("BoostingTermQuery.xml");
     dumpResults("BoostingTermQuery", q, 5);
   }
-
+  
   public void testSpanTermXML() throws Exception {
     Query q = parse("SpanQuery.xml");
     dumpResults("Span Query", q, 5);
   }
-
+  
   public void testConstantScoreQueryXML() throws Exception {
     Query q = parse("ConstantScoreQuery.xml");
     dumpResults("ConstantScoreQuery", q, 5);
@@ -275,25 +274,27 @@ public class TestBBCoreParser extends LuceneTestCase {
     Query q = parse("MatchAllDocsQuery.xml");
     dumpResults("MatchAllDocsQuery with range filter", q, 5);
   }
-
+  
   public void testBooleanFilterXML() throws ParserException, IOException {
     Query q = parse("BooleanFilter.xml");
     dumpResults("Boolean filter", q, 5);
   }
-
+  
   public void testNestedBooleanQuery() throws ParserException, IOException {
     Query q = parse("NestedBooleanQuery.xml");
     dumpResults("Nested Boolean query", q, 5);
   }
-
+  
   public void testCachedFilterXML() throws ParserException, IOException {
     Query q = parse("CachedFilter.xml");
     dumpResults("Cached filter", q, 5);
   }
-
+  
   public void testPhraseQueryXML() throws Exception {
     Query q = parse("PhraseQuery.xml");
-    assertTrue("Expecting a PhraseQuery, but resulted in " + q.getClass(), q instanceof PhraseQuery);
+    assertTrue("Expecting a BoostQuery, but resulted in " + q.getClass(), q instanceof BoostQuery);
+    Query nq = ((BoostQuery)q).getQuery();
+    assertTrue("Expecting a nested PhraseQuery, but resulted in " + nq.getClass(), nq instanceof PhraseQuery);
     dumpResults("PhraseQuery", q, 5);
   }
   
@@ -306,22 +307,28 @@ public class TestBBCoreParser extends LuceneTestCase {
   public void testPhraseQueryXMLWithNoTextXML() throws Exception {
     parse("PhraseQueryEmpty.xml", true/*shouldFail*/);
   }
-
+  
   public void testGenericTextQueryXML() throws Exception {
     Query q = parse("GenericTextQuery.xml");
-    assertTrue("Expecting a PhraseQuery, but resulted in " + q.getClass(), q instanceof PhraseQuery);
+    assertTrue("Expecting a BoostQuery, but resulted in " + q.getClass(), q instanceof BoostQuery);
+    Query nq = ((BoostQuery)q).getQuery();
+    assertTrue("Expecting a nested PhraseQuery, but resulted in " + nq.getClass(), nq instanceof PhraseQuery);
     dumpResults("GenericTextQuery", q, 5);
   }
   
   public void testGenericTextQuerySingleTermXML() throws Exception {
     Query q = parse("GenericTextQuerySingleTerm.xml");
-    assertTrue("Expecting a TermQuery, but resulted in " + q.getClass(), q instanceof TermQuery);
+    assertTrue("Expecting a BoostQuery, but resulted in " + q.getClass(), q instanceof BoostQuery);
+    Query nq = ((BoostQuery)q).getQuery();
+    assertTrue("Expecting a nested TermQuery, but resulted in " + nq.getClass(), nq instanceof TermQuery);
     dumpResults("GenericTextQuery", q, 5);
   }
   
   public void testGenericTextQueryWithStopwordsXML() throws Exception {
     Query q = parse("GenericTextQueryStopwords.xml");
-    assertTrue("Expecting a PhraseQuery, but resulted in " + q.getClass(), q instanceof PhraseQuery);
+    assertTrue("Expecting a BoostQuery, but resulted in " + q.getClass(), q instanceof BoostQuery);
+    Query nq = ((BoostQuery)q).getQuery();
+    assertTrue("Expecting a nested PhraseQuery, but resulted in " + nq.getClass(), nq instanceof PhraseQuery);
     dumpResults("GenericTextQuery with stopwords", q, 5);
   }
   
@@ -347,7 +354,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     Query q = parse("GenericTextQueryTrailingWildcard.xml");
     dumpResults("GenericTextQuery with a trailing wildcard", q, 5);
   }
-
+  
   public void testGenericTextQueryMultiWildcardXML() throws Exception {
     Query q = parse("GenericTextQueryMultiWildcard.xml");
     dumpResults("GenericTextQuery with multiple terms containing wildcards", q, 5);
@@ -362,17 +369,17 @@ public class TestBBCoreParser extends LuceneTestCase {
     Query q = parse("GenericTextQueryTrailingWildcard2.xml");
     dumpResults("GenericTextQuery with a trailing wildcard", q, 5);
   }
-
+  
   public void testGenericTextQueryMultiWildcard2XML() throws Exception {
     Query q = parse("GenericTextQueryMultiWildcard2.xml");
     dumpResults("GenericTextQuery with multiple terms containing wildcards", q, 5);
   }
-
+  
   public void testGenericTextQueryMultiClauseXML() throws Exception {
     Query q = parse("GenericTextQueryMultiClause.xml");
     dumpResults("GenericTextQuery. BooleanQuery containing multiple GenericTextQuery clauses with different boost factors", q, 5);
   }
-
+  
   public void testNumericRangeFilterQueryXML() throws ParserException, IOException {
     Query q = parse("NumericRangeFilterQuery.xml");
     dumpResults("NumericRangeFilter", q, 5);
@@ -391,13 +398,13 @@ public class TestBBCoreParser extends LuceneTestCase {
   }
   
   public void testNumericRangeFilter() throws IOException {
-    String text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' lowerTerm='19870410' upperTerm='19870531'/></ConstantScoreQuery>";
+    String text = "<ConstantScoreQuery><NumericRangeQuery fieldName='date2' lowerTerm='19870410' upperTerm='19870531'/></ConstantScoreQuery>";
     Query q = parseText(text, false);
     dumpResults("NumericRangeFilter1", q, 5);
-    text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' lowerTerm='19870601' /></ConstantScoreQuery>";
+    text = "<ConstantScoreQuery><NumericRangeQuery fieldName='date2' lowerTerm='19870601' /></ConstantScoreQuery>";
     q = parseText(text, false);
     dumpResults("NumericRangeFilter2", q, 5);
-    text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' upperTerm='19870408'/></ConstantScoreQuery>";
+    text = "<ConstantScoreQuery><NumericRangeQuery fieldName='date2' upperTerm='19870408'/></ConstantScoreQuery>";
     q = parseText(text, false);
     dumpResults("NumericRangeFilter3", q, 5);
   }
@@ -421,25 +428,25 @@ public class TestBBCoreParser extends LuceneTestCase {
         + "<WildcardNearQuery> </WildcardNearQuery></DisjunctionMaxQuery>";
     q = parseText(text, false);
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
-
+    
   }
   
   //federal N/3 (credit OR (taxes N/1 income))
   public void testNearBooleanNear() throws IOException, ParserException {
     String text = ""
-                  +"<NearQuery fieldName=\"contents\" slop=\"4\" inOrder=\"false\">"
-                  +"<WildcardNearQuery>bank</WildcardNearQuery>"
-                  +"<BooleanQuery disableCoord=\"true\"> "
-                  +"<Clause occurs=\"should\"><TermQuery>quarter</TermQuery></Clause>"
-                  +"<Clause occurs=\"should\">"
-                  +"<NearQuery slop=\"2\" inOrder=\"false\">"
-                  +"<WildcardNearQuery>earlier,</WildcardNearQuery>"
-                  +"<WildcardNearQuery>april</WildcardNearQuery>"
-                  +"</NearQuery>"
-                  +"</Clause>"
-                  +"</BooleanQuery>"
-                  +"</NearQuery>"
-                  ;
+        +"<NearQuery fieldName=\"contents\" slop=\"4\" inOrder=\"false\">"
+        +"<WildcardNearQuery>bank</WildcardNearQuery>"
+        +"<BooleanQuery disableCoord=\"true\"> "
+        +"<Clause occurs=\"should\"><TermQuery>quarter</TermQuery></Clause>"
+        +"<Clause occurs=\"should\">"
+        +"<NearQuery slop=\"2\" inOrder=\"false\">"
+        +"<WildcardNearQuery>earlier,</WildcardNearQuery>"
+        +"<WildcardNearQuery>april</WildcardNearQuery>"
+        +"</NearQuery>"
+        +"</Clause>"
+        +"</BooleanQuery>"
+        +"</NearQuery>"
+        ;
     Query q = parseText(text, false);
     dumpResults("testNearBooleanNear", q, 5);
   }
@@ -450,7 +457,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     SpanQuery[] clauses = new SpanQuery[2];
     clauses[0] = new SpanTermQuery(new Term("contents", "iranian"));
     clauses[1] = new SpanTermQuery(new Term("contents", "north"));
-
+    
     SpanQuery[] subQueries = new SpanQuery[2];
     subQueries[0] = new SpanOrQuery(clauses);
     subQueries[1] = new SpanTermQuery(new Term("contents", "akbar"));
@@ -460,13 +467,13 @@ public class TestBBCoreParser extends LuceneTestCase {
   
   public void testNearFirstBooleanMustXml() throws IOException, ParserException {
     String text = ""
-                  +"<NearFirstQuery fieldName=\"contents\" end=\"5\">"
-                  +"<BooleanQuery disableCoord=\"true\"> "
-                  +"<Clause occurs=\"must\"><WildcardNearQuery>ban*</WildcardNearQuery></Clause>"
-                  +"<Clause occurs=\"must\"><WildcardNearQuery>sa*</WildcardNearQuery></Clause>"
-                  +"</BooleanQuery>"
-                  +"</NearFirstQuery>"
-                  ;
+        +"<NearFirstQuery fieldName=\"contents\" end=\"5\">"
+        +"<BooleanQuery disableCoord=\"true\"> "
+        +"<Clause occurs=\"must\"><WildcardNearQuery>ban*</WildcardNearQuery></Clause>"
+        +"<Clause occurs=\"must\"><WildcardNearQuery>sa*</WildcardNearQuery></Clause>"
+        +"</BooleanQuery>"
+        +"</NearFirstQuery>"
+        ;
     Query q = parseText(text, false);
     dumpResults("testNearFirstBooleanMustXml", q, 50);
   }
@@ -475,7 +482,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     SpanQuery[] clauses = new SpanQuery[2];
     clauses[0] = new SpanTermQuery(new Term("contents", "upholds"));
     clauses[1] = new SpanTermQuery(new Term("contents", "building"));
-
+    
     SpanQuery[] subQueries = new SpanQuery[2];
     subQueries[0] = new SpanNearQuery(clauses, 10, false);
     subQueries[1] = new SpanTermQuery(new Term("contents", "bank"));
@@ -496,7 +503,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     {
       assertFalse("Not expecting MatchAllDocsQuery ",bc.getQuery() instanceof MatchAllDocsQuery);
     }
-  
+    
     text = "<BooleanQuery fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
         + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
@@ -548,7 +555,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     
     Filter f = coreParser().filterFactory.getFilter(parseXML(text));
     assertTrue("Expecting a TermFilter, but resulted in " + f.getClass(), f instanceof TermFilter);
-  
+    
     text = "<BooleanFilter fieldName='content' disableCoord='true'>"
         + "<Clause occurs='must'><TermFilter>rio</TermFilter></Clause>"
         + "<Clause occurs='should'><MatchAllDocsFilter/></Clause></BooleanFilter>";

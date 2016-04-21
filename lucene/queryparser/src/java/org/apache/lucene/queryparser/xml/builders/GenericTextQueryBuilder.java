@@ -14,11 +14,11 @@ import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.PhraseQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.IOUtils;
-
 import org.w3c.dom.Element;
 
 /*
@@ -63,11 +63,10 @@ public class GenericTextQueryBuilder implements QueryBuilder {
       String text = DOMUtils.getText(e);
       boolean ignoreWildcard = DOMUtils.getAttribute(e, "ignoreWC", false);
 
-      Query q = null;
       if (!ignoreWildcard && containsWildcard(text))
       {
         WildcardNearQueryParser p = new WildcardNearQueryParser(field, analyzer);
-        q = p.parse(text);
+        Query q = p.parse(text);
         
         float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
         if (boost != 1.0f) {
@@ -87,10 +86,8 @@ public class GenericTextQueryBuilder implements QueryBuilder {
           source.reset();
 
           TermToBytesRefAttribute termAtt = null;
-          BytesRef bytes = null;
           if (source.hasAttribute(TermToBytesRefAttribute.class)) {
               termAtt = source.getAttribute(TermToBytesRefAttribute.class);
-              bytes = termAtt.getBytesRef();
           }
           else throw new ParserException("Cannot build Text query, "
               + "token stream has no TermToBytesRefAttribute. field:" + field
@@ -103,12 +100,9 @@ public class GenericTextQueryBuilder implements QueryBuilder {
 
           int position = -1;
           while (source.incrementToken()) {
-              Term t = new Term(field, BytesRef.deepCopyOf(bytes));
+              Term t = new Term(field, BytesRef.deepCopyOf(termAtt.getBytesRef()));
               
               int positionIncrement = (posIncrAtt != null) ? posIncrAtt.getPositionIncrement() : 1;
-              if (positionIncrement <= 0) 
-                positionIncrement = 1;
-              
               position += positionIncrement;
 
               if (null == firstTerm) {
@@ -139,13 +133,20 @@ public class GenericTextQueryBuilder implements QueryBuilder {
       if (firstTerm == null) {
         return new MatchAllDocsQuery();      
       } else if (pq == null) {
-          TermQuery tq = new TermQuery(firstTerm);
-          tq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
+          Query tq = new TermQuery(firstTerm);
+          float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+          if (boost != 1f) {
+            tq = new BoostQuery(tq, boost);
+          }
           return tq;
       } else {
-          pq.setBoost(DOMUtils.getAttribute(e, "boost", 1.0f));
-          //TODO pq.setSlop(phraseSlop);
-          return pq;
+        Query q = pq;
+        float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+        if (boost != 1f) {
+          q = new BoostQuery(pq, boost);
+        }
+        //TODO pq.setSlop(phraseSlop);
+        return q;
       }
   }
   
