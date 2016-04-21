@@ -87,11 +87,11 @@ public class TestWildParser extends LuceneTestCase {
     protected TokenStreamComponents createComponents(final String fieldName, final Reader reader) {
       final JapaneseTokenizer src = new JapaneseTokenizer(reader, null, true, JapaneseTokenizer.Mode.SEARCH);
       TokenStream tok = new JapaneseNumberFilter(src);
-      tok = new JapaneseBaseFormFilter(src);
-      tok = new CJKWidthFilter(src);
-      tok = new JapaneseKatakanaStemFilter(src);
+      tok = new JapaneseBaseFormFilter(tok);
+      tok = new CJKWidthFilter(tok);
+      tok = new JapaneseKatakanaStemFilter(tok);
       //      tok = new SynonymFilter(src, null, true);
-      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
+      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, tok);
       return new TokenStreamComponents(src, tok);
     }
   }
@@ -106,11 +106,11 @@ public class TestWildParser extends LuceneTestCase {
     protected TokenStreamComponents createComponents(final String fieldName, final Reader reader) {
       final JapaneseTokenizer src = new JapaneseTokenizer(reader, null, false, JapaneseTokenizer.Mode.SEARCH);
       TokenStream tok = new JapaneseNumberFilter(src);
-      tok = new JapaneseBaseFormFilter(src);
-      tok = new CJKWidthFilter(src);
-      tok = new JapaneseKatakanaStemFilter(src);
+      tok = new JapaneseBaseFormFilter(tok);
+      tok = new CJKWidthFilter(tok);
+      tok = new JapaneseKatakanaStemFilter(tok);
       //      tok = new SynonymFilter(src, null, true);
-      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, src);
+      tok = new LowerCaseFilter(TEST_VERSION_CURRENT, tok);
       return new TokenStreamComponents(src, tok);
     }
   }
