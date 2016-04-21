@@ -58,10 +58,10 @@ public class TestCorePlusExtensionsParser extends TestCoreParser {
   }
 
   public void testDuplicateFilterQueryXML() throws ParserException, IOException {
-    List<LeafReaderContext> leaves = searcher.getTopReaderContext().leaves();
+    List<LeafReaderContext> leaves = searcher().getTopReaderContext().leaves();
     Assume.assumeTrue(leaves.size() == 1);
     Query q = parse("DuplicateFilterQuery.xml");
-    int h = searcher.search(q, 1000).totalHits;
+    int h = searcher().search(q, 1000).totalHits;
     assertEquals("DuplicateFilterQuery should produce 1 result ", 1, h);
   }
 

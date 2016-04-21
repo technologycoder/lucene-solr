@@ -1,5 +1,3 @@
-package org.apache.lucene.queryparser.xml;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -7,102 +5,68 @@ package org.apache.lucene.queryparser.xml;
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.lucene.queryparser.xml;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.MockAnalyzer;
 import org.apache.lucene.analysis.MockTokenFilter;
 import org.apache.lucene.analysis.MockTokenizer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntField;
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.junit.AfterClass;
-import org.junit.Assume;
-import org.junit.BeforeClass;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
 
 public class TestCoreParser extends LuceneTestCase {
 
   final private static String defaultField = "contents";
+
   private static Analyzer analyzer;
   private static CoreParser coreParser;
-  private static Directory dir;
-  private static IndexReader reader;
-  protected static IndexSearcher searcher;
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
+  private static CoreParserTestIndexData indexData;
+
+  protected Analyzer newAnalyzer() {
     // TODO: rewrite test (this needs to set QueryParser.enablePositionIncrements, too, for work with CURRENT):
-    analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
-    //initialize the parser
-    coreParser = new CoreParser(defaultField, analyzer);
+    return new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
+  }
 
-    BufferedReader d = new BufferedReader(new InputStreamReader(
-        TestCoreParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
-    dir = newDirectory();
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(analyzer));
-    String line = d.readLine();
-    while (line != null) {
-      int endOfDate = line.indexOf('\t');
-      String date = line.substring(0, endOfDate).trim();
-      String content = line.substring(endOfDate).trim();
-      Document doc = new Document();
-      doc.add(newTextField("date", date, Field.Store.YES));
-      doc.add(newTextField("contents", content, Field.Store.YES));
-      doc.add(new IntField("date2", Integer.valueOf(date), Field.Store.NO));
-      writer.addDocument(doc);
-      line = d.readLine();
-    }
-    d.close();
-    writer.close();
-    reader = DirectoryReader.open(dir);
-    searcher = newSearcher(reader);
-
+  protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
+    return new CoreParser(defaultField, analyzer);
   }
 
   @AfterClass
   public static void afterClass() throws Exception {
-    reader.close();
-    dir.close();
-    reader = null;
-    searcher = null;
-    dir = null;
+    if (indexData != null) {
+      indexData.close();
+      indexData = null;
+    }
     coreParser = null;
     analyzer = null;
   }
 
-  public void testSimpleXML() throws ParserException, IOException {
+  public void testTermQueryXML() throws ParserException, IOException {
     Query q = parse("TermQuery.xml");
     dumpResults("TermQuery", q, 5);
   }
 
-  public void testSimpleTermsQueryXML() throws ParserException, IOException {
+  public void testTermsQueryXML() throws ParserException, IOException {
     Query q = parse("TermsQuery.xml");
     dumpResults("TermsQuery", q, 5);
   }
@@ -123,10 +87,12 @@ public class TestCoreParser extends LuceneTestCase {
     assertEquals(1, ndq.getDisjuncts().size());
   }
 
+  /* branch_5x has this but bbsolr-4.8.1-news does not
   public void testRangeQueryXML() throws ParserException, IOException {
     Query q = parse("RangeQuery.xml");
     dumpResults("RangeQuery", q, 5);
   }
+  */
 
   public void testRangeFilterQueryXML() throws ParserException, IOException {
     Query q = parse("RangeFilterQuery.xml");
@@ -140,7 +106,7 @@ public class TestCoreParser extends LuceneTestCase {
 
   public void testCustomFieldUserQueryXML() throws ParserException, IOException {
     Query q = parse("UserInputQueryCustomField.xml");
-    int h = searcher.search(q, 1000).totalHits;
+    int h = searcher().search(q, 1000).totalHits;
     assertEquals("UserInputQueryCustomField should produce 0 result ", 0, h);
   }
 
@@ -179,9 +145,39 @@ public class TestCoreParser extends LuceneTestCase {
     dumpResults("NumericRangeFilter", q, 5);
   }
 
+  public void testNumericRangeFilterQueryXMLWithoutLowerTerm() throws ParserException, IOException {
+    Query q = parse("NumericRangeFilterQueryWithoutLowerTerm.xml");
+    dumpResults("NumericRangeFilterQueryWithoutLowerTerm", q, 5);
+  }
+
+  public void testNumericRangeFilterQueryXMLWithoutUpperTerm() throws ParserException, IOException {
+    Query q = parse("NumericRangeFilterQueryWithoutUpperTerm.xml");
+    dumpResults("NumericRangeFilterQueryWithoutUpperTerm", q, 5);
+  }
+
+  public void testNumericRangeFilterQueryXMLWithoutRange() throws ParserException, IOException {
+    Query q = parse("NumericRangeFilterQueryWithoutRange.xml");
+    dumpResults("NumericRangeFilterQueryWithoutRange", q, 5);
+  }
+
   public void testNumericRangeQueryXML() throws ParserException, IOException {
-    Query q = parse("NumericRangeQuery.xml");
+    Query q = parse("NumericRangeQueryQuery.xml"); // NumericRangeQuery.xml in branch_5x but NumericRangeQueryQuery.xml in bbsolr-4.8.1-news
     dumpResults("NumericRangeQuery", q, 5);
+  }
+
+  public void testNumericRangeQueryXMLWithoutLowerTerm() throws ParserException, IOException {
+    Query q = parse("NumericRangeQueryWithoutLowerTerm.xml");
+    dumpResults("NumericRangeQueryWithoutLowerTerm", q, 5);
+  }
+
+  public void testNumericRangeQueryXMLWithoutUpperTerm() throws ParserException, IOException {
+    Query q = parse("NumericRangeQueryWithoutUpperTerm.xml");
+    dumpResults("NumericRangeQueryWithoutUpperTerm", q, 5);
+  }
+
+  public void testNumericRangeQueryXMLWithoutRange() throws ParserException, IOException {
+    Query q = parse("NumericRangeQueryWithoutRange.xml");
+    dumpResults("NumericRangeQueryWithoutRange", q, 5);
   }
 
   //================= Helper methods ===================================
@@ -191,28 +187,55 @@ public class TestCoreParser extends LuceneTestCase {
   }
 
   protected Analyzer analyzer() {
+    if (analyzer == null) {
+      analyzer = newAnalyzer();
+    }
     return analyzer;
   }
 
   protected CoreParser coreParser() {
+    if (coreParser == null) {
+      coreParser = newCoreParser(defaultField, analyzer());
+    }
     return coreParser;
   }
 
+  private CoreParserTestIndexData indexData() {
+    if (indexData == null) {
+      try {
+        indexData = new CoreParserTestIndexData(analyzer());
+      } catch (Exception e) {
+        fail("caught Exception "+e);
+      }
+    }
+    return indexData;
+  }
+
+  protected IndexReader reader() {
+    return indexData().reader;
+  }
+
+  protected IndexSearcher searcher() {
+    return indexData().searcher;
+  }
+
   protected Query parse(String xmlFileName) throws ParserException, IOException {
-    InputStream xmlStream = TestCoreParser.class.getResourceAsStream(xmlFileName);
-    Query result = coreParser().parse(xmlStream);
-    xmlStream.close();
-    return result;
+    try (InputStream xmlStream = TestCoreParser.class.getResourceAsStream(xmlFileName)) {
+      assertNotNull("Test XML file " + xmlFileName + " cannot be found", xmlStream);
+      Query result = coreParser().parse(xmlStream);
+      return result;
+    }
   }
 
   protected Query rewrite(Query q) throws IOException {
-    return q.rewrite(reader);
+    return q.rewrite(reader());
   }
 
   protected void dumpResults(String qType, Query q, int numDocs) throws IOException {
     if (VERBOSE) {
-      System.out.println("TEST: query=" + q);
+      System.out.println("TEST: qType=" + qType + " query=" + q + " numDocs=" + numDocs);
     }
+    final IndexSearcher searcher = searcher();
     TopDocs hits = searcher.search(q, numDocs);
     assertTrue(qType + " should produce results ", hits.totalHits > 0);
     if (VERBOSE) {
