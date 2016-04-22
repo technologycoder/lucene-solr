@@ -613,13 +613,15 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("NearPrefixQuery", q, 5);
   }
   
-  public void testMaxBooleanCalusesWithPrefixQuery() throws ParserException, IOException {
-    int maxClauseCount = BooleanQuery.getMaxClauseCount();
-    BooleanQuery.setMaxClauseCount(3);
-    String text = "<GenericTextQuery fieldName='contents' wnq='true'>inc*</GenericTextQuery>";
-    Query q = parseText(text, false);
-    dumpResults("testMaxBooleanCalusesWithPrefixQuery", q, 5);
-    BooleanQuery.setMaxClauseCount(maxClauseCount);
+  public void testGenericTextQueryMaxBooleanClausesWithPrefixQuery() throws ParserException, IOException {
+    final int maxClauseCount = BooleanQuery.getMaxClauseCount();
+    try {
+      BooleanQuery.setMaxClauseCount(3);
+      final Query q = parse("GenericTextQueryMaxBooleanClausesWithPrefixQuery.xml");
+      dumpResults("GenericTextQueryMaxBooleanClausesWithPrefixQuery", q, 5);
+    } finally {
+      BooleanQuery.setMaxClauseCount(maxClauseCount);
+    }
   }
 
   //================= Helper methods ===================================
