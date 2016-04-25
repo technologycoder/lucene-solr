@@ -255,11 +255,7 @@ public class TestBBCoreParser extends TestCoreParser {
   }
 
   public void testDisjunctionMaxQuery_MatchAllDocsQuery() throws IOException {
-    String text = "<DisjunctionMaxQuery fieldName='content'>"
-        + "<WildcardNearQuery>rio de janeiro</WildcardNearQuery>"
-        + "<WildcardNearQuery>summit</WildcardNearQuery>"
-        + "<WildcardNearQuery> </WildcardNearQuery></DisjunctionMaxQuery>";
-    Query q = parseText(text, false);
+    Query q = parse("DisjunctionMaxQueryTripleWildcardNearQuery.xml");
     int size = ((DisjunctionMaxQuery)q).getDisjuncts().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
     DisjunctionMaxQuery dm = (DisjunctionMaxQuery)q;
@@ -268,12 +264,8 @@ public class TestBBCoreParser extends TestCoreParser {
       assertFalse("Not expecting MatchAllDocsQuery ",q1 instanceof MatchAllDocsQuery);
     }
     
-    text = "<DisjunctionMaxQuery fieldName='content' >"
-        + "<MatchAllDocsQuery/>"
-        + "<WildcardNearQuery> </WildcardNearQuery></DisjunctionMaxQuery>";
-    q = parseText(text, false);
+    q = parse("DisjunctionMaxQueryMatchAllDocsQuery.xml");
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
-
   }
   
   //federal N/3 (credit OR (taxes N/1 income))
