@@ -268,23 +268,8 @@ public class TestBBCoreParser extends TestCoreParser {
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
   }
   
-  //federal N/3 (credit OR (taxes N/1 income))
   public void testNearBooleanNear() throws IOException, ParserException {
-    String text = ""
-                  +"<NearQuery fieldName=\"contents\" slop=\"4\" inOrder=\"false\">"
-                  +"<WildcardNearQuery>bank</WildcardNearQuery>"
-                  +"<BooleanQuery disableCoord=\"true\"> "
-                  +"<Clause occurs=\"should\"><TermQuery>quarter</TermQuery></Clause>"
-                  +"<Clause occurs=\"should\">"
-                  +"<NearQuery slop=\"2\" inOrder=\"false\">"
-                  +"<WildcardNearQuery>earlier,</WildcardNearQuery>"
-                  +"<WildcardNearQuery>april</WildcardNearQuery>"
-                  +"</NearQuery>"
-                  +"</Clause>"
-                  +"</BooleanQuery>"
-                  +"</NearQuery>"
-                  ;
-    Query q = parseText(text, false);
+    final Query q = parse("NearBooleanNear.xml");
     dumpResults("testNearBooleanNear", q, 5);
   }
   
@@ -303,15 +288,7 @@ public class TestBBCoreParser extends TestCoreParser {
   }
   
   public void testNearFirstBooleanMustXml() throws IOException, ParserException {
-    String text = ""
-                  +"<NearFirstQuery fieldName=\"contents\" end=\"5\">"
-                  +"<BooleanQuery disableCoord=\"true\"> "
-                  +"<Clause occurs=\"must\"><WildcardNearQuery>ban*</WildcardNearQuery></Clause>"
-                  +"<Clause occurs=\"must\"><WildcardNearQuery>sa*</WildcardNearQuery></Clause>"
-                  +"</BooleanQuery>"
-                  +"</NearFirstQuery>"
-                  ;
-    Query q = parseText(text, false);
+    final Query q = parse("NearFirstBooleanMust.xml");
     dumpResults("testNearFirstBooleanMustXml", q, 50);
   }
   
