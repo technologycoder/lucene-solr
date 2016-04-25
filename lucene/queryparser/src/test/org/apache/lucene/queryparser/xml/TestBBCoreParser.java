@@ -18,18 +18,8 @@ package org.apache.lucene.queryparser.xml;
  */
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.MockAnalyzer;
-import org.apache.lucene.analysis.MockTokenFilter;
-import org.apache.lucene.analysis.MockTokenizer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.IntField;
-import org.apache.lucene.index.AtomicReaderContext;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queries.BooleanFilter;
 import org.apache.lucene.queries.FilterClause;
@@ -39,54 +29,37 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.FieldedQuery;
 import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsFilter;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.intervals.FieldedBooleanQuery;
 import org.apache.lucene.search.intervals.IntervalFilterQuery;
 import org.apache.lucene.search.intervals.OrderedNearQuery;
-import org.apache.lucene.search.intervals.RangeIntervalFilter;
 import org.apache.lucene.search.intervals.UnorderedNearQuery;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.util.LuceneTestCase;
-import org.junit.AfterClass;
-import org.junit.Assume;
-import org.junit.BeforeClass;
 import org.w3c.dom.Element;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 
-public class TestBBCoreParser extends LuceneTestCase {
+public class TestBBCoreParser extends TestCoreParser {
 
-  private static Analyzer analyzer;
-  private static CoreParser bbCoreParser;
-  private static Directory dir;
-  private static IndexReader reader;
-  private static IndexSearcher searcher;
   private static String ANALYSER_PARAM     = "tests.TestParser.analyser";
   private static String DEFAULT_ANALYSER   = "mock";
   private static String STANDARD_ANALYSER  = "standard";
   private static String KEYWORD_ANALYSER   = "keyword";
  
-  @BeforeClass
-  public static void beforeClass() throws Exception {
+  @Override
+  protected Analyzer newAnalyzer() {
+    final Analyzer analyzer;
     String analyserToUse = System.getProperty(ANALYSER_PARAM, DEFAULT_ANALYSER);
     if (analyserToUse.equals(STANDARD_ANALYSER))
     {
@@ -100,9 +73,14 @@ public class TestBBCoreParser extends LuceneTestCase {
     {
       assertEquals(DEFAULT_ANALYSER, analyserToUse);
       // TODO: rewrite test (this needs to set QueryParser.enablePositionIncrements, too, for work with CURRENT):
-      analyzer = new MockAnalyzer(random(), MockTokenizer.WHITESPACE, true, MockTokenFilter.ENGLISH_STOPSET);
+      analyzer = super.newAnalyzer();
     }
-    bbCoreParser = new BBCoreParser("contents", analyzer);
+    return analyzer;
+  }
+
+  @Override
+  protected CoreParser newCoreParser(String defaultField, Analyzer analyzer) {
+    final CoreParser bbCoreParser = new BBCoreParser(defaultField, analyzer);
     
     //MatchAllDocsFilter is not yet in side the builderFactory
     //Remove this when we have MatchAllDocsFilter within CorePlusExtensionsParser
@@ -114,44 +92,9 @@ public class TestBBCoreParser extends LuceneTestCase {
       }
     });
 
-    BufferedReader d = new BufferedReader(new InputStreamReader(
-        TestParser.class.getResourceAsStream("reuters21578.txt"), StandardCharsets.US_ASCII));
-    dir = newDirectory();
-    IndexWriter writer = new IndexWriter(dir, newIndexWriterConfig(TEST_VERSION_CURRENT, analyzer));
-    String line = d.readLine();
-    while (line != null) {
-      int endOfDate = line.indexOf('\t');
-      String date = line.substring(0, endOfDate).trim();
-      String content = line.substring(endOfDate).trim();
-      Document doc = new Document();
-      doc.add(newTextField("date", date, Field.Store.YES));
-      doc.add(newTextField("contents", content, Field.Store.YES));
-      doc.add(new IntField("date2", Integer.valueOf(date), Field.Store.YES));
-      writer.addDocument(doc);
-      line = d.readLine();
-    }
-    d.close();
-    writer.close();
-    reader = DirectoryReader.open(dir);
-    searcher = newSearcher(reader);
-
+    return bbCoreParser;
   }
 
-  @AfterClass
-  public static void afterClass() throws Exception {
-    reader.close();
-    dir.close();
-    reader = null;
-    searcher = null;
-    dir = null;
-    bbCoreParser = null;
-  }
-
-  public void testTermQueryXML() throws ParserException, IOException {
-    Query q = parse("TermQuery.xml");
-    dumpResults("TermQuery", q, 5);
-  }
-  
   public void testTermQueryEmptyXML() throws ParserException, IOException {
     parse("TermQueryEmpty.xml", true/*shouldFail*/);
   }
@@ -164,7 +107,7 @@ public class TestBBCoreParser extends LuceneTestCase {
     parse("TermQueryMultipleTerms.xml", true/*shouldFail*/);
   }
 
-  public void testTermsQueryXML() throws ParserException, IOException {
+  public void testTermsQueryShouldBeBooleanXML() throws ParserException, IOException {
     Query q = parse("TermsQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     dumpResults("TermsQuery", q, 5);
@@ -204,38 +147,6 @@ public class TestBBCoreParser extends LuceneTestCase {
   }
   
 
-  public void testBooleanQueryXML() throws ParserException, IOException {
-    Query q = parse("BooleanQuery.xml");
-    dumpResults("BooleanQuery", q, 5);
-  }
-
-  public void testDisjunctionMaxQueryXML() throws ParserException, IOException {
-    Query q = parse("DisjunctionMaxQuery.xml");
-    assertTrue(q instanceof DisjunctionMaxQuery);
-    DisjunctionMaxQuery d = (DisjunctionMaxQuery)q;
-    assertEquals(0.0f, d.getTieBreakerMultiplier(), 0.0001f);
-    assertEquals(2, d.getDisjuncts().size());
-    DisjunctionMaxQuery ndq = (DisjunctionMaxQuery) d.getDisjuncts().get(1);
-    assertEquals(1.2f, ndq.getTieBreakerMultiplier(), 0.0001f);
-    assertEquals(1, ndq.getDisjuncts().size());
-  }
-
-  public void testRangeFilterQueryXML() throws ParserException, IOException {
-    Query q = parse("RangeFilterQuery.xml");
-    dumpResults("RangeFilter", q, 5);
-  }
-
-  public void testUserQueryXML() throws ParserException, IOException {
-    Query q = parse("UserInputQuery.xml");
-    dumpResults("UserInput with Filter", q, 5);
-  }
-
-  public void testCustomFieldUserQueryXML() throws ParserException, IOException {
-    Query q = parse("UserInputQueryCustomField.xml");
-    int h = searcher.search(q, null, 1000).totalHits;
-    assertEquals("UserInputQueryCustomField should produce 0 result ", 0, h);
-  }
-
   public void testTermsFilterXML() throws Exception {
     Query q = parse("TermsFilterQuery.xml");
     dumpResults("Terms Filter", q, 5);
@@ -256,39 +167,9 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("TermsFilter with all stop words", q, 5);
   }
   
-  public void testBoostingTermQueryXML() throws Exception {
-    Query q = parse("BoostingTermQuery.xml");
-    dumpResults("BoostingTermQuery", q, 5);
-  }
-
-  public void testSpanTermXML() throws Exception {
-    Query q = parse("SpanQuery.xml");
-    dumpResults("Span Query", q, 5);
-  }
-
-  public void testConstantScoreQueryXML() throws Exception {
-    Query q = parse("ConstantScoreQuery.xml");
-    dumpResults("ConstantScoreQuery", q, 5);
-  }
-  
-  public void testMatchAllDocsPlusFilterXML() throws ParserException, IOException {
-    Query q = parse("MatchAllDocsQuery.xml");
-    dumpResults("MatchAllDocsQuery with range filter", q, 5);
-  }
-
   public void testBooleanFilterXML() throws ParserException, IOException {
     Query q = parse("BooleanFilter.xml");
     dumpResults("Boolean filter", q, 5);
-  }
-
-  public void testNestedBooleanQuery() throws ParserException, IOException {
-    Query q = parse("NestedBooleanQuery.xml");
-    dumpResults("Nested Boolean query", q, 5);
-  }
-
-  public void testCachedFilterXML() throws ParserException, IOException {
-    Query q = parse("CachedFilter.xml");
-    dumpResults("Cached filter", q, 5);
   }
 
   public void testPhraseQueryXML() throws Exception {
@@ -373,35 +254,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     dumpResults("GenericTextQuery. BooleanQuery containing multiple GenericTextQuery clauses with different boost factors", q, 5);
   }
 
-  public void testNumericRangeFilterQueryXML() throws ParserException, IOException {
-    Query q = parse("NumericRangeFilterQuery.xml");
-    dumpResults("NumericRangeFilter", q, 5);
-  }
-  
-  public void testNumericRangeQuery() throws IOException {
-    String text = "<NumericRangeQuery fieldName='date2' lowerTerm='19870409' upperTerm='19870412'/>";
-    Query q = parseText(text, false);
-    dumpResults("NumericRangeQuery1", q, 5);
-    text = "<NumericRangeQuery fieldName='date2' lowerTerm='19870602' />";
-    q = parseText(text, false);
-    dumpResults("NumericRangeQuery2", q, 5);
-    text = "<NumericRangeQuery fieldName='date2' upperTerm='19870408'/>";
-    q = parseText(text, false);
-    dumpResults("NumericRangeQuery3", q, 5);
-  }
-  
-  public void testNumericRangeFilter() throws IOException {
-    String text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' lowerTerm='19870410' upperTerm='19870531'/></ConstantScoreQuery>";
-    Query q = parseText(text, false);
-    dumpResults("NumericRangeFilter1", q, 5);
-    text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' lowerTerm='19870601' /></ConstantScoreQuery>";
-    q = parseText(text, false);
-    dumpResults("NumericRangeFilter2", q, 5);
-    text = "<ConstantScoreQuery><NumericRangeFilter fieldName='date2' upperTerm='19870408'/></ConstantScoreQuery>";
-    q = parseText(text, false);
-    dumpResults("NumericRangeFilter3", q, 5);
-  }
-  
   public void testDisjunctionMaxQuery_MatchAllDocsQuery() throws IOException {
     String text = "<DisjunctionMaxQuery fieldName='content'>"
         + "<WildcardNearQuery>rio de janeiro</WildcardNearQuery>"
@@ -626,15 +478,8 @@ public class TestBBCoreParser extends LuceneTestCase {
 
   //================= Helper methods ===================================
 
-  protected Analyzer analyzer() {
-    return analyzer;
-  }
-
-  protected CoreParser coreParser() {
-    return bbCoreParser;
-  }
-
-  private Query parse(String xmlFileName) throws IOException {
+  @Override
+  protected Query parse(String xmlFileName) throws IOException {
     return parse(xmlFileName, false);
   }
   
@@ -662,23 +507,6 @@ public class TestBBCoreParser extends LuceneTestCase {
     if (shouldFail && result != null)
       assertTrue("Expected to fail. But resulted in query: " + result.getClass() + " with value: " + result, false);
     return result;
-  }
-
-  private void dumpResults(String qType, Query q, int numDocs) throws IOException {
-    if (VERBOSE) {
-      System.out.println("=======TEST: " + q.getClass() + " query=" + q);
-    }
-    TopDocs hits = searcher.search(q, null, numDocs);
-    assertTrue(qType + " " + q + " should produce results ", hits.totalHits > 0);
-    if (true) {
-      System.out.println("=========" + qType + " class=" + q.getClass() + " query=" + q + "============");
-      ScoreDoc[] scoreDocs = hits.scoreDocs;
-      for (int i = 0; i < Math.min(numDocs, hits.totalHits); i++) {
-        Document ldoc = searcher.doc(scoreDocs[i].doc);
-        System.out.println("[" + ldoc.get("date") + "]" + ldoc.get("contents"));
-      }
-      System.out.println();
-    }
   }
 
   //helper
