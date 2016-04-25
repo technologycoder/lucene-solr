@@ -3,6 +3,9 @@ package org.apache.lucene.queryparser.xml.builders;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.spans.SpanBoostQuery;
+import org.apache.lucene.search.spans.SpanQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -30,7 +33,7 @@ import org.w3c.dom.Element;
 /**
  * Builder for {@link TermQuery}
  */
-public class BBTermQueryBuilder implements QueryBuilder {
+public class BBTermQueryBuilder implements QueryBuilder, SpanQueryBuilder {
 
   protected final TermBuilder termBuilder;
 
@@ -42,11 +45,11 @@ public class BBTermQueryBuilder implements QueryBuilder {
   public Query getQuery(Element e) throws ParserException {
     SingleTermProcessor tp = new SingleTermProcessor();
     String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
-    //extract the value and fail if there is no value. 
+    //extract the value and fail if there is no value.
     //This is a query builder for one and only one term
     String value =  DOMUtils.getNonBlankTextOrFail(e);
     this.termBuilder.extractTerms(tp, field, value);
-    
+
     try {
       Query q = new TermQuery(tp.getTerm());
       float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
@@ -55,7 +58,29 @@ public class BBTermQueryBuilder implements QueryBuilder {
       }
       return q;
     } catch (ParserException ex){
-      throw new ParserException(ex.getMessage() + " field:" + field 
+      throw new ParserException(ex.getMessage() + " field:" + field
+          + " value:" + value + ". Check the query anlyser configured on this field." );
+    }
+  }
+
+  @Override
+  public SpanQuery getSpanQuery(Element e) throws ParserException {
+    SingleTermProcessor tp = new SingleTermProcessor();
+    String field = DOMUtils.getAttributeWithInheritanceOrFail(e, "fieldName");
+    //extract the value and fail if there is no value.
+    //This is a query builder for one and only one term
+    String value =  DOMUtils.getNonBlankTextOrFail(e);
+    this.termBuilder.extractTerms(tp, field, value);
+
+    try {
+      SpanQuery q = new SpanTermQuery(tp.getTerm());
+      float boost = DOMUtils.getAttribute(e, "boost", 1.0f);
+      if (boost != 1f) {
+        q = new SpanBoostQuery(q, boost);
+      }
+      return q;
+    } catch (ParserException ex){
+      throw new ParserException(ex.getMessage() + " field:" + field
           + " value:" + value + ". Check the query anlyser configured on this field." );
     }
   }

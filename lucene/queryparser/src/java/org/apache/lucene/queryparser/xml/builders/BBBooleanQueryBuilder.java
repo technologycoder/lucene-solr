@@ -3,11 +3,18 @@
  */
 package org.apache.lucene.queryparser.xml.builders;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanNotQuery;
+import org.apache.lucene.search.spans.SpanOrQuery;
+import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.queryparser.xml.DOMUtils;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -34,12 +41,14 @@ import org.w3c.dom.NodeList;
 /**
  * Builder for {@link BooleanQuery}
  */
-public class BBBooleanQueryBuilder implements QueryBuilder {
+public class BBBooleanQueryBuilder implements QueryBuilder, SpanQueryBuilder {
 
   private final QueryBuilder factory;
+  private final SpanQueryBuilder spanFactory;
 
-  public BBBooleanQueryBuilder(QueryBuilder factory) {
+  public BBBooleanQueryBuilder(QueryBuilder factory, SpanQueryBuilder spanFactory) {
     this.factory = factory;
+    this.spanFactory = spanFactory;
   }
 
   /* (non-Javadoc)
@@ -94,6 +103,68 @@ public class BBBooleanQueryBuilder implements QueryBuilder {
     return q;
   }
 
+  @Override
+  public SpanQuery getSpanQuery(Element e) throws ParserException {
+    ArrayList<SpanQuery> ors = new ArrayList<>();
+    ArrayList<SpanQuery> ands = new ArrayList<>();
+    ArrayList<SpanQuery> nots = new ArrayList<>();
+
+    NodeList nl = e.getChildNodes();
+    final int nlLen = nl.getLength();
+    for (int i = 0; i < nlLen; i++) {
+      Node node = nl.item(i);
+      if (node.getNodeName().equals("Clause")) {
+        Element clauseElem = (Element) node;
+        BooleanClause.Occur occurs = getOccursValue(clauseElem);
+
+        Element clauseQuery = DOMUtils.getFirstChildOrFail(clauseElem);
+        SpanQuery q = spanFactory.getSpanQuery(clauseQuery);
+
+        // select the list to which we will add these options
+        ArrayList<SpanQuery> chosenList = ors;
+        if (occurs == BooleanClause.Occur.MUST) {
+          chosenList = ands;
+        } else if (occurs == BooleanClause.Occur.MUST_NOT) {
+          chosenList = nots;
+        }
+
+        chosenList.add(q);
+      }
+    }
+
+    SpanOrQuery orQuery = null;
+    SpanNearQuery andQuery = null;
+    SpanOrQuery notQuery = null;
+
+    if (ors.size() > 0) {
+      orQuery = new SpanOrQuery(ors.toArray(new SpanQuery[ors.size()]));
+    }
+
+    if (ands.size() > 0) {
+      if (orQuery != null) {
+        ands.add(orQuery);
+      }
+      andQuery = new SpanNearQuery(ands.toArray(new SpanQuery[ands.size()]), Integer.MAX_VALUE, false);
+    }
+
+    if (nots.size() > 0) {
+      notQuery = new SpanOrQuery(nots.toArray(new SpanQuery[nots.size()]));
+
+      if (andQuery != null) {
+        return new SpanNotQuery(andQuery, notQuery);
+      }
+      else if (orQuery != null) {
+        return new SpanNotQuery(orQuery, notQuery);
+      }
+      else {
+        // TODO fix this
+        return new SpanNotQuery(null, notQuery);
+      }
+    }
+
+    return (andQuery != null ? andQuery : orQuery);
+  }
+
   static BooleanClause.Occur getOccursValue(Element clauseElem) throws ParserException {
     String occs = clauseElem.getAttribute("occurs");
     if (occs == null || "should".equalsIgnoreCase(occs)) {
@@ -107,5 +178,4 @@ public class BBBooleanQueryBuilder implements QueryBuilder {
     }
     throw new ParserException("Invalid value for \"occurs\" attribute of clause:" + occs);
   }
-
 }

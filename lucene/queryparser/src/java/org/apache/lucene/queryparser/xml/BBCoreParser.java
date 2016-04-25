@@ -55,8 +55,9 @@ public class BBCoreParser extends CoreParser {
     this.termBuilder = new TermBuilder(analyzer);
 
     {
-      QueryBuilder termQueryBuilder = new BBTermQueryBuilder(termBuilder);
+      SpanQueryBuilder termQueryBuilder = new BBTermQueryBuilder(termBuilder);
       queryFactory.addBuilder("TermQuery", termQueryBuilder);
+      spanFactory.addBuilder("TermQuery", termQueryBuilder);
       queryFactory.addBuilder("TermFreqQuery", new TermFreqBuilder(null /* termFilterBuilder */, termQueryBuilder));
     }
     {
@@ -74,18 +75,32 @@ public class BBCoreParser extends CoreParser {
       filterFactory.addBuilder("TermsFilter", termsFilterBuilder);
       filterFactory.addBuilder("TermsFreqFilter", new TermFreqBuilder(termsFilterBuilder, null /* termsQueryBuilder */));
     }
-    
-    queryFactory.addBuilder("BooleanQuery", new BBBooleanQueryBuilder(queryFactory));
+
+    {
+      SpanQueryBuilder builder =  new BBBooleanQueryBuilder(queryFactory, spanFactory);
+      queryFactory.addBuilder("BooleanQuery", builder);
+      spanFactory.addBuilder("BooleanQuery", builder);
+    }
     filterFactory.addBuilder("BooleanFilter", new BBBooleanFilterBuilder(filterFactory));
 
     queryFactory.addBuilder("PhraseQuery", new PhraseQueryBuilder(analyzer));
     //GenericTextQuery is a error tolerant version of PhraseQuery
     queryFactory.addBuilder("GenericTextQuery", new GenericTextQueryBuilder(analyzer));
-    
-    queryFactory.addBuilder("NearQuery", new NearQueryBuilder(spanFactory));
-    queryFactory.addBuilder("NearFirstQuery", new NearFirstQueryBuilder(spanFactory));
 
-    queryFactory.addBuilder("WildcardNearQuery", new WildcardNearQueryBuilder(analyzer));
-
+    {
+      SpanQueryBuilder builder = new NearQueryBuilder(spanFactory);
+      queryFactory.addBuilder("NearQuery", builder);
+      spanFactory.addBuilder("NearQuery", builder);
+    }
+    {
+      SpanQueryBuilder builder = new NearFirstQueryBuilder(spanFactory);
+      queryFactory.addBuilder("NearFirstQuery", builder);
+      spanFactory.addBuilder("NearFirstQuery", builder);
+    }
+    {
+      SpanQueryBuilder builder =  new WildcardNearQueryBuilder(analyzer);
+      queryFactory.addBuilder("WildcardNearQuery", builder);
+      spanFactory.addBuilder("WildcardNearQuery", builder);
+    }
   }
 }

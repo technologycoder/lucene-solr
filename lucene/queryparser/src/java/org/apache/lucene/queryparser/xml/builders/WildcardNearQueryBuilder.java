@@ -2,6 +2,7 @@ package org.apache.lucene.queryparser.xml.builders;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.spans.SpanQuery;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 import org.apache.lucene.queryparser.xml.DOMUtils;
@@ -28,7 +29,7 @@ import org.w3c.dom.Element;
  * Text phrases can be thrown into this builder to get tokenized to form OrderedNearQuery of sub queries of individual tokens. 
  * Currently this can result in WildcardQuery,PrefixQuery and TermQuery as its sub queries. */
 
-public class WildcardNearQueryBuilder implements QueryBuilder {
+public class WildcardNearQueryBuilder implements QueryBuilder, SpanQueryBuilder {
   
   protected Analyzer analyzer;
   
@@ -44,5 +45,16 @@ public class WildcardNearQueryBuilder implements QueryBuilder {
     WildcardNearQueryParser p = new WildcardNearQueryParser(field, analyzer);
     return p.parse(text,ignoreWildcard);
   }
-    
+
+  @Override
+  public SpanQuery getSpanQuery(Element e) throws ParserException {
+    Query q = getQuery(e);
+
+    if (q instanceof SpanQuery) {
+      return (SpanQuery)q;
+    }
+
+    // TODO fix this
+    return null;
+  }
 }
