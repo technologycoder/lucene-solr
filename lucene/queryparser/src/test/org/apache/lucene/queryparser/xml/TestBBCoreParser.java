@@ -310,53 +310,44 @@ public class TestBBCoreParser extends TestCoreParser {
     dumpResults("testNearFirstBooleanMust", sq, 5);
   }
   
-  public void testBooleanQuerywithMatchAllDocsQuery() throws IOException {
-    String text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='should'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
-        + "<Clause occurs='should'><WildcardNearQuery>summit</WildcardNearQuery></Clause>"
-        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
-    Query q = parseText(text, false);
-    int size = ((BooleanQuery)q).clauses().size();
+  public void testBooleanQueryTripleShouldWildcardNearQuery() throws IOException {
+    final Query q = parse("BooleanQueryTripleShouldWildcardNearQuery.xml");
+    final int size = ((BooleanQuery)q).clauses().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
-    BooleanQuery bq = (BooleanQuery)q;
+    final BooleanQuery bq = (BooleanQuery)q;
     for(BooleanClause bc : bq.clauses())
     {
       assertFalse("Not expecting MatchAllDocsQuery ",bc.getQuery() instanceof MatchAllDocsQuery);
     }
-    
-    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
-        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
-    q = parseText(text, false);
+  }
+
+  public void testBooleanQueryMustShouldWildcardNearQuery() throws IOException {
+    final Query q = parse("BooleanQueryMustShouldWildcardNearQuery.xml");
     assertTrue("Expecting a SpanQuery, but resulted in " + q.getClass(), q instanceof SpanQuery);
-    
-    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='must'><WildcardNearQuery>rio de janeiro</WildcardNearQuery></Clause>"
-        + "<Clause occurs='must'><WildcardNearQuery>summit</WildcardNearQuery></Clause>"
-        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
-    q = parseText(text, false);
+  }
+
+  public void testBooleanQueryMustMustShouldWildcardNearQuery() throws IOException {
+    final Query q = parse("BooleanQueryMustMustShouldWildcardNearQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
-    bq = (BooleanQuery)q;
-    size = bq.clauses().size();
+    final BooleanQuery bq = (BooleanQuery)q;
+    final int size = bq.clauses().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
     for(BooleanClause bc : bq.clauses())
     {
       assertFalse("Not expecting MatchAllDocsQuery ", bc.getQuery() instanceof MatchAllDocsQuery);
     }
-    
-    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='must'><MatchAllDocsQuery/></Clause>"
-        + "<Clause occurs='should'><WildcardNearQuery> </WildcardNearQuery></Clause></BooleanQuery>";
-    q = parseText(text, false);
+  }
+
+  public void testBooleanQueryMatchAllDocsQueryWildcardNearQuery() throws IOException {
+    final Query q = parse("BooleanQueryMatchAllDocsQueryWildcardNearQuery.xml");
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
-    
-    text = "<BooleanQuery fieldName='content' disableCoord='true'>"
-        + "<Clause occurs='must'><MatchAllDocsQuery/></Clause>"
-        + "<Clause occurs='mustnot'><TermQuery>summit</TermQuery></Clause></BooleanQuery>";
-    q = parseText(text, false);
+  }
+
+  public void testBooleanQueryMatchAllDocsQueryTermQuery() throws IOException {
+    final Query q = parse("BooleanQueryMatchAllDocsQueryTermQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
-    bq = (BooleanQuery)q;
-    size = bq.clauses().size();
+    final BooleanQuery bq = (BooleanQuery)q;
+    final int size = bq.clauses().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
     boolean bMatchAllDocsFound = false;
     for(BooleanClause bc : bq.clauses())
@@ -364,7 +355,6 @@ public class TestBBCoreParser extends TestCoreParser {
       bMatchAllDocsFound |= bc.getQuery() instanceof MatchAllDocsQuery;
     }
     assertTrue("Expecting MatchAllDocsQuery ", bMatchAllDocsFound);
-    
   }
   
   public void testBooleanFilterwithMatchAllDocsFilter() throws ParserException, IOException {
@@ -464,11 +454,6 @@ public class TestBBCoreParser extends TestCoreParser {
     Query result = parse(xmlStream, shouldFail);
     xmlStream.close();
     return result;
-  }
-  private Query parseText(String text, Boolean shouldFail) 
-  {
-    InputStream xmlStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
-    return parse(xmlStream, shouldFail);
   }
   
   private Query parse(InputStream xmlStream, Boolean shouldFail)
