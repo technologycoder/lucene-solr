@@ -40,6 +40,7 @@ import org.apache.lucene.search.intervals.FieldedBooleanQuery;
 import org.apache.lucene.search.intervals.IntervalFilterQuery;
 import org.apache.lucene.search.intervals.OrderedNearQuery;
 import org.apache.lucene.search.intervals.UnorderedNearQuery;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.ByteArrayInputStream;
@@ -463,24 +464,9 @@ public class TestBBCoreParser extends TestCoreParser {
     return result;
   }
 
-  //helper
   private static Element parseXML(String text) throws ParserException {
-    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-    DocumentBuilder db = null;
-    try {
-      db = dbf.newDocumentBuilder();
-    }
-    catch (Exception se) {
-      throw new ParserException("XML Parser configuration error", se);
-    }
-    org.w3c.dom.Document doc = null;
     InputStream xmlStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
-    try {
-      doc = db.parse(xmlStream);
-    }
-    catch (Exception se) {
-      throw new ParserException("Error parsing XML stream:" + se, se);
-    }
+    org.w3c.dom.Document doc = CoreParser.parseXML(xmlStream);
     return doc.getDocumentElement();
   }
 }
