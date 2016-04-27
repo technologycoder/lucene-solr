@@ -437,6 +437,12 @@ public class TestBBCoreParser extends TestCoreParser {
       BooleanQuery.setMaxClauseCount(maxClauseCount);
     }
   }
+  
+  public void testBooleanQueryDedupe() throws ParserException, IOException {
+    Query query = parse("BooleanQueryDedupe.xml");
+    Query resultQuery = parse("BooleanQueryDedupeResult.xml");
+    assertEquals(resultQuery, query);
+  }
 
   //================= Helper methods ===================================
 

@@ -3,6 +3,8 @@
  */
 package org.apache.lucene.queryparser.xml.builders;
 
+import java.util.HashSet;
+
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -53,7 +55,8 @@ public class BBBooleanQueryBuilder implements QueryBuilder {
 
     boolean matchAllDocsExists = false;
     boolean shouldOrMustExists = false;
-
+    
+    HashSet<BooleanClause> clauseDedupeSet = new HashSet<BooleanClause>();
     NodeList nl = e.getChildNodes();
     final int nlLen = nl.getLength();
     for (int i = 0; i < nlLen; i++) {
@@ -71,7 +74,10 @@ public class BBBooleanQueryBuilder implements QueryBuilder {
         else if ((occurs == BooleanClause.Occur.SHOULD) || (occurs == BooleanClause.Occur.MUST)){
           shouldOrMustExists = true;
         }
-        bq.add(new BooleanClause(q, occurs));
+        BooleanClause bc = new BooleanClause(q, occurs);
+        if (clauseDedupeSet.add(bc)){//dedupe check
+          bq.add(bc);
+        }
       }
     }
 
