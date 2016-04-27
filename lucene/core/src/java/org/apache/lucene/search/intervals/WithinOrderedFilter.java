@@ -47,7 +47,7 @@ public class WithinOrderedFilter implements IntervalFilter {
   @Override
   public int hashCode() {
     final int prime = 31;
-    int result = super.hashCode();
+    int result = 1;
     result = prime * result + ((field == null) ? 0 : 2*field.hashCode() + (collectLeaves ? 1 : 0));
     return result;
   }
@@ -63,7 +63,7 @@ public class WithinOrderedFilter implements IntervalFilter {
     if (collectLeaves != other.collectLeaves) {
       return false;
     }
-    if (field != other.field) {
+    if (!field.equals(other.field)) {
       return false;
     }
     if (innerFilter == null) {

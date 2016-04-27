@@ -80,6 +80,46 @@ public class UnorderedNearQuery extends IntervalFilterQuery {
       return innerFilter.filter(collectIntervals,
           new ConjunctionIntervalIterator(iter.scorer, collectIntervals, collectLeaves, iter.subs(false)));
     }
+    
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + (innerFilter == null? 0: innerFilter.hashCode());
+      result = prime * result + (collectLeaves? 1: 0);
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (getClass() != obj.getClass()) return false;
+      WithinUnorderedFilter other = (WithinUnorderedFilter) obj;
+      if (collectLeaves != other.collectLeaves) return false;
+      if (innerFilter == null){ 
+        if (other.innerFilter != null) return false;
+      }
+      else if(!innerFilter.equals(other.innerFilter)) return false;
+      return true;
+    }
+  }
+  
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + slop;
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    UnorderedNearQuery other = (UnorderedNearQuery) obj;
+    if (slop != other.slop) return false;
+    return true;
   }
 
 }
