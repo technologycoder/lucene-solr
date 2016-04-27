@@ -95,16 +95,14 @@ public class TestBBCoreParser extends TestCoreParser {
     return bbCoreParser;
   }
 
-  public void testTermQueryEmptyXML() throws ParserException, IOException {
-    parse("TermQueryEmpty.xml", true/*shouldFail*/);
+  public void testTermQueryStopwordXML() throws IOException {
+    parseShouldFail("TermQueryStopwords.xml",
+        "Empty term found. field:contents value:to a. Check the query analyzer configured on this field.");
   }
   
-  public void testTermQueryStopwordXML() throws ParserException, IOException {
-    parse("TermQueryStopwords.xml", true/*shouldFail*/);
-  }
-  
-  public void testTermQueryMultipleTermsXML() throws ParserException, IOException {
-    parse("TermQueryMultipleTerms.xml", true/*shouldFail*/);
+  public void testTermQueryMultipleTermsXML() throws IOException {
+    parseShouldFail("TermQueryMultipleTerms.xml",
+        "Multiple terms found. field:contents value:sumitomo come home. Check the query analyzer configured on this field.");
   }
 
   public void testTermsQueryShouldBeBooleanXML() throws ParserException, IOException {
@@ -180,12 +178,14 @@ public class TestBBCoreParser extends TestCoreParser {
   
   public void testPhraseQueryXMLWithStopwordsXML() throws Exception {
     if (analyzer() instanceof StandardAnalyzer) {
-      parse("PhraseQueryStopwords.xml", true/*shouldfail*/);
+      parseShouldFail("PhraseQueryStopwords.xml",
+          "Empty phrase query generated for field:contents, phrase:and to a");
     }
   }
   
   public void testPhraseQueryXMLWithNoTextXML() throws Exception {
-    parse("PhraseQueryEmpty.xml", true/*shouldFail*/);
+    parseShouldFail("PhraseQueryEmpty.xml",
+        "PhraseQuery has no text");
   }
   
   public void testGenericTextQueryXML() throws Exception {
@@ -260,7 +260,7 @@ public class TestBBCoreParser extends TestCoreParser {
     dumpResults("GenericTextQuery. BooleanQuery containing multiple GenericTextQuery clauses with different boost factors", q, 5);
   }
 
-  public void testDisjunctionMaxQuery_MatchAllDocsQuery() throws IOException {
+  public void testDisjunctionMaxQueryTripleWildcardNearQuery() throws Exception {
     Query q = parse("DisjunctionMaxQueryTripleWildcardNearQuery.xml");
     int size = ((DisjunctionMaxQuery)q).getDisjuncts().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
@@ -269,8 +269,10 @@ public class TestBBCoreParser extends TestCoreParser {
     {
       assertFalse("Not expecting MatchAllDocsQuery ",q1 instanceof MatchAllDocsQuery);
     }
-    
-    q = parse("DisjunctionMaxQueryMatchAllDocsQuery.xml");
+  }
+
+  public void testDisjunctionMaxQueryMatchAllDocsQuery() throws Exception {
+    final Query q = parse("DisjunctionMaxQueryMatchAllDocsQuery.xml");
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
   }
   
@@ -310,7 +312,7 @@ public class TestBBCoreParser extends TestCoreParser {
     dumpResults("testNearFirstBooleanMust", sq, 5);
   }
   
-  public void testBooleanQueryTripleShouldWildcardNearQuery() throws IOException {
+  public void testBooleanQueryTripleShouldWildcardNearQuery() throws Exception {
     final Query q = parse("BooleanQueryTripleShouldWildcardNearQuery.xml");
     final int size = ((BooleanQuery)q).clauses().size();
     assertTrue("Expecting 2 clauses, but resulted in " + size, size == 2);
@@ -321,12 +323,12 @@ public class TestBBCoreParser extends TestCoreParser {
     }
   }
 
-  public void testBooleanQueryMustShouldWildcardNearQuery() throws IOException {
+  public void testBooleanQueryMustShouldWildcardNearQuery() throws ParserException, IOException {
     final Query q = parse("BooleanQueryMustShouldWildcardNearQuery.xml");
     assertTrue("Expecting a SpanQuery, but resulted in " + q.getClass(), q instanceof SpanQuery);
   }
 
-  public void testBooleanQueryMustMustShouldWildcardNearQuery() throws IOException {
+  public void testBooleanQueryMustMustShouldWildcardNearQuery() throws Exception {
     final Query q = parse("BooleanQueryMustMustShouldWildcardNearQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     final BooleanQuery bq = (BooleanQuery)q;
@@ -338,12 +340,12 @@ public class TestBBCoreParser extends TestCoreParser {
     }
   }
 
-  public void testBooleanQueryMatchAllDocsQueryWildcardNearQuery() throws IOException {
+  public void testBooleanQueryMatchAllDocsQueryWildcardNearQuery() throws Exception {
     final Query q = parse("BooleanQueryMatchAllDocsQueryWildcardNearQuery.xml");
     assertTrue("Expecting a MatchAllDocsQuery, but resulted in " + q.getClass(), q instanceof MatchAllDocsQuery);
   }
 
-  public void testBooleanQueryMatchAllDocsQueryTermQuery() throws IOException {
+  public void testBooleanQueryMatchAllDocsQueryTermQuery() throws Exception {
     final Query q = parse("BooleanQueryMatchAllDocsQueryTermQuery.xml");
     assertTrue("Expecting a BooleanQuery, but resulted in " + q.getClass(), q instanceof BooleanQuery);
     final BooleanQuery bq = (BooleanQuery)q;
@@ -442,32 +444,6 @@ public class TestBBCoreParser extends TestCoreParser {
   }
 
   //================= Helper methods ===================================
-
-  @Override
-  protected Query parse(String xmlFileName) throws IOException {
-    return parse(xmlFileName, false);
-  }
-  
-  private Query parse(String xmlFileName, Boolean shouldFail) throws IOException {
-    InputStream xmlStream = TestCoreParser.class.getResourceAsStream(xmlFileName);
-    assertTrue("Test XML file " + xmlFileName + " cannot be found", xmlStream != null);
-    Query result = parse(xmlStream, shouldFail);
-    xmlStream.close();
-    return result;
-  }
-  
-  private Query parse(InputStream xmlStream, Boolean shouldFail)
-  {
-    Query result = null;
-    try {
-      result = coreParser().parse(xmlStream);
-    } catch (ParserException ex) {
-      assertTrue("Parser exception " + ex, shouldFail);
-    }
-    if (shouldFail && result != null)
-      assertTrue("Expected to fail. But resulted in query: " + result.getClass() + " with value: " + result, false);
-    return result;
-  }
 
   private static Element parseXML(String text) throws ParserException {
     InputStream xmlStream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));

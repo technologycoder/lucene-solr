@@ -59,7 +59,7 @@ public class BBTermQueryBuilder implements QueryBuilder, SpanQueryBuilder {
       return q;
     } catch (ParserException ex){
       throw new ParserException(ex.getMessage() + " field:" + field
-          + " value:" + value + ". Check the query anlyser configured on this field." );
+          + " value:" + value + ". Check the query analyzer configured on this field." );
     }
   }
 
@@ -81,7 +81,7 @@ public class BBTermQueryBuilder implements QueryBuilder, SpanQueryBuilder {
       return q;
     } catch (ParserException ex){
       throw new ParserException(ex.getMessage() + " field:" + field
-          + " value:" + value + ". Check the query anlyser configured on this field." );
+          + " value:" + value + ". Check the query analyzer configured on this field." );
     }
   }
 
