@@ -3,6 +3,8 @@
  */
 package org.apache.lucene.queryparser.xml.builders;
 
+import java.util.HashSet;
+
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.MatchAllDocsFilter;
 import org.apache.lucene.queries.BooleanFilter;
@@ -50,6 +52,8 @@ public class BBBooleanFilterBuilder implements FilterBuilder {
     boolean matchAllDocsExists = false;
     boolean shouldOrMustExists = false;
 
+    HashSet<FilterClause> clauseDedupeSet = new HashSet<FilterClause>();
+
     NodeList nl = e.getChildNodes();
 
     final int nlLen = nl.getLength();
@@ -61,7 +65,7 @@ public class BBBooleanFilterBuilder implements FilterBuilder {
 
         Element clauseFilter = DOMUtils.getFirstChildOrFail(clauseElem);
         Filter f = factory.getFilter(clauseFilter);
-        
+
         //MatchAllDocs needs to be added back only if there is no other should or must clause and there is no need to have duplicates of them.
         if (f instanceof MatchAllDocsFilter) {
           matchAllDocsExists = true;
@@ -70,7 +74,11 @@ public class BBBooleanFilterBuilder implements FilterBuilder {
         else if ((occurs == BooleanClause.Occur.SHOULD) || (occurs == BooleanClause.Occur.MUST)){
           shouldOrMustExists = true;
         }
-        bf.add(new FilterClause(f, occurs));
+
+        FilterClause fc = new FilterClause(f, occurs);
+        if (clauseDedupeSet.add(fc)){//dedupe check
+          bf.add(fc);
+        }
       }
     }
 
