@@ -15,5 +15,4 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<!-- Empty TermQuery which should fail. TermQuery is used for term which should result in just one and only one TermQuery -->
 <TermQuery fieldName="contents"></TermQuery>
