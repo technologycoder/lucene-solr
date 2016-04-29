@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.util.Bits;
-import org.apache.lucene.util.ToStringUtils;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -27,61 +26,22 @@ public class MatchAllDocsFilter extends Filter {
 
   class MatchAllDocIdSet extends DocIdSet {
     final int maxDocs;
-    
+
     public MatchAllDocIdSet(int maxDocs) {
       if (maxDocs < 0)
         maxDocs = 0;
       this.maxDocs = maxDocs;
     }
-    
+
     @Override
     public DocIdSetIterator iterator() throws IOException {
-      return new MatchAllDocIdSetIterator(maxDocs);
-    }
-    
-    class MatchAllDocIdSetIterator extends DocIdSetIterator {
-      final int maxDocs;
-      int iCurrent;
-      public MatchAllDocIdSetIterator(int maxDocs) {
-        this.maxDocs = maxDocs;
-        iCurrent = -1;
-      }
-
-      @Override
-      public int docID() {
-        return iCurrent;
-      }
-
-      @Override
-      public int nextDoc() throws IOException {
-        if(++iCurrent < maxDocs)
-          return iCurrent;
-        else
-          return NO_MORE_DOCS;
-      }
-
-      @Override
-      public int advance(int target) throws IOException {
-        if(iCurrent < target && target < maxDocs) {
-          iCurrent = target;
-          return iCurrent;
-        }
-        else
-          return NO_MORE_DOCS;
-      }
-
-      @Override
-      public long cost() {
-        return 0;
-      }
-      
+      return DocIdSetIterator.all(maxDocs);
     }
 
     @Override
     public long ramBytesUsed() {
       return 0;
     }
-    
   }
 
   @Override
@@ -94,5 +54,4 @@ public class MatchAllDocsFilter extends Filter {
   public String toString(String field) {
     return "*:*";
   }
-  
 }
