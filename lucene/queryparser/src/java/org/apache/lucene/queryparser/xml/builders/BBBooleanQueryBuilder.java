@@ -4,7 +4,6 @@
 package org.apache.lucene.queryparser.xml.builders;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashSet;
 
 import org.apache.lucene.search.BooleanClause;
@@ -114,6 +113,7 @@ public class BBBooleanQueryBuilder implements QueryBuilder, SpanQueryBuilder {
     ArrayList<SpanQuery> ands = new ArrayList<>();
     ArrayList<SpanQuery> nots = new ArrayList<>();
 
+    HashSet<BooleanClause> clauseDedupeSet = new HashSet<BooleanClause>();
     NodeList nl = e.getChildNodes();
     final int nlLen = nl.getLength();
     for (int i = 0; i < nlLen; i++) {
@@ -133,23 +133,28 @@ public class BBBooleanQueryBuilder implements QueryBuilder, SpanQueryBuilder {
           chosenList = nots;
         }
 
-        chosenList.add(q);
+        BooleanClause bc = new BooleanClause(q, occurs);
+        if (clauseDedupeSet.add(bc)){//dedupe check
+          chosenList.add(q);
+        }
       }
     }
 
     SpanOrQuery orQuery = null;
-    SpanNearQuery andQuery = null;
+    SpanQuery andQuery = null;
     SpanOrQuery notQuery = null;
 
     if (ors.size() > 0) {
       orQuery = new SpanOrQuery(ors.toArray(new SpanQuery[ors.size()]));
     }
 
-    if (ands.size() > 0) {
+    if (ands.size() > 1) {
       if (orQuery != null) {
         ands.add(orQuery);
       }
       andQuery = new SpanNearQuery(ands.toArray(new SpanQuery[ands.size()]), Integer.MAX_VALUE, false);
+    } else if (ands.size() > 0) {
+      andQuery = ands.get(0);
     }
 
     if (nots.size() > 0) {
