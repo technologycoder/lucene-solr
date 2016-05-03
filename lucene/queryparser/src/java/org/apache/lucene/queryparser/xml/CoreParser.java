@@ -37,7 +37,8 @@ public class CoreParser implements QueryBuilder {
   protected QueryParser parser;
   protected QueryBuilderFactory queryFactory;
   protected FilterBuilderFactory filterFactory;
-  protected SpanQueryBuilderFactory spanFactory;
+  final protected SpanQueryBuilderFactory spanFactory;
+
   //Controls the max size of the LRU cache used for QueryFilter objects parsed.
   public static int maxNumCachedFilters = 20;
 
@@ -69,6 +70,8 @@ public class CoreParser implements QueryBuilder {
     filterFactory.addBuilder("NumericRangeFilter", new NumericRangeFilterBuilder());
 
     queryFactory = new QueryBuilderFactory();
+    spanFactory = new SpanQueryBuilderFactory();
+
     queryFactory.addBuilder("TermQuery", new TermQueryBuilder());
     queryFactory.addBuilder("TermsQuery", new TermsQueryBuilder(analyzer));
     queryFactory.addBuilder("MatchAllDocsQuery", new MatchAllDocsQueryBuilder());
@@ -87,8 +90,6 @@ public class CoreParser implements QueryBuilder {
     filterFactory.addBuilder("CachedFilter", new CachedFilterBuilder(queryFactory,
         filterFactory, maxNumCachedFilters));
 
-
-    spanFactory = new SpanQueryBuilderFactory();
 
     SpanNearBuilder snb = new SpanNearBuilder(spanFactory);
     spanFactory.addBuilder("SpanNear", snb);
@@ -129,6 +130,10 @@ public class CoreParser implements QueryBuilder {
 
   public void addFilterBuilder(String nodeName, FilterBuilder builder) {
     filterFactory.addBuilder(nodeName, builder);
+  }
+
+  public void addSpanBuilder(String nodeName, SpanQueryBuilder builder) {
+    spanFactory.addBuilder(nodeName, builder);
   }
 
   static Document parseXML(InputStream pXmlFile) throws ParserException {
