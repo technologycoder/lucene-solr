@@ -186,7 +186,6 @@ public class DebugComponent extends SearchComponent
   }
 
   private class Metric {
-    ArrayList<Object> rawValues = new ArrayList<>();
     private long count = 0;
     private long sum = 0;
     private long min = Long.MAX_VALUE;
@@ -201,13 +200,7 @@ public class DebugComponent extends SearchComponent
       this.sourceUnit = sourceUnit;
     }
 
-    void record(String shardAddress, long val) {
-      if (shardAddress != null) {
-        SimpleOrderedMap<Object> rv = new SimpleOrderedMap<>();
-        rv.add("key", shardAddress);
-        rv.add("val", val);
-        rawValues.add(rv);
-      }      
+    void record(long val) {
       count += 1;
       sum += val;
       if (val < min) {
@@ -219,7 +212,6 @@ public class DebugComponent extends SearchComponent
     }
     
     void add(final Metric other) {
-      this.rawValues.addAll(other.rawValues);
       this.count += other.count;
       this.sum += other.sum;
       if (other.min < this.min) {
@@ -238,9 +230,6 @@ public class DebugComponent extends SearchComponent
     Object toObject(TimeUnit destinationUnit)
     {
       SimpleOrderedMap<Object> nl = new SimpleOrderedMap<>();
-      if (!rawValues.isEmpty()) {
-        nl.add("rawValues", rawValues);
-      }
       nl.add("count", count);
       if (sourceUnit != destinationUnit) {
         nl.add("sum", destinationUnit.convert(sum, sourceUnit));
@@ -270,10 +259,9 @@ public class DebugComponent extends SearchComponent
       NamedList<Object> debug = null;
       
       for (ShardResponse srsp : sreq.responses) {
-        final String shardAddress = (rb.isDebugRawTimings() ? srsp.getShardAddress() : null);
-        submitWaitingTime.record(shardAddress, srsp.getSubmitWaitingTime());
-        elapsedTime.record(shardAddress, srsp.getSolrResponse().getElapsedTime()); 
-        takeWaitingTime.record(shardAddress, srsp.getTakeWaitingTime());            
+        submitWaitingTime.record(srsp.getSubmitWaitingTime());
+        elapsedTime.record(srsp.getSolrResponse().getElapsedTime()); 
+        takeWaitingTime.record(srsp.getTakeWaitingTime());            
 
         if (srsp.getException() != null) {
           // can't expect the debug content if there was an exception for this request
@@ -281,7 +269,7 @@ public class DebugComponent extends SearchComponent
           continue;
         }
         NamedList sdebug = (NamedList)srsp.getSolrResponse().getResponse().get("debug");
-        debug = (NamedList)merge(sdebug, debug, EXCLUDE_SET, true, shardAddress);
+        debug = (NamedList)merge(sdebug, debug, EXCLUDE_SET, true);
       }
       
       if (debug != null) {
@@ -348,7 +336,7 @@ public class DebugComponent extends SearchComponent
             continue;
           }
           NamedList sdebug = (NamedList)srsp.getSolrResponse().getResponse().get("debug");
-          info = (NamedList)merge(sdebug, info, EXCLUDE_SET, false, null);
+          info = (NamedList)merge(sdebug, info, EXCLUDE_SET, false);
           if ((sreq.purpose & ShardRequest.PURPOSE_GET_DEBUG) != 0) {
             hasGetDebugResponses = true;
             if (rb.isDebugResults()) {
@@ -436,7 +424,7 @@ public class DebugComponent extends SearchComponent
     return info;
   }
   
-  Object merge(Object source, Object dest, Set<String> exclude, final boolean metrics, final String shardAddress) {
+  Object merge(Object source, Object dest, Set<String> exclude, final boolean metrics) {
     if (source == null) return dest;
     if (dest == null) {
       if (source instanceof NamedList) {
@@ -461,7 +449,7 @@ public class DebugComponent extends SearchComponent
           return ((Number)source).longValue() + ((Number)dest).longValue();
         }
         else if (dest instanceof Metric) {
-          ((Metric) dest).record(shardAddress, ((Number)source).longValue());
+          ((Metric) dest).record(((Number)source).longValue());
           return dest;
         }
         // fall through
@@ -491,7 +479,7 @@ public class DebugComponent extends SearchComponent
 
         if (metrics == true && sval != null && sval instanceof Number) {
             Metric mm = new Metric();
-            mm.record(shardAddress, ((Number)sval).longValue());
+            mm.record(((Number)sval).longValue());
             sval = mm;
         }
         
@@ -508,9 +496,9 @@ public class DebugComponent extends SearchComponent
         }
 
         if (didx == -1) {
-          tmp.add(skey, merge(sval, null, null, metrics, shardAddress));
+          tmp.add(skey, merge(sval, null, null, metrics));
         } else {
-          dl.setVal(didx, merge(sval, dl.getVal(didx), null, metrics, shardAddress));
+          dl.setVal(didx, merge(sval, dl.getVal(didx), null, metrics));
         }
       }
       dl.addAll(tmp);
