@@ -31,8 +31,10 @@ import org.apache.solr.cloud.CloudDescriptor;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.cloud.ClusterState;
 import org.apache.solr.common.cloud.Slice;
+import org.apache.solr.common.params.BBCommonParams;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.CommonParams.EchoParamStyle;
+import org.apache.solr.common.params.BBSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.ExecutorUtil;
 import org.apache.solr.common.util.NamedList;
@@ -2036,13 +2038,20 @@ public final class SolrCore implements SolrInfoMBean, Closeable {
             + " parameter, use '" + EchoParamStyle.EXPLICIT + "' or '" + EchoParamStyle.ALL + "'" );
       }
 
-      String ep_mv = params.get( CommonParams.HEADER_ECHO_PARAMS_MULTIVALUED, null );
-      List<String> ep_mv_list = (ep_mv != null ? Arrays.asList(ep_mv.split(",")) : null);
-
-      if( echoParams == EchoParamStyle.EXPLICIT ) {
-        responseHeader.add("params", req.getOriginalParams().toNamedList(ep_mv_list));
-      } else if( echoParams == EchoParamStyle.ALL ) {
-        responseHeader.add("params", req.getParams().toNamedList(ep_mv_list));
+      final String ep_mv = params.get( BBCommonParams.HEADER_ECHO_PARAMS_MULTIVALUED, null );
+      final List<String> ep_mv_list = (ep_mv != null ? Arrays.asList(ep_mv.split(",")) : null);
+      if (ep_mv_list != null) {
+        if( echoParams == EchoParamStyle.EXPLICIT ) {
+          responseHeader.add("params", BBSolrParams.toNamedList(req.getOriginalParams(), ep_mv_list));
+        } else if( echoParams == EchoParamStyle.ALL ) {
+          responseHeader.add("params", BBSolrParams.toNamedList(req.getParams(), ep_mv_list));
+        }
+      } else {
+        if( echoParams == EchoParamStyle.EXPLICIT ) {
+          responseHeader.add("params", req.getOriginalParams().toNamedList());
+        } else if( echoParams == EchoParamStyle.ALL ) {
+          responseHeader.add("params", req.getParams().toNamedList());
+        }
       }
     }
   }

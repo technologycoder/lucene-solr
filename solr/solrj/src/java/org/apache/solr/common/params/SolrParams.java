@@ -18,12 +18,10 @@
 package org.apache.solr.common.params;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.List;
 
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.util.NamedList;
@@ -351,16 +349,12 @@ public abstract class SolrParams implements Serializable {
   
   /** Convert this to a NamedList */
   public NamedList<Object> toNamedList() {
-    return toNamedList(null);
-  }
-
-  public NamedList<Object> toNamedList(List<String> multi_valued_keys) {
     final SimpleOrderedMap<Object> result = new SimpleOrderedMap<>();
     
     for(Iterator<String> it=getParameterNamesIterator(); it.hasNext(); ) {
       final String name = it.next();
       final String [] values = getParams(name);
-      if (values.length==1 && (null == multi_valued_keys || !multi_valued_keys.contains(name))) {
+      if(values.length==1) {
         result.add(name,values[0]);
       } else {
         // currently no reason not to use the same array
