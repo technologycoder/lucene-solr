@@ -41,7 +41,7 @@ public class TestStandardNormalizer {
 
     Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("std", 0f), solrResourceLoader);
+        new NamedParams().add("std", "0f"), solrResourceLoader);
 
   }
 
@@ -50,7 +50,7 @@ public class TestStandardNormalizer {
 
     Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("std", -1f), solrResourceLoader);
+        new NamedParams().add("std", "-1f"), solrResourceLoader);
 
   }
 
@@ -58,14 +58,14 @@ public class TestStandardNormalizer {
   public void testInvalidSTD3() throws NormalizerException {
     Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("avg", 1f).add("std", 0f), solrResourceLoader);
+        new NamedParams().add("avg", "1f").add("std", "0f"), solrResourceLoader);
   }
 
   @Test
   public void testNormalizer() throws NormalizerException {
     final Normalizer identity = Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("avg", 0f).add("std", 1f), solrResourceLoader);
+        new NamedParams().add("avg", "0f").add("std", "1f"), solrResourceLoader);
 
     float value = 8;
     assertEquals(value, identity.normalize(value), 0.0001);
@@ -73,7 +73,7 @@ public class TestStandardNormalizer {
     assertEquals(value, identity.normalize(value), 0.0001);
     final Normalizer norm = Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("avg", 10f).add("std", 1.5f), solrResourceLoader);
+        new NamedParams().add("avg", "10f").add("std", "1.5f"), solrResourceLoader);
 
     for (final float v : new float[] {10f, 20f, 25f, 30f, 31f, 40f, 42f, 100f,
         10000000f}) {

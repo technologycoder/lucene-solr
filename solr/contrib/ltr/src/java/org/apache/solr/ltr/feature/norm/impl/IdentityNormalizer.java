@@ -18,7 +18,6 @@ package org.apache.solr.ltr.feature.norm.impl;
  */
 
 import org.apache.solr.ltr.feature.norm.Normalizer;
-import org.apache.solr.ltr.util.NamedParams;
 
 public class IdentityNormalizer extends Normalizer {
 
@@ -27,9 +26,6 @@ public class IdentityNormalizer extends Normalizer {
   public IdentityNormalizer() {
 
   }
-
-  @Override
-  public void init(NamedParams params) {}
 
   @Override
   public float normalize(float value) {

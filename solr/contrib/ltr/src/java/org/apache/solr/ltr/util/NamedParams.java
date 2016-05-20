@@ -48,6 +48,11 @@ public class NamedParams extends HashMap<String,Object> {
       f = ff;
       return f;
     }
+    if (o instanceof String) {
+      final Float ff = Float.parseFloat((String)o);
+      f = ff;
+      return f;
+    }
 
     throw new NumberFormatException(o.getClass().getName()
         + " cannot be converted to float");

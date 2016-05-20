@@ -41,7 +41,7 @@ public class TestMinMaxNormalizer {
 
     Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("min", 0f), solrResourceLoader);
+        new NamedParams().add("min", "0.0f"), solrResourceLoader);
 
   }
 
@@ -50,7 +50,7 @@ public class TestMinMaxNormalizer {
 
     Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("max", 0f), solrResourceLoader);
+        new NamedParams().add("max", "0.0f"), solrResourceLoader);
 
   }
 
@@ -58,7 +58,7 @@ public class TestMinMaxNormalizer {
   public void testInvalidMinMaxMissingInvalidDelta() throws NormalizerException {
     Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("max", 0f).add("min", 10f), solrResourceLoader);
+        new NamedParams().add("max", "0.0f").add("min", "10.0f"), solrResourceLoader);
   }
 
   @Test(expected = NormalizerException.class)
@@ -67,7 +67,7 @@ public class TestMinMaxNormalizer {
 
     Normalizer.getInstance(
         "org.apache.solr.ltr.feature.norm.impl.MinMaxNormalizer",
-        new NamedParams().add("min", 10f).add("max", 10f), solrResourceLoader);
+        new NamedParams().add("min", "10.0f").add("max", "10.0f"), solrResourceLoader);
     // min == max
   }
 
@@ -75,7 +75,7 @@ public class TestMinMaxNormalizer {
   public void testNormalizer() throws NormalizerException {
     final Normalizer n = Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("min", 5f).add("max", 10f), solrResourceLoader);
+        new NamedParams().add("min", "5.0f").add("max", "10.0f"), solrResourceLoader);
 
     float value = 8;
     assertEquals((value - 5f) / (10f - 5f), n.normalize(value), 0.0001);

@@ -23,6 +23,7 @@ import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.feature.norm.impl.StandardNormalizer;
 import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.ltr.util.NormalizerException;
+import org.apache.solr.util.SolrPluginUtils;
 
 /**
  * A normalizer normalizes the value of a feature. Once that the feature values
@@ -43,6 +44,7 @@ public abstract class Normalizer {
 
   public void init(NamedParams params) throws NormalizerException {
     this.params = params;
+    SolrPluginUtils.invokeSetters(this, params.entrySet());
   }
 
   public abstract float normalize(float value);
