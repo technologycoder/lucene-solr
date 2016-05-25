@@ -42,7 +42,7 @@ public class TestFeatureStore extends TestRerankBase {
   @Test
   public void testFeatureStoreAdd() throws InvalidFeatureNameException,
       FeatureException {
-    FeatureStore fs = fstore.getFeatureStore("fstore-testFeature");
+    final FeatureStore fs = fstore.getFeatureStore("fstore-testFeature");
     for (int i = 0; i < 5; i++) {
       fstore.addFeature("c" + i, OriginalScoreFeature.class.getCanonicalName(),
           "fstore-testFeature", NamedParams.EMPTY);
@@ -57,7 +57,7 @@ public class TestFeatureStore extends TestRerankBase {
   @Test
   public void testFeatureStoreGet() throws FeatureException,
       InvalidFeatureNameException {
-    FeatureStore fs = fstore.getFeatureStore("fstore-testFeature2");
+    final FeatureStore fs = fstore.getFeatureStore("fstore-testFeature2");
     for (int i = 0; i < 5; i++) {
 
       fstore.addFeature("c" + (float) i, ValueFeature.class.getCanonicalName(),
@@ -66,7 +66,7 @@ public class TestFeatureStore extends TestRerankBase {
     }
 
     for (float i = 0; i < 5; i++) {
-      Feature f = fs.get("c" + (float) i);
+      final Feature f = fs.get("c" + i);
       assertEquals("c" + i, f.getName());
       assertEquals(i, f.getParams().getFloat("value"), 0.0001);
     }
@@ -75,7 +75,7 @@ public class TestFeatureStore extends TestRerankBase {
   @Test(expected = FeatureException.class)
   public void testMissingFeature() throws InvalidFeatureNameException,
       FeatureException {
-    FeatureStore fs = fstore.getFeatureStore("fstore-testFeature3");
+    final FeatureStore fs = fstore.getFeatureStore("fstore-testFeature3");
     for (int i = 0; i < 5; i++) {
       fstore.addFeature("testc" + (float) i,
           ValueFeature.class.getCanonicalName(), "fstore-testFeature3",
@@ -88,7 +88,7 @@ public class TestFeatureStore extends TestRerankBase {
   @Test(expected = FeatureException.class)
   public void testMissingFeature2() throws InvalidFeatureNameException,
       FeatureException {
-    FeatureStore fs = fstore.getFeatureStore("fstore-testFeature4");
+    final FeatureStore fs = fstore.getFeatureStore("fstore-testFeature4");
     for (int i = 0; i < 5; i++) {
       fstore.addFeature("testc" + (float) i,
           ValueFeature.class.getCanonicalName(), "fstore-testFeature4",

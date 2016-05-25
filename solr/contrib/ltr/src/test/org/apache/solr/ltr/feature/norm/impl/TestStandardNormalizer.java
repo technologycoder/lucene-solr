@@ -19,61 +19,63 @@ package org.apache.solr.ltr.feature.norm.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.feature.norm.Normalizer;
-import org.apache.solr.ltr.rest.ManagedModelStore;
 import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.ltr.util.NormalizerException;
 import org.junit.Test;
 
 public class TestStandardNormalizer {
 
+  private final SolrResourceLoader solrResourceLoader = new SolrResourceLoader();
+
   @Test(expected = NormalizerException.class)
   public void testNormalizerNoParams() throws NormalizerException {
-    ManagedModelStore.getNormalizerInstance(
-        StandardNormalizer.class.getCanonicalName(), new NamedParams());
+    Normalizer.getInstance(
+        StandardNormalizer.class.getCanonicalName(), new NamedParams(), solrResourceLoader);
 
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidSTD() throws NormalizerException {
 
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("std", 0f));
+        new NamedParams().add("std", 0f), solrResourceLoader);
 
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidSTD2() throws NormalizerException {
 
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("std", -1f));
+        new NamedParams().add("std", -1f), solrResourceLoader);
 
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidSTD3() throws NormalizerException {
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("avg", 1f).add("std", 0f));
+        new NamedParams().add("avg", 1f).add("std", 0f), solrResourceLoader);
   }
 
   @Test
   public void testNormalizer() throws NormalizerException {
-    Normalizer identity = ManagedModelStore.getNormalizerInstance(
+    final Normalizer identity = Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("avg", 0f).add("std", 1f));
+        new NamedParams().add("avg", 0f).add("std", 1f), solrResourceLoader);
 
     float value = 8;
     assertEquals(value, identity.normalize(value), 0.0001);
     value = 150;
     assertEquals(value, identity.normalize(value), 0.0001);
-    Normalizer norm = ManagedModelStore.getNormalizerInstance(
+    final Normalizer norm = Normalizer.getInstance(
         StandardNormalizer.class.getCanonicalName(),
-        new NamedParams().add("avg", 10f).add("std", 1.5f));
+        new NamedParams().add("avg", 10f).add("std", 1.5f), solrResourceLoader);
 
-    for (float v : new float[] {10f, 20f, 25f, 30f, 31f, 40f, 42f, 100f,
+    for (final float v : new float[] {10f, 20f, 25f, 30f, 31f, 40f, 42f, 100f,
         10000000f}) {
       assertEquals((v - 10f) / (1.5f), norm.normalize(v), 0.0001);
     }

@@ -33,7 +33,7 @@ public class MatchAllIterator extends DocIdSetIterator {
   public int nextDoc() throws IOException {
     // only the rescorer will call this scorers and nextDoc will never be called
     return ++docID; // FIXME: Keep this or throw new
-                    // UnsupportedOperationException()?
+    // UnsupportedOperationException()?
   }
 
   @Override

@@ -19,61 +19,63 @@ package org.apache.solr.ltr.feature.norm.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.feature.norm.Normalizer;
-import org.apache.solr.ltr.rest.ManagedModelStore;
 import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.ltr.util.NormalizerException;
 import org.junit.Test;
 
 public class TestMinMaxNormalizer {
 
+  private final SolrResourceLoader solrResourceLoader = new SolrResourceLoader();
+
   @Test(expected = NormalizerException.class)
   public void testInvalidMinMaxNoParams() throws NormalizerException {
-    ManagedModelStore.getNormalizerInstance(
-        MinMaxNormalizer.class.getCanonicalName(), new NamedParams());
+    Normalizer.getInstance(
+        MinMaxNormalizer.class.getCanonicalName(), new NamedParams(), solrResourceLoader);
 
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidMinMaxMissingMax() throws NormalizerException {
 
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("min", 0f));
+        new NamedParams().add("min", 0f), solrResourceLoader);
 
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidMinMaxMissingMin() throws NormalizerException {
 
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("max", 0f));
+        new NamedParams().add("max", 0f), solrResourceLoader);
 
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidMinMaxMissingInvalidDelta() throws NormalizerException {
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("max", 0f).add("min", 10f));
+        new NamedParams().add("max", 0f).add("min", 10f), solrResourceLoader);
   }
 
   @Test(expected = NormalizerException.class)
   public void testInvalidMinMaxMissingInvalidDelta2()
       throws NormalizerException {
 
-    ManagedModelStore.getNormalizerInstance(
+    Normalizer.getInstance(
         "org.apache.solr.ltr.feature.norm.impl.MinMaxNormalizer",
-        new NamedParams().add("min", 10f).add("max", 10f));
+        new NamedParams().add("min", 10f).add("max", 10f), solrResourceLoader);
     // min == max
   }
 
   @Test
   public void testNormalizer() throws NormalizerException {
-    Normalizer n = ManagedModelStore.getNormalizerInstance(
+    final Normalizer n = Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
-        new NamedParams().add("min", 5f).add("max", 10f));
+        new NamedParams().add("min", 5f).add("max", 10f), solrResourceLoader);
 
     float value = 8;
     assertEquals((value - 5f) / (10f - 5f), n.normalize(value), 0.0001);

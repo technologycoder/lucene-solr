@@ -43,6 +43,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.apache.solr.search.SolrIndexSearcher.ProcessedFilter;
+import org.apache.solr.search.SyntaxError;
 
 public class SolrFeature extends Feature {
 
@@ -63,39 +64,44 @@ public class SolrFeature extends Feature {
     }
 
     @Override
-    public void process() throws FeatureException {
+    public void process() throws IOException {
       try {
-        String df = (String) getParams().get(CommonParams.DF);
-        String defaultParser = (String) getParams().get("defaultParser");
+        final String df = (String) getParams().get(CommonParams.DF);
+        final String defaultParser = (String) getParams().get("defaultParser");
         String solrQuery = (String) getParams().get(CommonParams.Q);
-        List<String> fqs = (List<String>) getParams().get(CommonParams.FQ);
+        final List<String> fqs = (List<String>) getParams()
+            .get(CommonParams.FQ);
 
-        if ((solrQuery == null || solrQuery.isEmpty())
-            && (fqs == null || fqs.isEmpty())) {
+        if (((solrQuery == null) || solrQuery.isEmpty())
+            && ((fqs == null) || fqs.isEmpty())) {
           throw new IOException("ERROR: FQ or Q have not been provided");
         }
 
-        if (solrQuery == null || solrQuery.isEmpty()) {
+        if ((solrQuery == null) || solrQuery.isEmpty()) {
           solrQuery = "*:*";
         }
-        solrQuery = macroExpander.expand(solrQuery);
 
-        SolrQueryRequest req = makeRequest(request.getCore(), solrQuery, fqs,
-            df);
+        solrQuery = macroExpander.expand(solrQuery);
+        if (solrQuery == null) {
+          throw new FeatureException("Feature requires efi parameter that was not passed in request.");
+        }
+
+        final SolrQueryRequest req = makeRequest(request.getCore(), solrQuery,
+            fqs, df);
         if (req == null) {
           throw new IOException("ERROR: No parameters provided");
         }
 
         // Build the filter queries
-        this.queryAndFilters = new ArrayList<Query>(); // If there are no fqs we
-                                                       // just want an empty
-                                                       // list
+        queryAndFilters = new ArrayList<Query>(); // If there are no fqs we
+                                                  // just want an empty
+                                                  // list
         if (fqs != null) {
           for (String fq : fqs) {
-            if (fq != null && fq.trim().length() != 0) {
+            if ((fq != null) && (fq.trim().length() != 0)) {
               fq = macroExpander.expand(fq);
-              QParser fqp = QParser.getParser(fq, null, req);
-              Query filterQuery = fqp.getQuery();
+              final QParser fqp = QParser.getParser(fq, null, req);
+              final Query filterQuery = fqp.getQuery();
               if (filterQuery != null) {
                 queryAndFilters.add(filterQuery);
               }
@@ -103,8 +109,8 @@ public class SolrFeature extends Feature {
           }
         }
 
-        QParser parser = QParser.getParser(solrQuery,
-            defaultParser == null ? "lucene" : defaultParser, req);
+        final QParser parser = QParser.getParser(solrQuery,
+              defaultParser == null ? "lucene" : defaultParser, req);
         query = parser.parse();
 
         // Query can be null if there was no input to parse, for instance if you
@@ -115,10 +121,8 @@ public class SolrFeature extends Feature {
           queryAndFilters.add(query);
           solrQueryWeight = searcher.createNormalizedWeight(query, true);
         }
-
-      } catch (Exception e) {
-        throw new FeatureException("Exception for " + this.toString() + " "
-            + e.getMessage(), e);
+      } catch (final SyntaxError e) {
+        throw new FeatureException("Failed to parse feature query.", e);
       }
     }
 
@@ -126,22 +130,24 @@ public class SolrFeature extends Feature {
         List<String> fqs, String df) {
       // Map.Entry<String, String> [] entries = new NamedListEntry[q.length /
       // 2];
-      NamedList<String> returnList = new NamedList<String>();
-      if (solrQuery != null && !solrQuery.isEmpty()) {
+      final NamedList<String> returnList = new NamedList<String>();
+      if ((solrQuery != null) && !solrQuery.isEmpty()) {
         returnList.add(CommonParams.Q, solrQuery);
       }
       if (fqs != null) {
-        for (String fq : fqs) {
+        for (final String fq : fqs) {
           returnList.add(CommonParams.FQ, fq);
           // entries[i/2] = new NamedListEntry<>(q[i], q[i+1]);
         }
       }
-      if (df != null && !df.isEmpty()) {
+      if ((df != null) && !df.isEmpty()) {
         returnList.add(CommonParams.DF, df);
       }
-      if (returnList.size() > 0) return new LocalSolrQueryRequest(core,
-          returnList);
-      else return null;
+      if (returnList.size() > 0) {
+        return new LocalSolrQueryRequest(core, returnList);
+      } else {
+        return null;
+      }
     }
 
     @Override
@@ -151,8 +157,8 @@ public class SolrFeature extends Feature {
         solrScorer = solrQueryWeight.scorer(context);
       }
 
-      DocIdSetIterator idItr = getDocIdSetIteratorFromQueries(queryAndFilters,
-          context);
+      final DocIdSetIterator idItr = getDocIdSetIteratorFromQueries(
+          queryAndFilters, context);
       if (idItr != null) {
         return solrScorer == null ? new SolrFeatureFilterOnlyScorer(this, idItr)
             : new SolrFeatureScorer(this, solrScorer, idItr);
@@ -179,14 +185,16 @@ public class SolrFeature extends Feature {
       // are given an IndexSearcher instead.
       // Ideally there should be some guarantee that we have a SolrIndexSearcher
       // so we don't have to cast.
-      ProcessedFilter pf = ((SolrIndexSearcher) searcher).getProcessedFilter(
-          null, queries);
+      final ProcessedFilter pf = ((SolrIndexSearcher) searcher)
+          .getProcessedFilter(null, queries);
       final Bits liveDocs = context.reader().getLiveDocs();
 
       DocIdSetIterator idIter = null;
       if (pf.filter != null) {
-        DocIdSet idSet = pf.filter.getDocIdSet(context, liveDocs);
-        if (idSet != null) idIter = idSet.iterator();
+        final DocIdSet idSet = pf.filter.getDocIdSet(context, liveDocs);
+        if (idSet != null) {
+          idIter = idSet.iterator();
+        }
       }
 
       return idIter;
@@ -202,7 +210,7 @@ public class SolrFeature extends Feature {
         super(weight);
         q = (String) getParams().get(CommonParams.Q);
         this.solrScorer = solrScorer;
-        this.itr = new SolrFeatureScorerIterator(filterIterator,
+        itr = new SolrFeatureScorerIterator(filterIterator,
             solrScorer.iterator());
       }
 
@@ -275,7 +283,7 @@ public class SolrFeature extends Feature {
           DocIdSetIterator iterator) {
         super(weight);
         fq = (String) getParams().get(CommonParams.FQ);
-        this.itr = iterator;
+        itr = iterator;
       }
 
       @Override

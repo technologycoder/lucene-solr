@@ -29,7 +29,7 @@ import org.apache.solr.ltr.util.NamedParams;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestModelMetadata extends TestRerankBase {
+public class TestLTRScoringAlgorithm extends TestRerankBase {
 
   static ManagedModelStore store = null;
   static FeatureStore fstore = null;
@@ -45,33 +45,33 @@ public class TestModelMetadata extends TestRerankBase {
 
   @Test
   public void getInstanceTest() throws FeatureException, ModelException {
-    Map<String,Object> weights = new HashMap<>();
+    final Map<String,Object> weights = new HashMap<>();
     weights.put("constant1", 1d);
     weights.put("constant5", 1d);
 
-    ModelMetadata meta = new RankSVMModel("test1",
-        RankSVMModel.class.getCanonicalName(), getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test1",
+        getFeatures(new String[] {
             "constant1", "constant5"}), "test", fstore.getFeatures(),
         new NamedParams().add("weights", weights));
 
     store.addMetadataModel(meta);
-    ModelMetadata m = store.getModel("test1");
+    final LTRScoringAlgorithm m = store.getModel("test1");
     assertEquals(meta, m);
   }
 
   @Test(expected = ModelException.class)
   public void getInvalidTypeTest() throws ModelException, FeatureException {
-    ModelMetadata meta = new RankSVMModel("test2",
-        "org.apache.solr.ltr.model.LOLModel", getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test2",
+        getFeatures(new String[] {
             "constant1", "constant5"}), "test", fstore.getFeatures(), null);
     store.addMetadataModel(meta);
-    ModelMetadata m = store.getModel("test38290156821076");
+    final LTRScoringAlgorithm m = store.getModel("test38290156821076");
   }
 
   @Test(expected = ModelException.class)
   public void getInvalidNameTest() throws ModelException, FeatureException {
-    ModelMetadata meta = new RankSVMModel("!!!??????????",
-        RankSVMModel.class.getCanonicalName(), getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("!!!??????????",
+        getFeatures(new String[] {
             "constant1", "constant5"}), "test", fstore.getFeatures(), null);
     store.addMetadataModel(meta);
     store.getModel("!!!??????????");
@@ -79,28 +79,28 @@ public class TestModelMetadata extends TestRerankBase {
 
   @Test(expected = ModelException.class)
   public void existingNameTest() throws ModelException, FeatureException {
-    Map<String,Object> weights = new HashMap<>();
+    final Map<String,Object> weights = new HashMap<>();
     weights.put("constant1", 1d);
     weights.put("constant5", 1d);
 
-    ModelMetadata meta = new RankSVMModel("test3",
-        RankSVMModel.class.getCanonicalName(), getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test3",
+        getFeatures(new String[] {
             "constant1", "constant5"}), "test", fstore.getFeatures(),
         new NamedParams().add("weights", weights));
     store.addMetadataModel(meta);
-    ModelMetadata m = store.getModel("test3");
+    final LTRScoringAlgorithm m = store.getModel("test3");
     assertEquals(meta, m);
     store.addMetadataModel(meta);
   }
 
   @Test(expected = ModelException.class)
   public void duplicateFeatureTest() throws ModelException, FeatureException {
-    Map<String,Object> weights = new HashMap<>();
+    final Map<String,Object> weights = new HashMap<>();
     weights.put("constant1", 1d);
     weights.put("constant5", 1d);
 
-    ModelMetadata meta = new RankSVMModel("test4",
-        RankSVMModel.class.getCanonicalName(), getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test4",
+        getFeatures(new String[] {
             "constant1", "constant1"}), "test", fstore.getFeatures(),
         new NamedParams().add("weights", weights));
     store.addMetadataModel(meta);
@@ -109,12 +109,12 @@ public class TestModelMetadata extends TestRerankBase {
 
   @Test(expected = ModelException.class)
   public void missingFeatureTest() throws ModelException, FeatureException {
-    Map<String,Object> weights = new HashMap<>();
+    final Map<String,Object> weights = new HashMap<>();
     weights.put("constant1", 1d);
     weights.put("constant5missing", 1d);
 
-    ModelMetadata meta = new RankSVMModel("test5",
-        RankSVMModel.class.getCanonicalName(), getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test5",
+        getFeatures(new String[] {
             "constant1", "constant1"}), "test", fstore.getFeatures(),
         new NamedParams().add("weights", weights));
     store.addMetadataModel(meta);
@@ -123,28 +123,26 @@ public class TestModelMetadata extends TestRerankBase {
 
   @Test(expected = ModelException.class)
   public void notExistingClassTest() throws ModelException, FeatureException {
-    Map<String,Object> weights = new HashMap<>();
+    final Map<String,Object> weights = new HashMap<>();
     weights.put("constant1", 1d);
     weights.put("constant5missing", 1d);
 
-    ModelMetadata meta = new RankSVMModel("test6",
-        "com.hello.im.a.bad.model.class", getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test6",
+        getFeatures(new String[] {
             "constant1", "constant5"}), "test", fstore.getFeatures(),
         new NamedParams().add("weights", weights));
     store.addMetadataModel(meta);
 
   }
 
-  private class WrongClass {};
-
   @Test(expected = ModelException.class)
   public void badModelClassTest() throws ModelException, FeatureException {
-    Map<String,Object> weights = new HashMap<>();
+    final Map<String,Object> weights = new HashMap<>();
     weights.put("constant1", 1d);
     weights.put("constant5missing", 1d);
 
-    ModelMetadata meta = new RankSVMModel("test7",
-        WrongClass.class.getCanonicalName(), getFeatures(new String[] {
+    final LTRScoringAlgorithm meta = new RankSVMModel("test7",
+        getFeatures(new String[] {
             "constant1", "constant5"}), "test", fstore.getFeatures(),
         new NamedParams().add("weights", weights));
     store.addMetadataModel(meta);

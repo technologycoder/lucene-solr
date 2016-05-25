@@ -27,18 +27,23 @@ public class MinMaxNormalizer extends Normalizer {
   private float max;
   private float delta;
 
+  @Override
   public void init(NamedParams params) throws NormalizerException {
     super.init(params);
-    if (!params.containsKey("min")) throw new NormalizerException(
-        "missing required param [min] for normalizer MinMaxNormalizer");
-    if (!params.containsKey("max")) throw new NormalizerException(
-        "missing required param [max] for normalizer MinMaxNormalizer");
+    if (!params.containsKey("min")) {
+      throw new NormalizerException(
+          "missing required param [min] for normalizer MinMaxNormalizer");
+    }
+    if (!params.containsKey("max")) {
+      throw new NormalizerException(
+          "missing required param [max] for normalizer MinMaxNormalizer");
+    }
     try {
-      min = (float) params.getFloat("min");
+      min = params.getFloat("min");
 
-      max = (float) params.getFloat("max");
+      max = params.getFloat("max");
 
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new NormalizerException(
           "invalid param value for normalizer MinMaxNormalizer", e);
     }

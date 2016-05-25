@@ -24,34 +24,37 @@ import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.Explanation;
-import org.apache.solr.ltr.feature.ModelMetadata;
+import org.apache.solr.ltr.feature.LTRScoringAlgorithm;
 import org.apache.solr.ltr.util.ModelException;
 import org.apache.solr.ltr.util.NamedParams;
 
-public class RankSVMModel extends ModelMetadata {
+public class RankSVMModel extends LTRScoringAlgorithm {
 
   protected float[] featureToWeight;
 
-  public RankSVMModel(String name, String type, List<Feature> features,
+  /** name of the attribute containing the weight of the SVM model **/
+  public static final String WEIGHTS_PARAM = "weights";
+
+  public RankSVMModel(String name, List<Feature> features,
       String featureStoreName, Collection<Feature> allFeatures,
       NamedParams params) throws ModelException {
-    super(name, type, features, featureStoreName, allFeatures, params);
+    super(name, features, featureStoreName, allFeatures, params);
 
     if (!hasParams()) {
       throw new ModelException("Model " + name + " doesn't contain any weights");
     }
 
-    Map<String,Double> modelWeights = (Map<String,Double>) getParams().get(
-        "weights");
-    if (modelWeights == null || modelWeights.isEmpty()) {
+    final Map<String,Double> modelWeights = (Map<String,Double>) getParams()
+        .get(WEIGHTS_PARAM);
+    if ((modelWeights == null) || modelWeights.isEmpty()) {
       throw new ModelException("Model " + name + " doesn't contain any weights");
     }
 
     // List<Feature> features = getFeatures(); // model features
-    this.featureToWeight = new float[features.size()];
+    featureToWeight = new float[features.size()];
 
     for (int i = 0; i < features.size(); ++i) {
-      String key = features.get(i).getName();
+      final String key = features.get(i).getName();
       if (!modelWeights.containsKey(key)) {
         throw new ModelException("no weight for feature " + key);
       }
@@ -68,13 +71,14 @@ public class RankSVMModel extends ModelMetadata {
     return score;
   }
 
+  @Override
   public Explanation explain(LeafReaderContext context, int doc,
       float finalScore, List<Explanation> featureExplanations) {
-    List<Explanation> details = new ArrayList<>();
+    final List<Explanation> details = new ArrayList<>();
     int index = 0;
 
-    for (Explanation featureExplain : featureExplanations) {
-      List<Explanation> featureDetails = new ArrayList<>();
+    for (final Explanation featureExplain : featureExplanations) {
+      final List<Explanation> featureDetails = new ArrayList<>();
       featureDetails.add(Explanation.match(featureToWeight[index],
           "weight on feature [would be cool to have the name :)]"));
       featureDetails.add(featureExplain);
@@ -84,7 +88,7 @@ public class RankSVMModel extends ModelMetadata {
       index++;
     }
 
-    return Explanation.match(finalScore, getName() + " [ " + getType()
-        + " ] model applied to features, sum of:", details);
+    return Explanation.match(finalScore, toString()
+        + " model applied to features, sum of:", details);
   }
 }

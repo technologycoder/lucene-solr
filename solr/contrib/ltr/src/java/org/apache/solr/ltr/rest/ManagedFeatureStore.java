@@ -29,6 +29,7 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.feature.FeatureStore;
 import org.apache.solr.ltr.ranking.Feature;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.InvalidFeatureNameException;
 import org.apache.solr.ltr.util.NameValidator;
@@ -37,7 +38,6 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.rest.BaseSolrResource;
 import org.apache.solr.rest.ManagedResource;
 import org.apache.solr.rest.ManagedResourceStorage.StorageIO;
-import org.apache.solr.rest.RestManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +47,10 @@ import org.slf4j.LoggerFactory;
 public class ManagedFeatureStore extends ManagedResource implements
     ManagedResource.ChildResourceSupport {
 
-  private Map<String,FeatureStore> stores = new HashMap<>();
+  private final Map<String,FeatureStore> stores = new HashMap<>();
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-  public static final String FEATURES_JSON_FIELD = "features";
-  public static final String FEATURE_STORE_JSON_FIELD = "featureStores";
-  public static final String DEFAULT_FSTORE = "_DEFAULT_";
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
   public ManagedFeatureStore(String resourceId, SolrResourceLoader loader,
       StorageIO storageIO) throws SolrException {
@@ -63,7 +60,7 @@ public class ManagedFeatureStore extends ManagedResource implements
 
   public synchronized FeatureStore getFeatureStore(String name) {
     if (name == null) {
-      name = DEFAULT_FSTORE;
+      name = CommonLTRParams.DEFAULT_FEATURE_STORE_NAME;
     }
     if (!stores.containsKey(name)) {
       stores.put(name, new FeatureStore(name));
@@ -79,32 +76,33 @@ public class ManagedFeatureStore extends ManagedResource implements
     logger.info("------ managed feature ~ loading ------");
     if (managedData instanceof List) {
       @SuppressWarnings("unchecked")
-      List<Map<String,Object>> up = (List<Map<String,Object>>) managedData;
-      for (Map<String,Object> u : up) {
+      final List<Map<String,Object>> up = (List<Map<String,Object>>) managedData;
+      for (final Map<String,Object> u : up) {
         update(u);
       }
     }
   }
 
   public void update(Map<String,Object> map) {
-    String name = (String) map.get("name");
-    String type = (String) map.get("type");
-    String store = (String) map.get("store");
+    final String name = (String) map.get(CommonLTRParams.MODEL_NAME);
+    final String type = (String) map.get(CommonLTRParams.MODEL_TYPE);
+    final String store = (String) map.get(CommonLTRParams.MODEL_FEATURE_STORE);
 
     NamedParams params = null;
 
-    if (map.containsKey("params")) {
+    if (map.containsKey(CommonLTRParams.MODEL_PARAMS)) {
       @SuppressWarnings("unchecked")
-      Map<String,Object> np = (Map<String,Object>) map.get("params");
+      final Map<String,Object> np = (Map<String,Object>) map
+          .get(CommonLTRParams.MODEL_PARAMS);
       params = new NamedParams(np);
     }
 
     try {
 
       addFeature(name, type, store, params);
-    } catch (InvalidFeatureNameException e) {
+    } catch (final InvalidFeatureNameException e) {
       throw new SolrException(ErrorCode.BAD_REQUEST, e);
-    } catch (FeatureException e) {
+    } catch (final FeatureException e) {
       logger.error(e.getMessage());
       e.printStackTrace();
       throw new SolrException(ErrorCode.BAD_REQUEST, e);
@@ -115,7 +113,7 @@ public class ManagedFeatureStore extends ManagedResource implements
       String featureStore, NamedParams params)
       throws InvalidFeatureNameException, FeatureException {
     if (featureStore == null) {
-      featureStore = DEFAULT_FSTORE;
+      featureStore = CommonLTRParams.DEFAULT_FEATURE_STORE_NAME;
     }
 
     logger.info("register feature {} -> {} in store [" + featureStore + "]",
@@ -124,7 +122,7 @@ public class ManagedFeatureStore extends ManagedResource implements
       throw new InvalidFeatureNameException(name);
     }
 
-    FeatureStore fstore = getFeatureStore(featureStore);
+    final FeatureStore fstore = getFeatureStore(featureStore);
 
     if (fstore.containsFeature(name)) {
       logger.error(
@@ -138,7 +136,7 @@ public class ManagedFeatureStore extends ManagedResource implements
       params = NamedParams.EMPTY;
     }
 
-    Feature feature = createFeature(name, type, params, fstore.size());
+    final Feature feature = createFeature(name, type, params, fstore.size());
 
     fstore.add(feature);
   }
@@ -149,13 +147,11 @@ public class ManagedFeatureStore extends ManagedResource implements
   private Feature createFeature(String name, String type, NamedParams params,
       int id) throws FeatureException {
     try {
-      Class<?> c = Class.forName(type);
-
-      Feature f = (Feature) c.newInstance();
+      final Feature f = solrResourceLoader.newInstance(type, Feature.class);
       f.init(name, params, id);
       return f;
 
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new FeatureException(e.getMessage(), e);
     }
   }
@@ -164,8 +160,8 @@ public class ManagedFeatureStore extends ManagedResource implements
   @Override
   public Object applyUpdatesToManagedData(Object updates) {
     if (updates instanceof List) {
-      List<Map<String,Object>> up = (List<Map<String,Object>>) updates;
-      for (Map<String,Object> u : up) {
+      final List<Map<String,Object>> up = (List<Map<String,Object>>) updates;
+      for (final Map<String,Object> u : up) {
         update(u);
       }
     }
@@ -180,8 +176,8 @@ public class ManagedFeatureStore extends ManagedResource implements
     // logger.info("  - {}", s);
     //
     // }
-    List<Object> features = new ArrayList<>();
-    for (FeatureStore fs : stores.values()) {
+    final List<Object> features = new ArrayList<>();
+    for (final FeatureStore fs : stores.values()) {
       features.addAll(fs.featuresAsManagedResources());
     }
     return features;
@@ -205,18 +201,19 @@ public class ManagedFeatureStore extends ManagedResource implements
    */
   @Override
   public void doGet(BaseSolrResource endpoint, String childId) {
-    SolrQueryResponse response = endpoint.getSolrResponse();
+    final SolrQueryResponse response = endpoint.getSolrResponse();
 
     // If no feature store specified, show all the feature stores available
     if (childId == null) {
-      response.add(FEATURE_STORE_JSON_FIELD, stores.keySet());
+      response.add(CommonLTRParams.FEATURE_STORE_JSON_FIELD, stores.keySet());
     } else {
-      FeatureStore store = getFeatureStore(childId);
+      final FeatureStore store = getFeatureStore(childId);
       if (store == null) {
         throw new SolrException(ErrorCode.BAD_REQUEST,
             "missing feature store [" + childId + "]");
       }
-      response.add(FEATURES_JSON_FIELD, store.featuresAsManagedResources());
+      response.add(CommonLTRParams.FEATURES_JSON_FIELD,
+          store.featuresAsManagedResources());
     }
   }
 

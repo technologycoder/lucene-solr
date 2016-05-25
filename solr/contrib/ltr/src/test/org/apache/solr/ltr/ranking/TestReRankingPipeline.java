@@ -41,7 +41,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
-import org.apache.solr.ltr.feature.ModelMetadata;
+import org.apache.solr.ltr.feature.LTRScoringAlgorithm;
 import org.apache.solr.ltr.feature.impl.FieldValueFeature;
 import org.apache.solr.ltr.ranking.ModelQuery.ModelWeight;
 import org.apache.solr.ltr.ranking.ModelQuery.ModelWeight.ModelScorer;
@@ -54,19 +54,20 @@ import org.slf4j.LoggerFactory;
 @SuppressCodecs("Lucene3x")
 public class TestReRankingPipeline extends LuceneTestCase {
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
   private IndexSearcher getSearcher(IndexReader r) {
-    IndexSearcher searcher = newSearcher(r);
+    final IndexSearcher searcher = newSearcher(r);
 
     return searcher;
   }
 
   private static List<Feature> makeFieldValueFeatures(int[] featureIds,
       String field) {
-    List<Feature> features = new ArrayList<>();
-    for (int i : featureIds) {
-      FieldValueFeature f = new FieldValueFeature();
+    final List<Feature> features = new ArrayList<>();
+    for (final int i : featureIds) {
+      final FieldValueFeature f = new FieldValueFeature();
       f.name = "f" + i;
       f.params = new NamedParams().add("field", field);
       features.add(f);
@@ -74,12 +75,12 @@ public class TestReRankingPipeline extends LuceneTestCase {
     return features;
   }
 
-  private class MockModel extends ModelMetadata {
+  private class MockModel extends LTRScoringAlgorithm {
 
-    public MockModel(String name, String type, List<Feature> features,
+    public MockModel(String name, List<Feature> features,
         String featureStoreName, Collection<Feature> allFeatures,
         NamedParams params) {
-      super(name, type, features, featureStoreName, allFeatures, params);
+      super(name, features, featureStoreName, allFeatures, params);
     }
 
     @Override
@@ -98,8 +99,8 @@ public class TestReRankingPipeline extends LuceneTestCase {
   @Ignore
   @Test
   public void testRescorer() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+    final Directory dir = newDirectory();
+    final RandomIndexWriter w = new RandomIndexWriter(random(), dir);
 
     Document doc = new Document();
     doc.add(newStringField("id", "0", Field.Store.YES));
@@ -116,28 +117,28 @@ public class TestReRankingPipeline extends LuceneTestCase {
     doc.add(new FloatDocValuesField("final-score", 2.0f));
     w.addDocument(doc);
 
-    IndexReader r = w.getReader();
+    final IndexReader r = w.getReader();
     w.close();
 
     // Do ordinary BooleanQuery:
-    Builder bqBuilder = new Builder();
+    final Builder bqBuilder = new Builder();
     bqBuilder.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
     bqBuilder.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
-    IndexSearcher searcher = getSearcher(r);
+    final IndexSearcher searcher = getSearcher(r);
     // first run the standard query
     TopDocs hits = searcher.search(bqBuilder.build(), 10);
     assertEquals(2, hits.totalHits);
     assertEquals("0", searcher.doc(hits.scoreDocs[0].doc).get("id"));
     assertEquals("1", searcher.doc(hits.scoreDocs[1].doc).get("id"));
 
-    List<Feature> features = makeFieldValueFeatures(new int[] {0, 1, 2},
+    final List<Feature> features = makeFieldValueFeatures(new int[] {0, 1, 2},
         "final-score");
-    List<Feature> allFeatures = makeFieldValueFeatures(new int[] {0, 1, 2, 3,
-        4, 5, 6, 7, 8, 9}, "final-score");
-    RankSVMModel meta = new RankSVMModel("test",
-        MockModel.class.getCanonicalName(), features, "test", allFeatures, null);
+    final List<Feature> allFeatures = makeFieldValueFeatures(new int[] {0, 1,
+        2, 3, 4, 5, 6, 7, 8, 9}, "final-score");
+    final RankSVMModel meta = new RankSVMModel("test",
+        features, "test", allFeatures, null);
 
-    LTRRescorer rescorer = new LTRRescorer(new ModelQuery(meta));
+    final LTRRescorer rescorer = new LTRRescorer(new ModelQuery(meta));
     hits = rescorer.rescore(searcher, hits, 2);
 
     // rerank using the field final-score
@@ -152,8 +153,8 @@ public class TestReRankingPipeline extends LuceneTestCase {
   @Ignore
   @Test
   public void testDifferentTopN() throws IOException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+    final Directory dir = newDirectory();
+    final RandomIndexWriter w = new RandomIndexWriter(random(), dir);
 
     Document doc = new Document();
     doc.add(newStringField("id", "0", Field.Store.YES));
@@ -184,14 +185,14 @@ public class TestReRankingPipeline extends LuceneTestCase {
     doc.add(new FloatDocValuesField("final-score", 5.0f));
     w.addDocument(doc);
 
-    IndexReader r = w.getReader();
+    final IndexReader r = w.getReader();
     w.close();
 
     // Do ordinary BooleanQuery:
-    Builder bqBuilder = new Builder();
+    final Builder bqBuilder = new Builder();
     bqBuilder.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
     bqBuilder.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
-    IndexSearcher searcher = getSearcher(r);
+    final IndexSearcher searcher = getSearcher(r);
 
     // first run the standard query
     TopDocs hits = searcher.search(bqBuilder.build(), 10);
@@ -207,14 +208,14 @@ public class TestReRankingPipeline extends LuceneTestCase {
     assertEquals("3", searcher.doc(hits.scoreDocs[3].doc).get("id"));
     assertEquals("4", searcher.doc(hits.scoreDocs[4].doc).get("id"));
 
-    List<Feature> features = makeFieldValueFeatures(new int[] {0, 1, 2},
+    final List<Feature> features = makeFieldValueFeatures(new int[] {0, 1, 2},
         "final-score");
-    List<Feature> allFeatures = makeFieldValueFeatures(new int[] {0, 1, 2, 3,
-        4, 5, 6, 7, 8, 9}, "final-score");
-    RankSVMModel meta = new RankSVMModel("test",
-        MockModel.class.getCanonicalName(), features, "test", allFeatures, null);
+    final List<Feature> allFeatures = makeFieldValueFeatures(new int[] {0, 1,
+        2, 3, 4, 5, 6, 7, 8, 9}, "final-score");
+    final RankSVMModel meta = new RankSVMModel("test",
+        features, "test", allFeatures, null);
 
-    LTRRescorer rescorer = new LTRRescorer(new ModelQuery(meta));
+    final LTRRescorer rescorer = new LTRRescorer(new ModelQuery(meta));
 
     // rerank @ 0 should not change the order
     hits = rescorer.rescore(searcher, hits, 0);
@@ -231,7 +232,7 @@ public class TestReRankingPipeline extends LuceneTestCase {
       hits = searcher.search(bqBuilder.build(), 10);
       // meta = new MockModel();
       // rescorer = new LTRRescorer(new ModelQuery(meta));
-      ScoreDoc[] slice = new ScoreDoc[topN];
+      final ScoreDoc[] slice = new ScoreDoc[topN];
       System.arraycopy(hits.scoreDocs, 0, slice, 0, topN);
       hits = new TopDocs(hits.totalHits, slice, hits.getMaxScore());
       hits = rescorer.rescore(searcher, hits, topN);
@@ -253,32 +254,32 @@ public class TestReRankingPipeline extends LuceneTestCase {
 
   @Test
   public void testDocParam() throws Exception {
-    NamedParams test = new NamedParams();
+    final NamedParams test = new NamedParams();
     test.add("fake", 2);
     List<Feature> features = makeFieldValueFeatures(new int[] {0},
         "final-score");
     List<Feature> allFeatures = makeFieldValueFeatures(new int[] {0},
         "final-score");
-    MockModel meta = new MockModel("test", MockModel.class.getCanonicalName(),
+    MockModel meta = new MockModel("test",
         features, "test", allFeatures, null);
     ModelQuery query = new ModelQuery(meta);
     ModelWeight wgt = query.createWeight(null, true);
     ModelScorer modelScr = wgt.scorer(null);
     modelScr.setDocInfoParam("ORIGINAL_SCORE", 1);
-    for (ChildScorer feat : modelScr.getChildren()) {
+    for (final ChildScorer feat : modelScr.getChildren()) {
       assert (((FeatureScorer) feat.child).hasDocParam("ORIGINAL_SCORE"));
     }
 
     features = makeFieldValueFeatures(new int[] {0, 1, 2}, "final-score");
     allFeatures = makeFieldValueFeatures(new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8,
         9}, "final-score");
-    meta = new MockModel("test", MockModel.class.getCanonicalName(), features,
+    meta = new MockModel("test", features,
         "test", allFeatures, null);
     query = new ModelQuery(meta);
     wgt = query.createWeight(null, true);
     modelScr = wgt.scorer(null);
     modelScr.setDocInfoParam("ORIGINAL_SCORE", 1);
-    for (ChildScorer feat : modelScr.getChildren()) {
+    for (final ChildScorer feat : modelScr.getChildren()) {
       assert (((FeatureScorer) feat.child).hasDocParam("ORIGINAL_SCORE"));
     }
   }

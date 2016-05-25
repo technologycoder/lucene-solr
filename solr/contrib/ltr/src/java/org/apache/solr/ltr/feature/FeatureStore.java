@@ -52,11 +52,11 @@ public class FeatureStore {
   }
 
   public List<Object> featuresAsManagedResources() {
-    List<Object> features = new ArrayList<Object>();
-    for (Feature f : store.values()) {
-      Map<String,Object> o = new LinkedHashMap<>();
+    final List<Object> features = new ArrayList<Object>();
+    for (final Feature f : store.values()) {
+      final Map<String,Object> o = new LinkedHashMap<>();
       o.put("name", f.getName());
-      o.put("type", f.getType());
+      o.put("type", f.getClass().getCanonicalName());
       o.put("store", storeName);
       o.put("params", f.getParams());
       features.add(o);

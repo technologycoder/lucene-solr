@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.solr.ltr.ranking.ModelQuery;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.search.SolrCache;
 import org.apache.solr.search.SolrIndexSearcher;
 import org.slf4j.Logger;
@@ -34,8 +35,8 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class FeatureLogger<FV_TYPE> {
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-  public static final String QUERY_FV_CACHE_NAME = "QUERY_DOC_FV";
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
   /**
    * Log will be called every time that the model generates the feature values
@@ -58,11 +59,14 @@ public abstract class FeatureLogger<FV_TYPE> {
   public boolean log(int docid, ModelQuery modelQuery,
       SolrIndexSearcher searcher, String[] featureNames, float[] featureValues,
       boolean[] featuresUsed) {
-    FV_TYPE r = makeFeatureVector(featureNames, featureValues, featuresUsed);
-    if (r == null) return false;
+    final FV_TYPE featureVector = makeFeatureVector(featureNames, featureValues,
+        featuresUsed);
+    if (featureVector == null) {
+      return false;
+    }
     // FIXME: Confirm this hashing works
-    return searcher.cacheInsert(QUERY_FV_CACHE_NAME, modelQuery.hashCode() + 31
-        * docid, makeFeatureVector(featureNames, featureValues, featuresUsed)) != null;
+    return searcher.cacheInsert(CommonLTRParams.QUERY_FV_CACHE_NAME,
+        modelQuery.hashCode() + (31 * docid),featureVector) != null;
   }
 
   /**
@@ -75,9 +79,15 @@ public abstract class FeatureLogger<FV_TYPE> {
    * @return a feature logger for the format specified.
    */
   public static FeatureLogger<?> getFeatureLogger(String format) {
-    if (format == null || format.isEmpty()) return new CSVFeatureLogger();
-    if (format.equals("csv")) return new CSVFeatureLogger();
-    if (format.equals("json")) return new MapFeatureLogger();
+    if ((format == null) || format.isEmpty()) {
+      return new CSVFeatureLogger();
+    }
+    if (format.equals("csv")) {
+      return new CSVFeatureLogger();
+    }
+    if (format.equals("json")) {
+      return new MapFeatureLogger();
+    }
     logger.warn("unknown feature logger {}", format);
     return null;
 
@@ -95,9 +105,10 @@ public abstract class FeatureLogger<FV_TYPE> {
    */
   public FV_TYPE getFeatureVector(int docid, ModelQuery reRankModel,
       SolrIndexSearcher searcher) {
-    SolrCache fvCache = searcher.getCache(QUERY_FV_CACHE_NAME);
+    final SolrCache fvCache = searcher
+        .getCache(CommonLTRParams.QUERY_FV_CACHE_NAME);
     return fvCache == null ? null : (FV_TYPE) fvCache.get(reRankModel
-        .hashCode() + 31 * docid);
+        .hashCode() + (31 * docid));
   }
 
   public static class MapFeatureLogger extends FeatureLogger<Map<String,Float>> {
@@ -145,8 +156,8 @@ public abstract class FeatureLogger<FV_TYPE> {
         }
       }
 
-      String features = (sb.length() > 0 ? sb.substring(0, sb.length() - 1)
-          : "");
+      final String features = (sb.length() > 0 ? sb.substring(0,
+          sb.length() - 1) : "");
       sb.setLength(0);
 
       return features;

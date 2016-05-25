@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandles;
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.ltr.TestRerankBase;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -32,7 +33,8 @@ import org.slf4j.LoggerFactory;
 public class TestLTRQParserPlugin extends TestRerankBase {
 
   @SuppressWarnings("unused")
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
   @BeforeClass
   public static void before() throws Exception {
@@ -52,17 +54,17 @@ public class TestLTRQParserPlugin extends TestRerankBase {
 
   @Test
   public void ltrModelIdMissingTest() throws Exception {
-    String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
+    final String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
     // SolrQueryRequest req = req("q", solrQuery, "rows", "4", "fl", "*,score",
     // "fv", "true", "rq", "{!ltr reRankDocs=100}");
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery(solrQuery);
     query.add("fl", "*, score");
     query.add("rows", "4");
     query.add("fv", "true");
     query.add("rq", "{!ltr reRankDocs=100}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     assert (res.contains("Must provide model in the request"));
 
     // h.query("/query", req);
@@ -79,15 +81,15 @@ public class TestLTRQParserPlugin extends TestRerankBase {
 
   @Test
   public void ltrModelIdDoesNotExistTest() throws Exception {
-    String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
-    SolrQuery query = new SolrQuery();
+    final String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
+    final SolrQuery query = new SolrQuery();
     query.setQuery(solrQuery);
     query.add("fl", "*, score");
     query.add("rows", "4");
     query.add("fv", "true");
     query.add("rq", "{!ltr model=-1 reRankDocs=100}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     assert (res.contains("cannot find model"));
     /*
      * String solrQuery =
@@ -101,15 +103,15 @@ public class TestLTRQParserPlugin extends TestRerankBase {
 
   @Test
   public void ltrMoreResultsThanReRankedTest() throws Exception {
-    String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
-    SolrQuery query = new SolrQuery();
+    final String solrQuery = "_query_:{!edismax qf='title' mm=100% v='bloomberg' tie=0.1}";
+    final SolrQuery query = new SolrQuery();
     query.setQuery(solrQuery);
     query.add("fl", "*, score");
     query.add("rows", "4");
     query.add("fv", "true");
     query.add("rq", "{!ltr model=6029760550880411648 reRankDocs=3}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
     assert (res.contains("Requesting more documents than being reranked."));
     /*
@@ -125,12 +127,11 @@ public class TestLTRQParserPlugin extends TestRerankBase {
 
   @Test
   public void ltrNoResultsTest() throws Exception {
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:bloomberg23");
     query.add("fl", "*,[fv]");
     query.add("rows", "3");
     query.add("debugQuery", "on");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr reRankDocs=3 model=6029760550880411648}");
     assertJQ("/query" + query.toQueryString(), "/response/numFound/==0");
     // assertJQ("/query?" + query.toString(), "/response/numFound/==0");

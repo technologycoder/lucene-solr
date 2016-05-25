@@ -25,7 +25,7 @@ import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.ltr.TestRerankBase;
-import org.apache.solr.ltr.ranking.LTRComponent;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.ModelException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -38,7 +38,8 @@ import org.slf4j.LoggerFactory;
 public class TestLambdaMARTModel extends TestRerankBase {
 
   @SuppressWarnings("unused")
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
   @BeforeClass
   public static void before() throws Exception {
@@ -57,7 +58,7 @@ public class TestLambdaMARTModel extends TestRerankBase {
     h.update(commit());
 
     loadFeatures("lambdamart_features.json"); // currently needed to force
-                                              // scoring on all docs
+    // scoring on all docs
     loadModels("lambdamart_model.json");
   }
 
@@ -69,10 +70,9 @@ public class TestLambdaMARTModel extends TestRerankBase {
   @Ignore
   @Test
   public void lambdaMartTest1() throws Exception {
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("rows", "3");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("fl", "*,score");
 
     // Regular scores
@@ -119,11 +119,10 @@ public class TestLambdaMARTModel extends TestRerankBase {
   @Ignore
   @Test
   public void lambdaMartTestExplain() throws Exception {
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*,score,[fv]");
     query.add("rows", "3");
-    query.add(LTRComponent.LTRParams.FV, "true");
 
     query.add("rq",
         "{!ltr reRankDocs=3 model=lambdamartmodel efi.user_query=w3}");

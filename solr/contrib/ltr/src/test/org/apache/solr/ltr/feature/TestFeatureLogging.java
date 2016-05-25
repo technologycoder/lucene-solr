@@ -23,8 +23,8 @@ import org.apache.solr.ltr.TestRerankBase;
 import org.apache.solr.ltr.feature.impl.FieldValueFeature;
 import org.apache.solr.ltr.feature.impl.SolrFeature;
 import org.apache.solr.ltr.feature.impl.ValueFeature;
-import org.apache.solr.ltr.ranking.LTRComponent;
 import org.apache.solr.ltr.ranking.RankSVMModel;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -61,12 +61,11 @@ public class TestFeatureLogging extends TestRerankBase {
         "c1", "c2", "c3"}, "test1",
         "{\"weights\":{\"c1\":1.0,\"c2\":1.0,\"c3\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:bloomberg");
     query.add("fl", "title,description,id,popularity,[fv]");
     query.add("rows", "3");
     query.add("debugQuery", "on");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr reRankDocs=3 model=sum1}");
 
     String res = restTestHarness.query("/query" + query.toQueryString());
@@ -78,57 +77,65 @@ public class TestFeatureLogging extends TestRerankBase {
     query.remove("fl");
     query.add("fl", "[fv]");
     query.add("rows", "3");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr reRankDocs=3 model=sum1}");
 
     res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
     assertJQ("/query" + query.toQueryString(),
         "/response/docs/[0]/=={'[fv]':'c1:1.0;c2:2.0;c3:3.0;pop:2.0;yesmatch:1.0'}");
+    query.remove("rq");
+
+    // set logging at false but still asking for feature, and it should work anyway
+    query.add("rq", "{!ltr reRankDocs=3 model=sum1}");
+    assertJQ("/query" + query.toQueryString(),
+        "/response/docs/[0]/=={'[fv]':'c1:1.0;c2:2.0;c3:3.0;pop:2.0;yesmatch:1.0'}");
+
+
   }
 
   @Test
-  public void testGeneratedOnlyFeatures() throws Exception {
-    loadFeature("c1", ValueFeature.class.getCanonicalName(), "test3",
+  public void testDefaultStoreFeatureExtraction() throws Exception {
+    loadFeature("defaultf1", ValueFeature.class.getCanonicalName(),
+        CommonLTRParams.DEFAULT_FEATURE_STORE_NAME,
         "{\"value\":1.0}");
-    loadFeature("c2", ValueFeature.class.getCanonicalName(), "test3",
+    loadFeature("store8f1", ValueFeature.class.getCanonicalName(),
+        "store8",
         "{\"value\":2.0}");
-    loadFeature("c3", ValueFeature.class.getCanonicalName(), "test3",
+    loadFeature("store9f1", ValueFeature.class.getCanonicalName(),
+        "store9",
         "{\"value\":3.0}");
-    loadFeature("pop", FieldValueFeature.class.getCanonicalName(), "test3",
-        "{\"field\":\"popularity\"}");
+    loadModel("store9m1", RankSVMModel.class.getCanonicalName(),
+      new String[] {"store9f1"},
+      "store9",
+      "{\"weights\":{\"store9f1\":1.0}}");
 
-    loadModel("sumonly", RankSVMModel.class.getCanonicalName(), new String[] {
-        "c1", "c2", "c3"}, "test3",
-        "{\"weights\":{\"c1\":1.0,\"c2\":1.0,\"c3\":1.0}}");
+    final SolrQuery query = new SolrQuery();
+    query.setQuery("id:7");
+    query.add("rows", "1");
 
-    SolrQuery query = new SolrQuery();
-    query.setQuery("title:bloomberg");
-    query.add("fl", "title,description,id,popularity,[fv]");
-    query.add("rows", "3");
-    query.add("debugQuery", "on");
-    query.add(LTRComponent.LTRParams.FV, "true");
-    query.add("rq", "{!ltr reRankDocs=3 model=sumonly}");
+    // No store specified, use default store for extraction
+    query.add("fl", "fv:[fv]");
+    assertJQ("/query" + query.toQueryString(),
+        "/response/docs/[0]/=={'fv':'defaultf1:1.0'}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
-    System.out.println(res);
-    assertJQ(
-        "/query" + query.toQueryString(),
-        "/response/docs/[0]/=={'title':'bloomberg bloomberg ', 'description':'bloomberg','id':'7', 'popularity':2,  '[fv]':'c1:1.0;c2:2.0;c3:3.0;pop:2.0'}");
+    // Store specified, use store for extraction
+    query.remove("fl");
+    query.add("fl", "fv:[fv store=store8]");
+    assertJQ("/query" + query.toQueryString(),
+        "/response/docs/[0]/=={'fv':'store8f1:2.0'}");
 
+    // Store specified + model specified, use store for extraction
+    query.add("rq", "{!ltr reRankDocs=3 model=store9m1}");
+    assertJQ("/query" + query.toQueryString(),
+        "/response/docs/[0]/=={'fv':'store8f1:2.0'}");
+
+    // No store specified + model specified, use model store for extraction
     query.remove("fl");
     query.add("fl", "fv:[fv]");
-    query.add("rows", "3");
-
-    query.add(LTRComponent.LTRParams.FV, "true");
-    query.add("rq", "{!ltr reRankDocs=3 model=sumonly}");
-
-    res = restTestHarness.query("/query" + query.toQueryString());
-    System.out.println(res);
     assertJQ("/query" + query.toQueryString(),
-        "/response/docs/[0]/=={'fv':'c1:1.0;c2:2.0;c3:3.0;pop:2.0'}");
-
+        "/response/docs/[0]/=={'fv':'store9f1:3.0'}");
   }
+
 
   @Test
   public void testGeneratedGroup() throws Exception {
@@ -145,7 +152,7 @@ public class TestFeatureLogging extends TestRerankBase {
         "c1", "c2", "c3"}, "testgroup",
         "{\"weights\":{\"c1\":1.0,\"c2\":1.0,\"c3\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:bloomberg");
     query.add("fl", "*,[fv]");
     query.add("debugQuery", "on");
@@ -156,7 +163,6 @@ public class TestFeatureLogging extends TestRerankBase {
     query.add("group", "true");
     query.add("group.field", "title");
 
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr reRankDocs=3 model=sumgroup}");
 
     String res = restTestHarness.query("/query" + query.toQueryString());

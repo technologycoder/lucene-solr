@@ -82,7 +82,7 @@ public abstract class FeatureWeight extends Weight {
 
   public final void setExternalFeatureInfo(Map<String,String> efi) {
     this.efi = efi;
-    this.macroExpander = new MacroExpander(efi);
+    macroExpander = new MacroExpander(efi);
   }
 
   /**
@@ -118,10 +118,12 @@ public abstract class FeatureWeight extends Weight {
   @Override
   public Explanation explain(LeafReaderContext context, int doc)
       throws IOException {
-    FeatureScorer r = scorer(context);
+    final FeatureScorer r = scorer(context);
     r.iterator().advance(doc);
     float score = getDefaultValue();
-    if (r.docID() == doc) score = r.score();
+    if (r.docID() == doc) {
+      score = r.score();
+    }
 
     return Explanation.match(score, r.toString());
   }

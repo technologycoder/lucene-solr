@@ -5,6 +5,18 @@
         "q" : "{!terms f=title}${user_query}"
     }
 }, {
+    "name" : "confidence",
+    "type" : "org.apache.solr.ltr.feature.impl.ValueFeature",
+    "store": "fstore2",
+    "params" : {
+        "value" : "${myconf}"
+    }
+}, {
+    "name":"originalScore",
+    "type":"org.apache.solr.ltr.feature.impl.OriginalScoreFeature",
+    "store": "fstore2",
+    "params":{}
+}, {
     "name" : "titlePhraseMatch",
     "type" : "org.apache.solr.ltr.feature.impl.SolrFeature",
     "params" : {

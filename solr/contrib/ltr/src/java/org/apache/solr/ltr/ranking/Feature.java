@@ -32,7 +32,6 @@ import org.apache.solr.ltr.util.NamedParams;
 public abstract class Feature extends Query implements Cloneable {
 
   protected String name;
-  protected String type = this.getClass().getCanonicalName();
   protected Normalizer norm = IdentityNormalizer.INSTANCE;
   protected int id;
   protected NamedParams params = NamedParams.EMPTY;
@@ -54,7 +53,7 @@ public abstract class Feature extends Query implements Cloneable {
 
     try {
       return (Query) super.clone();
-    } catch (CloneNotSupportedException e) {
+    } catch (final CloneNotSupportedException e) {
       // FIXME throw the exception, wrap into another exception?
       e.printStackTrace();
     }
@@ -63,46 +62,48 @@ public abstract class Feature extends Query implements Cloneable {
 
   @Override
   public String toString(String field) {
-    return "Feature [name=" + name + ", type=" + type + ", id=" + id
+    return "Feature [name=" + name + ", type=" + getClass().getSimpleName() + ", id=" + id
         + ", params=" + params + "]";
   }
 
+  @Override
   public abstract FeatureWeight createWeight(IndexSearcher searcher,
       boolean needsScores) throws IOException;
 
   @Override
   public int hashCode() {
     final int prime = 31;
-    int result = super.hashCode();
-    result = prime * result + id;
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
-    result = prime * result + ((params == null) ? 0 : params.hashCode());
-    result = prime * result + ((type == null) ? 0 : type.hashCode());
+    int result = classHash();
+    result = (prime * result) + id;
+    result = (prime * result) + ((name == null) ? 0 : name.hashCode());
+    result = (prime * result) + ((params == null) ? 0 : params.hashCode());
     return result;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (!super.equals(obj)) return false;
-    Feature other = (Feature) obj;
-    if (id != other.id) return false;
-    if (name == null) {
-      if (other.name != null) return false;
-    } else if (!name.equals(other.name)) return false;
-    if (params == null) {
-      if (other.params != null) return false;
-    } else if (!params.equals(other.params)) return false;
-    if (type == null) {
-      if (other.type != null) return false;
-    } else if (!type.equals(other.type)) return false;
-    return true;
+  public boolean equals(Object o) {
+    return sameClassAs(o) &&  equalsTo(getClass().cast(o));
   }
 
-  /**
-   * @return the type
-   */
-  public String getType() {
-    return type;
+  private boolean equalsTo(Feature other) {
+    if (id != other.id) {
+        return false;
+    }
+    if (name == null) {
+        if (other.name != null) {
+            return false;
+        }
+    } else if (!name.equals(other.name)) {
+        return false;
+    }
+    if (params == null) {
+        if (other.params != null) {
+            return false;
+        }
+    } else if (!params.equals(other.params)) {
+        return false;
+    }
+    return true;
   }
 
   /**

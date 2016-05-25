@@ -48,13 +48,14 @@ import com.carrotsearch.hppc.IntIntHashMap;
 public class LTRCollector extends TopDocsCollector {
   // FIXME: This should extend ReRankCollector since it is mostly a copy
 
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
-  private ModelQuery reRankModel;
+  private final ModelQuery reRankModel;
   private TopDocsCollector mainCollector;
-  private IndexSearcher searcher;
-  private int reRankDocs;
-  private Map<BytesRef,Integer> boostedPriority;
+  private final IndexSearcher searcher;
+  private final int reRankDocs;
+  private final Map<BytesRef,Integer> boostedPriority;
 
   @SuppressWarnings("unchecked")
   public LTRCollector(int reRankDocs, ModelQuery reRankModel, QueryCommand cmd,
@@ -66,11 +67,11 @@ public class LTRCollector extends TopDocsCollector {
     this.boostedPriority = boostedPriority;
     Sort sort = cmd.getSort();
     if (sort == null) {
-      this.mainCollector = TopScoreDocCollector.create(this.reRankDocs);
+      mainCollector = TopScoreDocCollector.create(this.reRankDocs);
     } else {
       sort = sort.rewrite(searcher);
-      this.mainCollector = TopFieldCollector.create(sort, this.reRankDocs,
-          false, true, true);
+      mainCollector = TopFieldCollector.create(sort, this.reRankDocs, false,
+          true, true);
     }
     this.searcher = searcher;
   }
@@ -104,12 +105,12 @@ public class LTRCollector extends TopDocsCollector {
         howMany = reRankDocs;
       }
 
-      TopDocs mainDocs = mainCollector.topDocs(0, reRankDocs);
+      final TopDocs mainDocs = mainCollector.topDocs(0, reRankDocs);
       TopDocs topRerankDocs;
       try {
         topRerankDocs = new LTRRescorer(reRankModel).rescore(searcher,
             mainDocs, howMany);
-      } catch (IOException e) {
+      } catch (final IOException e) {
         logger.error("LTRRescorer reranking failed. " + e);
         e.printStackTrace();
         // If someone deployed a messed up model, we don't want to crash and
@@ -119,27 +120,27 @@ public class LTRCollector extends TopDocsCollector {
       }
 
       if (boostedPriority != null) {
-        SolrRequestInfo info = SolrRequestInfo.getRequestInfo();
+        final SolrRequestInfo info = SolrRequestInfo.getRequestInfo();
         Map requestContext = null;
         if (info != null) {
           requestContext = info.getReq().getContext();
         }
 
-        IntIntHashMap boostedDocs = QueryElevationComponent.getBoostDocs(
+        final IntIntHashMap boostedDocs = QueryElevationComponent.getBoostDocs(
             (SolrIndexSearcher) searcher, boostedPriority, requestContext);
 
         Arrays.sort(topRerankDocs.scoreDocs, new BoostedComp(boostedDocs,
             mainDocs.scoreDocs, topRerankDocs.getMaxScore()));
 
-        ScoreDoc[] scoreDocs = new ScoreDoc[howMany];
+        final ScoreDoc[] scoreDocs = new ScoreDoc[howMany];
         System.arraycopy(topRerankDocs.scoreDocs, 0, scoreDocs, 0, howMany);
         topRerankDocs.scoreDocs = scoreDocs;
       }
 
       return topRerankDocs;
 
-    } catch (Exception e) {
-      logger.error("Exception: ",e);
+    } catch (final Exception e) {
+      logger.error("Exception: ", e);
       throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, e);
     }
   }
@@ -149,22 +150,22 @@ public class LTRCollector extends TopDocsCollector {
 
     public BoostedComp(IntIntHashMap boostedDocs, ScoreDoc[] scoreDocs,
         float maxScore) {
-      this.boostedMap = new IntFloatHashMap(boostedDocs.size() * 2);
+      boostedMap = new IntFloatHashMap(boostedDocs.size() * 2);
 
-      for (int i = 0; i < scoreDocs.length; i++) {
+      for (final ScoreDoc scoreDoc : scoreDocs) {
         final int idx;
-        if ((idx = boostedDocs.indexOf(scoreDocs[i].doc)) >= 0) {
-          boostedMap
-              .put(scoreDocs[i].doc, maxScore + boostedDocs.indexGet(idx));
+        if ((idx = boostedDocs.indexOf(scoreDoc.doc)) >= 0) {
+          boostedMap.put(scoreDoc.doc, maxScore + boostedDocs.indexGet(idx));
         } else {
           break;
         }
       }
     }
 
+    @Override
     public int compare(Object o1, Object o2) {
-      ScoreDoc doc1 = (ScoreDoc) o1;
-      ScoreDoc doc2 = (ScoreDoc) o2;
+      final ScoreDoc doc1 = (ScoreDoc) o1;
+      final ScoreDoc doc2 = (ScoreDoc) o2;
       float score1 = doc1.score;
       float score2 = doc2.score;
       int idx;

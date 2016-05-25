@@ -29,23 +29,23 @@ public class NamedParams extends HashMap<String,Object> {
   public static float convertToFloat(Object o) {
     float f = 0;
     if (o instanceof Double) {
-      double d = (Double) o;
+      final double d = (Double) o;
       f = (float) d;
       return f;
     }
     if (o instanceof Integer) {
-      int d = (Integer) o;
-      f = (float) d;
+      final int d = (Integer) o;
+      f = d;
       return f;
     }
     if (o instanceof Long) {
-      long l = (Long) o;
-      f = (float) l;
+      final long l = (Long) o;
+      f = l;
       return f;
     }
     if (o instanceof Float) {
-      Float ff = (Float) o;
-      f = (float) ff;
+      final Float ff = (Float) o;
+      f = ff;
       return f;
     }
 
@@ -56,7 +56,7 @@ public class NamedParams extends HashMap<String,Object> {
   public NamedParams() {}
 
   public NamedParams(Map<String,Object> params) {
-    for (Map.Entry<String,Object> p : params.entrySet()) {
+    for (final Map.Entry<String,Object> p : params.entrySet()) {
       add(p.getKey(), p.getValue());
     }
   }
@@ -86,7 +86,7 @@ public class NamedParams extends HashMap<String,Object> {
   }
 
   public float getFloat(String key) {
-    Object o = get(key);
+    final Object o = get(key);
     return convertToFloat(o);
   }
 

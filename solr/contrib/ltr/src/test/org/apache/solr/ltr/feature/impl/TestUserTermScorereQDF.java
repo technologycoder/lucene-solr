@@ -30,13 +30,13 @@ public class TestUserTermScorereQDF extends TestQueryFeature {
     loadModel("Term-matchedTitleDF", RankSVMModel.class.getCanonicalName(),
         new String[] {"matchedTitleDF"},
         "{\"weights\":{\"matchedTitleDF\":1.0}}");
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "2");
     query.add("rq", "{!ltr model=Term-matchedTitleDF reRankDocs=4}");
     query.set("debugQuery", "on");
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
     assertJQ("/query" + query.toQueryString(), "/response/numFound/==4");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/id=='7'");

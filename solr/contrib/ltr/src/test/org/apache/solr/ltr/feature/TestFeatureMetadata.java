@@ -50,7 +50,7 @@ public class TestFeatureMetadata extends TestRerankBase {
 
     store.addFeature("test", OriginalScoreFeature.class.getCanonicalName(),
         "testFstore", NamedParams.EMPTY);
-    Feature feature = store.getFeatureStore("testFstore").get("test");
+    final Feature feature = store.getFeatureStore("testFstore").get("test");
     assertEquals("test", feature.getName());
     assertEquals(OriginalScoreFeature.class.getCanonicalName(), feature
         .getClass().getCanonicalName());

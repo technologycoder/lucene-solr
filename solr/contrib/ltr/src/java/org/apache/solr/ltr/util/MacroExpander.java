@@ -19,34 +19,38 @@ package org.apache.solr.ltr.util;
 
 import java.util.Map;
 
+import org.apache.solr.search.StrParser;
+import org.apache.solr.search.SyntaxError;
+
 // TODO This should be replaced with the MacroExpander inside Solr 5.2
 public class MacroExpander {
   public static final String MACRO_START = "${";
 
-  private Map<String,String> orig;
-  private String macroStart = MACRO_START;
-  private char escape = '\\';
+  private final Map<String,String> orig;
+  private final String macroStart = MACRO_START;
+  private final char escape = '\\';
 
   public MacroExpander(Map<String,String> orig) {
     this.orig = orig;
-  }
+   }
 
   public static String expand(String val, Map<String,String> params) {
-    MacroExpander mc = new MacroExpander(params);
+    final MacroExpander mc = new MacroExpander(params);
     return mc.expand(val);
   }
 
   public String expand(String val) {
     // quickest short circuit
     int idx = val.indexOf(macroStart.charAt(0));
-    if (idx < 0) return val;
+    if (idx < 0) {
+      return val;
+    }
 
     int start = 0; // start of the unprocessed part of the string
-    int end = 0;
     StringBuilder sb = null;
     for (;;) {
       idx = val.indexOf(macroStart, idx);
-      int matchedStart = idx;
+      final int matchedStart = idx;
 
       // check if escaped
       if (idx > 0) {
@@ -55,13 +59,15 @@ public class MacroExpander {
         // that's when we allow changing
         // of the escape character?
 
-        char ch = val.charAt(idx - 1);
+        final char ch = val.charAt(idx - 1);
         if (ch == escape) {
           idx += macroStart.length();
           continue;
         }
       } else if (idx < 0) {
-        if (sb == null) return val;
+        if (sb == null) {
+          return val;
+        }
         sb.append(val.substring(start));
         return sb.toString();
       }
@@ -69,7 +75,7 @@ public class MacroExpander {
       // found unescaped "${"
       idx += macroStart.length();
 
-      int rbrace = val.indexOf('}', idx);
+      final int rbrace = val.indexOf('}', idx);
       if (rbrace == -1) {
         // no matching close brace...
         continue;
@@ -86,17 +92,30 @@ public class MacroExpander {
       // update "start" to be at the end of ${...}
       start = rbrace + 1;
 
-      String paramName = val.substring(idx, rbrace);
+      // String inbetween = val.substring(idx, rbrace);
+      final StrParser parser = new StrParser(val, idx, rbrace);
+      try {
+        final String paramName = parser.getId();
+        String defVal = null;
+        final boolean hasDefault = parser.opt(':');
+        if (hasDefault) {
+          defVal = val.substring(parser.pos, rbrace);
+        }
 
-      // in the event that expansions become context dependent... consult
-      // original?
-      String replacement = orig.get(paramName);
+        // in the event that expansions become context dependent... consult original?
+        final String replacement = orig.get(paramName);
+        if (replacement != null) {
+          sb.append(replacement);
+        }
+        else if (defVal != null) {
+          sb.append(defVal);
+        }
+        else {
+          return null;
+        }
 
-      // TODO - handle a list somehow...
-      if (replacement != null) {
-        sb.append(replacement);
-      } else {
-        sb.append(val.substring(matchedStart, start));
+      } catch (final SyntaxError syntaxError) {
+        return null;
       }
 
     }

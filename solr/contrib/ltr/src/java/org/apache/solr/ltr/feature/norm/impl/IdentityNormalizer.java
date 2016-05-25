@@ -28,6 +28,7 @@ public class IdentityNormalizer extends Normalizer {
 
   }
 
+  @Override
   public void init(NamedParams params) {}
 
   @Override

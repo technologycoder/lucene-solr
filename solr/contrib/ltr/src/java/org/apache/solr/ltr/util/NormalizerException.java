@@ -17,7 +17,7 @@ package org.apache.solr.ltr.util;
  * limitations under the License.
  */
 
-public class NormalizerException extends LtrException {
+public class NormalizerException extends LTRException {
 
   private static final long serialVersionUID = 1L;
 

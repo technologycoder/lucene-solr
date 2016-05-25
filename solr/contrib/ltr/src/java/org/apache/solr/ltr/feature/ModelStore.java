@@ -34,14 +34,15 @@ import org.apache.solr.ltr.util.NameValidator;
  */
 public class ModelStore {
 
-  private Map<String,ModelMetadata> availableModels;
+  private final Map<String,LTRScoringAlgorithm> availableModels;
 
   public ModelStore() {
     availableModels = new HashMap<>();
   }
 
-  public synchronized ModelMetadata getModel(String name) throws ModelException {
-    ModelMetadata model = availableModels.get(name);
+  public synchronized LTRScoringAlgorithm getModel(String name)
+      throws ModelException {
+    final LTRScoringAlgorithm model = availableModels.get(name);
     if (model == null) {
       throw new ModelException("cannot find model " + name);
     }
@@ -64,22 +65,22 @@ public class ModelStore {
    * @return the available models as a list of Maps objects
    */
   public List<Object> modelAsManagedResources() {
-    List<Object> list = new ArrayList<>();
-    for (ModelMetadata modelmeta : availableModels.values()) {
-      Map<String,Object> modelMap = new HashMap<>();
+    final List<Object> list = new ArrayList<>();
+    for (final LTRScoringAlgorithm modelmeta : availableModels.values()) {
+      final Map<String,Object> modelMap = new HashMap<>();
       modelMap.put("name", modelmeta.getName());
-      modelMap.put("type", modelmeta.getType());
+      modelMap.put("type", modelmeta.getClass().getCanonicalName());
       modelMap.put("store", modelmeta.getFeatureStoreName());
-      List<Map<String,Object>> features = new ArrayList<>();
-      for (Feature meta : modelmeta.getFeatures()) {
-        Map<String,Object> map = new HashMap<String,Object>();
+      final List<Map<String,Object>> features = new ArrayList<>();
+      for (final Feature meta : modelmeta.getFeatures()) {
+        final Map<String,Object> map = new HashMap<String,Object>();
         map.put("name", meta.getName());
 
-        Normalizer n = meta.getNorm();
+        final Normalizer n = meta.getNorm();
 
         if (n != null) {
-          Map<String,Object> normalizer = new HashMap<>();
-          normalizer.put("type", n.getType());
+          final Map<String,Object> normalizer = new HashMap<>();
+          normalizer.put("type", n.getClass().getCanonicalName());
           normalizer.put("params", n.getParams());
           map.put("norm", normalizer);
         }
@@ -109,9 +110,9 @@ public class ModelStore {
 
   }
 
-  public synchronized void addModel(ModelMetadata modeldata)
+  public synchronized void addModel(LTRScoringAlgorithm modeldata)
       throws ModelException {
-    String name = modeldata.getName();
+    final String name = modeldata.getName();
 
     if (modeldata.getFeatures().isEmpty()) {
       throw new ModelException("no features declared for model "
@@ -126,18 +127,10 @@ public class ModelStore {
           + "' already exists. Please use a different name");
     }
 
-    String type = modeldata.getType();
-    try {
-      Class.forName(type);
-    } catch (ClassNotFoundException e) {
-      throw new ModelException("cannot find class " + type
-          + " implementing model " + name, e);
-    }
-
     // checks for duplicates in the feature
-    Set<String> names = new HashSet<>();
-    for (Feature feature : modeldata.getFeatures()) {
-      String fname = feature.getName();
+    final Set<String> names = new HashSet<>();
+    for (final Feature feature : modeldata.getFeatures()) {
+      final String fname = feature.getName();
       if (names.contains(fname)) {
         throw new ModelException("duplicated feature " + fname + " in model "
             + name);

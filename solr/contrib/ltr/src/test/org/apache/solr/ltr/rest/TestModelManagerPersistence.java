@@ -21,8 +21,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.solr.SolrTestCaseJ4.SuppressSSL;
 import org.apache.solr.ltr.TestRerankBase;
 import org.apache.solr.ltr.feature.impl.ValueFeature;
-import org.apache.solr.ltr.ranking.LTRComponent.LTRParams;
 import org.apache.solr.ltr.ranking.RankSVMModel;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,12 +40,12 @@ public class TestModelManagerPersistence extends TestRerankBase {
 
     loadFeature("feature", ValueFeature.class.getCanonicalName(), "test",
         "{\"value\":2}");
-    System.out.println(restTestHarness.query(LTRParams.FSTORE_END_POINT
-        + "/test"));
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test",
+    System.out.println(restTestHarness
+        .query(CommonLTRParams.FEATURE_STORE_END_POINT + "/test"));
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test",
         "/features/[0]/name=='feature'");
     restTestHarness.reload();
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test",
         "/features/[0]/name=='feature'");
     loadFeature("feature1", ValueFeature.class.getCanonicalName(), "test1",
         "{\"value\":2}");
@@ -53,32 +53,34 @@ public class TestModelManagerPersistence extends TestRerankBase {
         "{\"value\":2}");
     loadFeature("feature3", ValueFeature.class.getCanonicalName(), "test2",
         "{\"value\":2}");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test",
         "/features/[0]/name=='feature'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test",
         "/features/[1]/name=='feature2'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test1",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test1",
         "/features/[0]/name=='feature1'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test2",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test2",
         "/features/[0]/name=='feature3'");
     restTestHarness.reload();
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test",
         "/features/[0]/name=='feature'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test",
         "/features/[1]/name=='feature2'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test1",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test1",
         "/features/[0]/name=='feature1'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/test2",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/test2",
         "/features/[0]/name=='feature3'");
     loadModel("test-model", RankSVMModel.class.getCanonicalName(),
         new String[] {"feature"}, "test", "{\"weights\":{\"feature\":1.0}}");
-    String fstorecontent = FileUtils.readFileToString(fstorefile,"UTF-8");
-    String mstorecontent = FileUtils.readFileToString(mstorefile,"UTF-8");
+    final String fstorecontent = FileUtils
+        .readFileToString(fstorefile, "UTF-8");
+    final String mstorecontent = FileUtils
+        .readFileToString(mstorefile, "UTF-8");
 
-    System.out.println("fstore:\n");
+    System.out.println("feature-store:\n");
     System.out.println(fstorecontent);
 
-    System.out.println("mstore:\n");
+    System.out.println("model-store:\n");
     System.out.println(mstorecontent);
 
   }

@@ -40,6 +40,7 @@ import org.apache.lucene.search.Weight;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
+import org.apache.solr.ltr.feature.LTRScoringAlgorithm;
 import org.apache.solr.ltr.feature.impl.ValueFeature;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.util.FeatureException;
@@ -51,17 +52,17 @@ import org.junit.Test;
 public class TestModelQuery extends LuceneTestCase {
 
   private IndexSearcher getSearcher(IndexReader r) {
-    IndexSearcher searcher = newSearcher(r, false, false);
+    final IndexSearcher searcher = newSearcher(r, false, false);
     return searcher;
   }
 
   private static List<Feature> makeFeatures(int[] featureIds) {
-    List<Feature> features = new ArrayList<>();
-    for (int i : featureIds) {
-      ValueFeature f = new ValueFeature();
+    final List<Feature> features = new ArrayList<>();
+    for (final int i : featureIds) {
+      final ValueFeature f = new ValueFeature();
       try {
         f.init("f" + i, new NamedParams().add("value", i), i);
-      } catch (FeatureException e) {
+      } catch (final FeatureException e) {
         e.printStackTrace();
       }
       features.add(f);
@@ -70,9 +71,9 @@ public class TestModelQuery extends LuceneTestCase {
   }
 
   private static List<Feature> makeNormalizedFeatures(int[] featureIds) {
-    List<Feature> features = new ArrayList<>();
-    for (int i : featureIds) {
-      ValueFeature f = new ValueFeature();
+    final List<Feature> features = new ArrayList<>();
+    for (final int i : featureIds) {
+      final ValueFeature f = new ValueFeature();
       f.name = "f" + i;
       f.params = new NamedParams().add("value", i);
       f.id = i;
@@ -89,12 +90,14 @@ public class TestModelQuery extends LuceneTestCase {
   }
 
   private static NamedParams makeFeatureWeights(List<Feature> features) {
-    NamedParams nameParams = new NamedParams();
-    HashMap<String,Double> modelWeights = new HashMap<String,Double>();
-    for (Feature feat : features) {
+    final NamedParams nameParams = new NamedParams();
+    final HashMap<String,Double> modelWeights = new HashMap<String,Double>();
+    for (final Feature feat : features) {
       modelWeights.put(feat.name, 0.1);
     }
-    if (modelWeights.isEmpty()) modelWeights.put("", 0.0);
+    if (modelWeights.isEmpty()) {
+      modelWeights.put("", 0.0);
+    }
     nameParams.add("weights", modelWeights);
     return nameParams;
   }
@@ -102,32 +105,80 @@ public class TestModelQuery extends LuceneTestCase {
   private ModelQuery.ModelWeight performQuery(TopDocs hits,
       IndexSearcher searcher, int docid, ModelQuery model) throws IOException,
       ModelException {
-    List<LeafReaderContext> leafContexts = searcher.getTopReaderContext()
+    final List<LeafReaderContext> leafContexts = searcher.getTopReaderContext()
         .leaves();
-    int n = ReaderUtil.subIndex(hits.scoreDocs[0].doc, leafContexts);
+    final int n = ReaderUtil.subIndex(hits.scoreDocs[0].doc, leafContexts);
     final LeafReaderContext context = leafContexts.get(n);
-    int deBasedDoc = hits.scoreDocs[0].doc - context.docBase;
+    final int deBasedDoc = hits.scoreDocs[0].doc - context.docBase;
 
-    Weight weight = searcher.createNormalizedWeight(model, true);
-    Scorer scorer = weight.scorer(context);
+    final Weight weight = searcher.createNormalizedWeight(model, true);
+    final Scorer scorer = weight.scorer(context);
 
     // rerank using the field final-score
     scorer.iterator().advance(deBasedDoc);
-    float score = scorer.score();
+    scorer.score();
 
     // assertEquals(42.0f, score, 0.0001);
     // assertTrue(weight instanceof AssertingWeight);
     // (AssertingIndexSearcher)
     assertTrue(weight instanceof ModelQuery.ModelWeight);
-    ModelQuery.ModelWeight modelWeight = (ModelQuery.ModelWeight) weight;
+    final ModelQuery.ModelWeight modelWeight = (ModelQuery.ModelWeight) weight;
     return modelWeight;
 
   }
 
   @Test
+  public void testModelQueryEquality() throws ModelException {
+    final List<Feature> features = makeFeatures(new int[] {0, 1, 2});
+    final List<Feature> allFeatures = makeFeatures(
+        new int[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    final NamedParams modelParams = makeFeatureWeights(features);
+
+    final LTRScoringAlgorithm algorithm1 = new RankSVMModel(
+        "testModelName",
+        features, "testStoreName", allFeatures, modelParams);
+
+    final ModelQuery m1 = new ModelQuery(algorithm1);
+    final ModelQuery m2 = new ModelQuery(algorithm1);
+
+    assertEquals(m1, m2);
+    assertEquals(m1.hashCode(), m2.hashCode());
+
+    final HashMap<String,String> externalFeatureInfo = new HashMap<>();
+    externalFeatureInfo.put("queryIntent", "company");
+    m2.setExternalFeatureInfo(externalFeatureInfo);
+
+    assertFalse(m1.equals(m2));
+    assertFalse(m1.hashCode() == m2.hashCode());
+
+    final HashMap<String,String> externalFeatureInfo2 = new HashMap<>();
+    externalFeatureInfo2.put("queryIntent", "company");
+    m1.setExternalFeatureInfo(externalFeatureInfo2);
+
+    assertEquals(m1, m2);
+    assertEquals(m1.hashCode(), m2.hashCode());
+
+    final LTRScoringAlgorithm algorithm2 = new RankSVMModel(
+        "testModelName2",
+        features, "testStoreName", allFeatures, modelParams);
+    final ModelQuery m3 = new ModelQuery(algorithm2);
+
+    assertFalse(m1.equals(m3));
+    assertFalse(m1.hashCode() == m3.hashCode());
+
+    final LTRScoringAlgorithm algorithm3 = new RankSVMModel(
+        "testModelName",
+        features, "testStoreName3", allFeatures, modelParams);
+    final ModelQuery m4 = new ModelQuery(algorithm3);
+
+    assertFalse(m1.equals(m4));
+    assertFalse(m1.hashCode() == m4.hashCode());
+  }
+
+  @Test
   public void testModelQuery() throws IOException, ModelException {
-    Directory dir = newDirectory();
-    RandomIndexWriter w = new RandomIndexWriter(random(), dir);
+    final Directory dir = newDirectory();
+    final RandomIndexWriter w = new RandomIndexWriter(random(), dir);
 
     Document doc = new Document();
     doc.add(newStringField("id", "0", Field.Store.YES));
@@ -144,25 +195,25 @@ public class TestModelQuery extends LuceneTestCase {
     doc.add(new FloatDocValuesField("final-score", 2.0f));
     w.addDocument(doc);
 
-    IndexReader r = w.getReader();
+    final IndexReader r = w.getReader();
     w.close();
 
     // Do ordinary BooleanQuery:
-    Builder bqBuilder = new Builder();
+    final Builder bqBuilder = new Builder();
     bqBuilder.add(new TermQuery(new Term("field", "wizard")), Occur.SHOULD);
     bqBuilder.add(new TermQuery(new Term("field", "oz")), Occur.SHOULD);
-    IndexSearcher searcher = getSearcher(r);
+    final IndexSearcher searcher = getSearcher(r);
     // first run the standard query
-    TopDocs hits = searcher.search(bqBuilder.build(), 10);
+    final TopDocs hits = searcher.search(bqBuilder.build(), 10);
     assertEquals(2, hits.totalHits);
     assertEquals("0", searcher.doc(hits.scoreDocs[0].doc).get("id"));
     assertEquals("1", searcher.doc(hits.scoreDocs[1].doc).get("id"));
 
     List<Feature> features = makeFeatures(new int[] {0, 1, 2});
-    List<Feature> allFeatures = makeFeatures(new int[] {0, 1, 2, 3, 4, 5, 6, 7,
-        8, 9});
+    final List<Feature> allFeatures = makeFeatures(new int[] {0, 1, 2, 3, 4, 5,
+        6, 7, 8, 9});
     RankSVMModel meta = new RankSVMModel("test",
-        RankSVMModel.class.getCanonicalName(), features, "test", allFeatures,
+        features, "test", allFeatures,
         makeFeatureWeights(features));
 
     ModelQuery.ModelWeight modelWeight = performQuery(hits, searcher,
@@ -171,11 +222,10 @@ public class TestModelQuery extends LuceneTestCase {
     assertEquals(10, modelWeight.allFeatureValues.length);
 
     for (int i = 0; i < 3; i++) {
-      assertEquals((float) i, modelWeight.modelFeatureValuesNormalized[i],
-          0.0001);
+      assertEquals(i, modelWeight.modelFeatureValuesNormalized[i], 0.0001);
     }
     for (int i = 0; i < 10; i++) {
-      assertEquals((float) i, modelWeight.allFeatureValues[i], 0.0001);
+      assertEquals(i, modelWeight.allFeatureValues[i], 0.0001);
     }
 
     for (int i = 0; i < 10; i++) {
@@ -183,9 +233,9 @@ public class TestModelQuery extends LuceneTestCase {
 
     }
 
-    int[] mixPositions = new int[] {8, 2, 4, 9, 0};
+    final int[] mixPositions = new int[] {8, 2, 4, 9, 0};
     features = makeFeatures(mixPositions);
-    meta = new RankSVMModel("test", RankSVMModel.class.getCanonicalName(),
+    meta = new RankSVMModel("test",
         features, "test", allFeatures, makeFeatureWeights(features));
 
     modelWeight = performQuery(hits, searcher, hits.scoreDocs[0].doc,
@@ -194,16 +244,16 @@ public class TestModelQuery extends LuceneTestCase {
         modelWeight.modelFeatureValuesNormalized.length);
 
     for (int i = 0; i < mixPositions.length; i++) {
-      assertEquals((float) mixPositions[i],
+      assertEquals(mixPositions[i],
           modelWeight.modelFeatureValuesNormalized[i], 0.0001);
     }
     for (int i = 0; i < 10; i++) {
-      assertEquals((float) i, modelWeight.allFeatureValues[i], 0.0001);
+      assertEquals(i, modelWeight.allFeatureValues[i], 0.0001);
     }
 
-    int[] noPositions = new int[] {};
+    final int[] noPositions = new int[] {};
     features = makeFeatures(noPositions);
-    meta = new RankSVMModel("test", RankSVMModel.class.getCanonicalName(),
+    meta = new RankSVMModel("test",
         features, "test", allFeatures, makeFeatureWeights(features));
 
     modelWeight = performQuery(hits, searcher, hits.scoreDocs[0].doc,
@@ -212,8 +262,8 @@ public class TestModelQuery extends LuceneTestCase {
 
     // test normalizers
     features = makeNormalizedFeatures(mixPositions);
-    RankSVMModel normMeta = new RankSVMModel("test",
-        RankSVMModel.class.getCanonicalName(), features, "test", allFeatures,
+    final RankSVMModel normMeta = new RankSVMModel("test",
+        features, "test", allFeatures,
         makeFeatureWeights(features));
 
     modelWeight = performQuery(hits, searcher, hits.scoreDocs[0].doc,
@@ -224,7 +274,7 @@ public class TestModelQuery extends LuceneTestCase {
       assertEquals(42.42f, modelWeight.modelFeatureValuesNormalized[i], 0.0001);
     }
     for (int i = 0; i < 10; i++) {
-      assertEquals((float) i, modelWeight.allFeatureValues[i], 0.0001);
+      assertEquals(i, modelWeight.allFeatureValues[i], 0.0001);
     }
     r.close();
     dir.close();

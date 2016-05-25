@@ -28,28 +28,31 @@ public class TestMacroExpander {
 
   @Test
   public void testEmptyExpander() {
-    Map<String,String> efi = new HashMap<String,String>();
-    MacroExpander macroExpander = new MacroExpander(efi);
+    final Map<String,String> efi = new HashMap<String,String>();
+    final MacroExpander macroExpander = new MacroExpander(efi);
 
     assertEquals("", macroExpander.expand(""));
     assertEquals("foo", macroExpander.expand("foo"));
     assertEquals("$foo", macroExpander.expand("$foo"));
-    assertEquals("${foo}", macroExpander.expand("${foo}"));
+    assertEquals(null, macroExpander.expand("${foo}"));
     assertEquals("{foo}", macroExpander.expand("{foo}"));
-    assertEquals("${foo}", MacroExpander.expand("${foo}", efi));
+    assertEquals("default", macroExpander.expand("${foo:default}"));
+    assertEquals(null, MacroExpander.expand("${foo}", efi));
   }
 
   @Test
   public void testExpander() {
-    Map<String,String> efi = new HashMap<String,String>();
+    final Map<String,String> efi = new HashMap<String,String>();
     efi.put("foo", "bar");
     efi.put("baz", "bat");
-    MacroExpander macroExpander = new MacroExpander(efi);
+    final MacroExpander macroExpander = new MacroExpander(efi);
 
     assertEquals("", macroExpander.expand(""));
     assertEquals("foo", macroExpander.expand("foo"));
     assertEquals("$foo", macroExpander.expand("$foo"));
     assertEquals("bar", macroExpander.expand("${foo}"));
+    assertEquals("bar", macroExpander.expand("${foo:default}"));
+    assertEquals("default", macroExpander.expand("${bar:default}"));
     assertEquals("{foo}", macroExpander.expand("{foo}"));
     assertEquals("bar", MacroExpander.expand("${foo}", efi));
     assertEquals("foo bar baz bat",

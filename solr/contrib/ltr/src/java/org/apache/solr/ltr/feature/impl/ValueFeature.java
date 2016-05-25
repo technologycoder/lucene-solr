@@ -33,6 +33,8 @@ public class ValueFeature extends Feature {
 
   protected float configValue = -1f;
   protected String configValueStr = null;
+  /** name of the attribute containing the value of this feature **/
+  private static final String VALUE_FIELD = "value";
 
   public ValueFeature() {}
 
@@ -40,21 +42,21 @@ public class ValueFeature extends Feature {
   public void init(String name, NamedParams params, int id)
       throws FeatureException {
     super.init(name, params, id);
-    Object paramValue = params.get("value");
+    final Object paramValue = params.get(VALUE_FIELD);
     if (paramValue == null) {
       throw new FeatureException("Missing the field 'value' in params for "
           + this);
     }
 
     if (paramValue instanceof String) {
-      this.configValueStr = (String) paramValue;
-      if (this.configValueStr.trim().isEmpty()) {
+      configValueStr = (String) paramValue;
+      if (configValueStr.trim().isEmpty()) {
         throw new FeatureException("Empty field 'value' in params for " + this);
       }
     } else {
       try {
-        this.configValue = NamedParams.convertToFloat(paramValue);
-      } catch (NumberFormatException e) {
+        configValue = NamedParams.convertToFloat(paramValue);
+      } catch (final NumberFormatException e) {
         throw new FeatureException("Invalid type for 'value' in params for "
             + this);
       }
@@ -84,7 +86,12 @@ public class ValueFeature extends Feature {
       // otherwise use the
       // constant value provided in the config.
       if (configValueStr != null) {
-        featureValue = Float.parseFloat(macroExpander.expand(configValueStr));
+        final String expandedValue = macroExpander.expand(configValueStr);
+        if (expandedValue == null) {
+          throw new FeatureException("Feature requires efi parameter that was not passed in request.");
+        }
+
+        featureValue = Float.parseFloat(expandedValue);
       } else {
         featureValue = configValue;
       }
@@ -111,7 +118,7 @@ public class ValueFeature extends Feature {
         super(weight);
         this.constScore = constScore;
         this.featureType = featureType;
-        this.itr = new MatchAllIterator();
+        itr = new MatchAllIterator();
       }
 
       @Override

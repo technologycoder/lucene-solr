@@ -18,26 +18,33 @@ package org.apache.solr.ltr.ranking;
  */
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.ReaderUtil;
-import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Weight;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
+import org.apache.solr.ltr.feature.FeatureStore;
 import org.apache.solr.ltr.log.FeatureLogger;
-import org.apache.solr.ltr.ranking.LTRQParserPlugin.LTRQParser;
+import org.apache.solr.ltr.log.LoggingModel;
 import org.apache.solr.ltr.ranking.ModelQuery.ModelWeight;
+import org.apache.solr.ltr.ranking.ModelQuery.ModelWeight.ModelScorer;
+import org.apache.solr.ltr.rest.ManagedFeatureStore;
+import org.apache.solr.ltr.util.CommonLTRParams;
+import org.apache.solr.ltr.util.LTRUtils;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.ResultContext;
 import org.apache.solr.response.transform.DocTransformer;
 import org.apache.solr.response.transform.TransformerFactory;
 import org.apache.solr.search.SolrIndexSearcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This transformer will take care to generate and append in the response the
@@ -47,7 +54,8 @@ import org.apache.solr.search.SolrIndexSearcher;
  */
 public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
 
-  SolrQueryRequest req;
+  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
+      .lookup().lookupClass());
 
   @Override
   public void init(@SuppressWarnings("rawtypes") NamedList args) {
@@ -57,26 +65,37 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
   @Override
   public DocTransformer create(String name, SolrParams params,
       SolrQueryRequest req) {
-    this.req = req;
-    return new FeatureTransformer(name);
+
+    // Hint to enable feature vector cache since we are requesting features
+    req.getContext().put(CommonLTRParams.LOG_FEATURES_QUERY_PARAM, true);
+    req.getContext().put(CommonLTRParams.STORE, params.get(CommonLTRParams.STORE));
+
+    return new FeatureTransformer(name, params, req);
   }
 
   class FeatureTransformer extends DocTransformer {
 
     String name;
+    SolrParams params;
+    SolrQueryRequest req;
+
     List<LeafReaderContext> leafContexts;
     SolrIndexSearcher searcher;
     ModelQuery reRankModel;
     ModelWeight modelWeight;
-    FeatureLogger<?> featurelLogger;
+    FeatureLogger<?> featureLogger;
+    boolean resultsReranked;
 
     /**
      * @param name
      *          Name of the field to be added in a document representing the
      *          feature vectors
      */
-    public FeatureTransformer(String name) {
+    public FeatureTransformer(String name, SolrParams params,
+        SolrQueryRequest req) {
       this.name = name;
+      this.params = params;
+      this.req = req;
     }
 
     @Override
@@ -87,27 +106,68 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
     @Override
     public void setContext(ResultContext context) {
       super.setContext(context);
-      if (context == null) return;
-      if (context.getRequest() == null) return;
-      reRankModel = (ModelQuery) req.getContext()
-          .get(LTRQParser.MODEL);
-      if (reRankModel == null) throw new SolrException(
-          org.apache.solr.common.SolrException.ErrorCode.BAD_REQUEST,
-          "model is null");
-      reRankModel.setRequest(context.getRequest());
-      featurelLogger = reRankModel.getFeatureLogger();
+      if (context == null) {
+        return;
+      }
+      if (context.getRequest() == null) {
+        return;
+      }
+
       searcher = context.getSearcher();
-      if (searcher == null) throw new SolrException(
-          org.apache.solr.common.SolrException.ErrorCode.BAD_REQUEST,
-          "searcher is null");
+      if (searcher == null) {
+        throw new SolrException(
+            org.apache.solr.common.SolrException.ErrorCode.BAD_REQUEST,
+            "searcher is null");
+      }
       leafContexts = searcher.getTopReaderContext().leaves();
+
+      // Setup ModelQuery
+      reRankModel = (ModelQuery) req.getContext().get(CommonLTRParams.MODEL);
+      resultsReranked = (reRankModel != null);
+      String featureStoreName = params.get(CommonLTRParams.STORE);
+      if (!resultsReranked || (featureStoreName != null && (!featureStoreName.equals(reRankModel.getFeatureStoreName())))) {
+        // if store is set in the trasformer we should overwrite the logger
+        if (featureStoreName == null){
+            featureStoreName =CommonLTRParams.DEFAULT_FEATURE_STORE_NAME;
+        }
+
+        final ManagedFeatureStore fr = (ManagedFeatureStore) req.getCore().getRestManager()
+            .getManagedResource(CommonLTRParams.FEATURE_STORE_END_POINT);
+
+        final FeatureStore store = fr.getFeatureStore(featureStoreName);
+
+        try {
+          final LoggingModel lm = new LoggingModel(featureStoreName,store.getFeatures());
+          reRankModel = new ModelQuery(lm);
+
+          // Local transformer efi if provided
+          final Map<String,String> externalFeatureInfo = LTRUtils.extractEFIParams(params);
+          reRankModel.setExternalFeatureInfo(externalFeatureInfo);
+
+          reRankModel.setOriginalQuery(context.getQuery());
+
+        }catch (final Exception e) {
+          logger.error("retrieving the feature store {}\n{}", featureStoreName, e);
+          throw new SolrException(ErrorCode.BAD_REQUEST,
+              "retrieving the feature store "+featureStoreName);
+        }
+      }
+
+      if (reRankModel.getFeatureLogger() == null){
+        final String featureResponseFormat = req.getParams().get(CommonLTRParams.FV_RESPONSE_WRITER,"csv");
+        reRankModel.setFeatureLogger(FeatureLogger.getFeatureLogger(featureResponseFormat));
+      }
+      reRankModel.setRequest(req);
+
+      featureLogger = reRankModel.getFeatureLogger();
+
       Weight w;
       try {
         w = reRankModel.createWeight(searcher, true);
-      } catch (IOException e) {
+      } catch (final IOException e) {
         throw new SolrException(ErrorCode.BAD_REQUEST, e.getMessage(), e);
       }
-      if (w == null || !(w instanceof ModelWeight)) {
+      if ((w == null) || !(w instanceof ModelWeight)) {
         throw new SolrException(ErrorCode.BAD_REQUEST,
             "error logging the features, model weight is null");
       }
@@ -118,23 +178,29 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
     @Override
     public void transform(SolrDocument doc, int docid, float score)
         throws IOException {
-      Object fv = featurelLogger.getFeatureVector(docid, reRankModel, searcher);
+      final Object fv = featureLogger.getFeatureVector(docid, reRankModel,
+          searcher);
       if (fv == null) { // FV for this document was not in the cache
-        int n = ReaderUtil.subIndex(docid, leafContexts);
+        final int n = ReaderUtil.subIndex(docid, leafContexts);
         final LeafReaderContext atomicContext = leafContexts.get(n);
-        int deBasedDoc = docid - atomicContext.docBase;
-        Scorer r = modelWeight.scorer(atomicContext);
-        if ((r == null || r.iterator().advance(deBasedDoc) != docid)
-            && fv == null) {
-          doc.addField(name, featurelLogger.makeFeatureVector(new String[0],
+        final int deBasedDoc = docid - atomicContext.docBase;
+        final ModelScorer r = modelWeight.scorer(atomicContext);
+        if (((r == null) || (r.iterator().advance(deBasedDoc) != docid))
+            && (fv == null)) {
+          doc.addField(name, featureLogger.makeFeatureVector(new String[0],
               new float[0], new boolean[0]));
         } else {
-          float finalScore = r.score();
-          String[] names = modelWeight.allFeatureNames;
-          float[] values = modelWeight.allFeatureValues;
-          boolean[] valuesUsed = modelWeight.allFeaturesUsed;
+          if (!resultsReranked) {
+            // If results have not been reranked, the score passed in is the original query's
+            // score, which some features can use instead of recalculating it
+            r.setDocInfoParam(CommonLTRParams.ORIGINAL_DOC_SCORE, new Float(score));
+          }
+          r.score();
+          final String[] names = modelWeight.allFeatureNames;
+          final float[] values = modelWeight.allFeatureValues;
+          final boolean[] valuesUsed = modelWeight.allFeaturesUsed;
           doc.addField(name,
-              featurelLogger.makeFeatureVector(names, values, valuesUsed));
+              featureLogger.makeFeatureVector(names, values, valuesUsed));
         }
       } else {
         doc.addField(name, fv);

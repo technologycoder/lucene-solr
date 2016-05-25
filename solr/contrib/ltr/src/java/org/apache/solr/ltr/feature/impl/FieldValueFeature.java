@@ -29,6 +29,7 @@ import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.ranking.FeatureScorer;
 import org.apache.solr.ltr.ranking.FeatureWeight;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
 
@@ -42,10 +43,11 @@ public class FieldValueFeature extends Feature {
 
   }
 
+  @Override
   public void init(String name, NamedParams params, int id)
       throws FeatureException {
     super.init(name, params, id);
-    if (!params.containsKey("field")) {
+    if (!params.containsKey(CommonLTRParams.FEATURE_FIELD_PARAM)) {
       throw new FeatureException("missing param field");
     }
   }
@@ -53,8 +55,8 @@ public class FieldValueFeature extends Feature {
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    this.fieldName = (String) params.get("field");
-    fields.add(this.fieldName);
+    fieldName = (String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM);
+    fields.add(fieldName);
     return new FieldValueFeatureWeight(searcher, name, params, norm, id);
   }
 
@@ -85,25 +87,26 @@ public class FieldValueFeature extends Feature {
           LeafReaderContext context) {
         super(weight);
         this.context = context;
-        this.itr = new MatchAllIterator();
+        itr = new MatchAllIterator();
       }
 
       @Override
       public float score() throws IOException {
 
         try {
-          Document document = context.reader().document(itr.docID(), fields);
-          IndexableField field = document.getField(fieldName);
+          final Document document = context.reader().document(itr.docID(),
+              fields);
+          final IndexableField field = document.getField(fieldName);
           if (field == null) {
             // logger.debug("no field {}", f);
             // TODO define default value
             return 0;
           }
-          Number number = field.numericValue();
+          final Number number = field.numericValue();
           if (number != null) {
             return number.floatValue();
           } else {
-            String string = field.stringValue();
+            final String string = field.stringValue();
             // boolean values in the index are encoded with the
             // chars T/F
             if (string.equals("T")) {
@@ -113,7 +116,7 @@ public class FieldValueFeature extends Feature {
               return 0;
             }
           }
-        } catch (IOException e) {
+        } catch (final IOException e) {
           // TODO discuss about about feature failures:
           // do we want to return a default value?
           // do we want to fail?

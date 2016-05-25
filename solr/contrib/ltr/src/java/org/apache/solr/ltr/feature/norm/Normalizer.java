@@ -18,6 +18,7 @@ package org.apache.solr.ltr.feature.norm;
  */
 
 import org.apache.lucene.search.Explanation;
+import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.feature.norm.impl.StandardNormalizer;
 import org.apache.solr.ltr.util.NamedParams;
@@ -34,19 +35,10 @@ import org.apache.solr.ltr.util.NormalizerException;
  */
 public abstract class Normalizer {
 
-  protected String type = this.getClass().getCanonicalName();
   NamedParams params;
-
-  public String getType() {
-    return type;
-  }
 
   public NamedParams getParams() {
     return params;
-  }
-
-  public void setType(String type) {
-    this.type = type;
   }
 
   public void init(NamedParams params) throws NormalizerException {
@@ -56,11 +48,24 @@ public abstract class Normalizer {
   public abstract float normalize(float value);
 
   public Explanation explain(Explanation explain) {
-    float normalized = normalize(explain.getValue());
-    String explainDesc = "normalized using " + type;
-    if (params != null) explainDesc += " [params " + params + "]";
+    final float normalized = normalize(explain.getValue());
+    String explainDesc = "normalized using " + getClass().getSimpleName();
+    if (params != null) {
+      explainDesc += " [params " + params + "]";
+    }
 
     return Explanation.match(normalized, explainDesc, explain);
+  }
+
+  public static Normalizer getInstance(String type, NamedParams params,
+    SolrResourceLoader solrResourceLoader) {
+    final Normalizer f = solrResourceLoader.newInstance(type, Normalizer.class);
+    if (params == null) {
+      params = NamedParams.EMPTY;
+    }
+    f.init(params);
+    return f;
+
   }
 
 }

@@ -26,6 +26,7 @@ import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.ltr.rest.ManagedFeatureStore;
 import org.apache.solr.ltr.rest.ManagedModelStore;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.rest.ManagedResource;
 import org.apache.solr.rest.ManagedResourceObserver;
 import org.apache.solr.util.plugin.SolrCoreAware;
@@ -37,19 +38,6 @@ import org.apache.solr.util.plugin.SolrCoreAware;
  */
 public class LTRComponent extends SearchComponent implements SolrCoreAware,
     ManagedResourceObserver {
-
-  // TODO: This is the Solr way, move these to LTRParams in solr.common.params
-  public interface LTRParams {
-    // Set to true to turn on feature vectors in the LTRComponent
-    public static final String FV = "fv";
-    public static final String FV_RESPONSE_WRITER = "fvwt";
-    public static final String FSTORE_END_POINT = "/schema/fstore";
-    public static final String MSTORE_END_POINT = "/schema/mstore";
-
-  }
-
-  public static final String LOGGER_NAME = "solr-feature-logger";
-  public static final String FEATURE_PARAM = "featureVectors";
 
   @SuppressWarnings("rawtypes")
   @Override
@@ -74,15 +62,15 @@ public class LTRComponent extends SearchComponent implements SolrCoreAware,
 
   @Override
   public void inform(SolrCore core) {
-    core.getRestManager().addManagedResource(LTRParams.FSTORE_END_POINT,
-        ManagedFeatureStore.class);
-    ManagedFeatureStore fr = (ManagedFeatureStore) core.getRestManager()
-        .getManagedResource(LTRParams.FSTORE_END_POINT);
-    core.getRestManager().addManagedResource(LTRParams.MSTORE_END_POINT,
-        ManagedModelStore.class);
+    core.getRestManager().addManagedResource(
+        CommonLTRParams.FEATURE_STORE_END_POINT, ManagedFeatureStore.class);
+    final ManagedFeatureStore fr = (ManagedFeatureStore) core.getRestManager()
+        .getManagedResource(CommonLTRParams.FEATURE_STORE_END_POINT);
+    core.getRestManager().addManagedResource(
+        CommonLTRParams.MODEL_STORE_END_POINT, ManagedModelStore.class);
 
-    ManagedModelStore mr = (ManagedModelStore) core.getRestManager()
-        .getManagedResource(LTRParams.MSTORE_END_POINT);
+    final ManagedModelStore mr = (ManagedModelStore) core.getRestManager()
+        .getManagedResource(CommonLTRParams.MODEL_STORE_END_POINT);
     // core.getResourceLoader().getManagedResourceRegistry().registerManagedResource(LTRParams.FSTORE_END_POINT,
     // , observer);
     mr.init(fr);

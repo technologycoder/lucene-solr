@@ -29,7 +29,7 @@ import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.ranking.FeatureScorer;
 import org.apache.solr.ltr.ranking.FeatureWeight;
-import org.apache.solr.ltr.ranking.LTRRescorer;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.NamedParams;
 
 public class OriginalScoreFeature extends Feature {
@@ -51,27 +51,28 @@ public class OriginalScoreFeature extends Feature {
 
     }
 
+    @Override
     public void process() throws IOException {
       // I can't set w before in the constructor because I would need to have it
       // in the query for doing that. But the query/feature is shared among
       // different threads so I can't set the original query there.
-      w = searcher.createNormalizedWeight(this.originalQuery, true);
+      w = searcher.createNormalizedWeight(originalQuery, true);
     };
 
     @Override
     public Explanation explain(LeafReaderContext context, int doc)
         throws IOException {
       // Explanation e = w.explain(context, doc);
-      Scorer s = w.scorer(context);
+      final Scorer s = w.scorer(context);
       s.iterator().advance(doc);
-      float score = s.score();
+      final float score = s.score();
       return Explanation.match(score, "original score query: " + originalQuery);
     }
 
     @Override
     public FeatureScorer scorer(LeafReaderContext context) throws IOException {
 
-      Scorer originalScorer = w.scorer(context);
+      final Scorer originalScorer = w.scorer(context);
       return new OriginalScoreScorer(this, originalScorer);
     }
 
@@ -88,9 +89,8 @@ public class OriginalScoreFeature extends Feature {
         // This is done to improve the speed of feature extraction. Since this
         // was already scored in step 1
         // we shouldn't need to calc original score again.
-        return this.hasDocParam(LTRRescorer.ORIGINAL_DOC_NAME) ? (Float) this
-            .getDocParam(LTRRescorer.ORIGINAL_DOC_NAME) : originalScorer
-            .score();
+        return hasDocParam(CommonLTRParams.ORIGINAL_DOC_SCORE) ? (Float) getDocParam(CommonLTRParams.ORIGINAL_DOC_SCORE)
+            : originalScorer.score();
       }
 
       @Override

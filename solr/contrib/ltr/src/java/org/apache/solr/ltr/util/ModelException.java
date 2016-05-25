@@ -17,7 +17,7 @@ package org.apache.solr.ltr.util;
  * limitations under the License.
  */
 
-public class ModelException extends LtrException {
+public class ModelException extends LTRException {
 
   private static final long serialVersionUID = 1L;
 

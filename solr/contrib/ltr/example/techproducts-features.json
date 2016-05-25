@@ -21,6 +21,6 @@
 {
     "name" : "productNameMatchQuery",
     "type" : "org.apache.solr.ltr.feature.impl.SolrFeature",
-    "params" : { "q" : "{!field f=name}${query}" }
+    "params" : { "q" : "{!field f=name}${user_query}" }
 }
 ]

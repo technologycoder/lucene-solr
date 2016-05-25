@@ -26,6 +26,7 @@ public class StandardNormalizer extends Normalizer {
   private float avg;
   private float std;
 
+  @Override
   public void init(NamedParams params) throws NormalizerException {
     super.init(params);
     if (!params.containsKey("avg")) {
@@ -36,7 +37,9 @@ public class StandardNormalizer extends Normalizer {
     }
     avg = params.getFloat("avg", 0);
     std = params.getFloat("std", 1);
-    if (std <= 0) throw new NormalizerException("std must be > 0");
+    if (std <= 0) {
+      throw new NormalizerException("std must be > 0");
+    }
   }
 
   @Override

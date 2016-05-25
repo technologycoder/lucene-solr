@@ -36,23 +36,23 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Weight;
-import org.apache.lucene.search.Scorer.ChildScorer;
-import org.apache.solr.ltr.feature.ModelMetadata;
+import org.apache.solr.ltr.feature.LTRScoringAlgorithm;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.log.FeatureLogger;
+import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.request.SolrQueryRequest;
 
 /**
- * The ranking query that is run, reranking results using the ModelMetadata
- * algorithm
+ * The ranking query that is run, reranking results using the
+ * LTRScoringAlgorithm algorithm
  */
 public class ModelQuery extends Query {
 
   // contains a description of the model
-  protected ModelMetadata meta;
+  protected LTRScoringAlgorithm meta;
   // feature logger to output the features.
-  private FeatureLogger fl = null;
+  protected FeatureLogger<?> fl;
   // Map of external parameters, such as query intent, that can be used by
   // features
   protected Map<String,String> efi;
@@ -61,11 +61,11 @@ public class ModelQuery extends Query {
   // Original solr request
   protected SolrQueryRequest request;
 
-  public ModelQuery(ModelMetadata meta) {
+  public ModelQuery(LTRScoringAlgorithm meta) {
     this.meta = meta;
   }
 
-  public ModelMetadata getMetadata() {
+  public LTRScoringAlgorithm getMetadata() {
     return meta;
   }
 
@@ -74,7 +74,11 @@ public class ModelQuery extends Query {
   }
 
   public FeatureLogger getFeatureLogger() {
-    return this.fl;
+    return fl;
+  }
+
+  public String getFeatureStoreName(){
+    return meta.getFeatureStoreName();
   }
 
   public Collection<Feature> getAllFeatures() {
@@ -82,11 +86,15 @@ public class ModelQuery extends Query {
   }
 
   public void setOriginalQuery(Query mainQuery) {
-    this.originalQuery = mainQuery;
+    originalQuery = mainQuery;
   }
 
   public void setExternalFeatureInfo(Map<String,String> externalFeatureInfo) {
-    this.efi = externalFeatureInfo;
+    efi = externalFeatureInfo;
+  }
+
+  public Map<String,String> getExternalFeatureInfo() {
+    return efi;
   }
 
   public void setRequest(SolrQueryRequest request) {
@@ -96,25 +104,41 @@ public class ModelQuery extends Query {
   @Override
   public int hashCode() {
     final int prime = 31;
-    int result = super.hashCode();
-    result = prime * result + ((meta == null) ? 0 : meta.hashCode());
-    result = prime * result
+    int result = classHash();
+    result = (prime * result) + ((meta == null) ? 0 : meta.hashCode());
+    result = (prime * result)
         + ((originalQuery == null) ? 0 : originalQuery.hashCode());
-    result = prime * result + ((efi == null) ? 0 : originalQuery.hashCode());
-    result = prime * result + this.toString().hashCode();
+    result = (prime * result) + ((efi == null) ? 0 : efi.hashCode());
+    result = (prime * result) + this.toString().hashCode();
     return result;
   }
+@Override
+  public boolean equals(Object o) {
+    return sameClassAs(o) &&  equalsTo(getClass().cast(o));
+  }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!super.equals(obj)) return false;
-    ModelQuery other = (ModelQuery) obj;
+  private boolean equalsTo(ModelQuery other) {
     if (meta == null) {
-      if (other.meta != null) return false;
-    } else if (!meta.equals(other.meta)) return false;
+      if (other.meta != null) {
+        return false;
+      }
+    } else if (!meta.equals(other.meta)) {
+      return false;
+    }
     if (originalQuery == null) {
-      if (other.originalQuery != null) return false;
-    } else if (!originalQuery.equals(other.originalQuery)) return false;
+      if (other.originalQuery != null) {
+        return false;
+      }
+    } else if (!originalQuery.equals(other.originalQuery)) {
+      return false;
+    }
+    if (efi == null) {
+      if (other.efi != null) {
+        return false;
+      }
+    } else if (!efi.equals(other.efi)) {
+      return false;
+    }
     return true;
   }
 
@@ -129,8 +153,8 @@ public class ModelQuery extends Query {
   @Override
   public ModelWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    Collection<Feature> features = this.getAllFeatures();
-    List<Feature> modelFeatures = this.getFeatures();
+    final Collection<Feature> features = getAllFeatures();
+    final List<Feature> modelFeatures = getFeatures();
 
     return new ModelWeight(searcher, getWeights(modelFeatures, searcher,
         needsScores), getWeights(features, searcher, needsScores));
@@ -138,16 +162,23 @@ public class ModelQuery extends Query {
 
   private FeatureWeight[] getWeights(Collection<Feature> features,
       IndexSearcher searcher, boolean needsScores) throws IOException {
-    FeatureWeight[] arr = new FeatureWeight[features.size()];
+    final FeatureWeight[] arr = new FeatureWeight[features.size()];
     int i = 0;
-    SolrQueryRequest req = this.getRequest();
+    final SolrQueryRequest req = getRequest();
     // since the feature store is a linkedhashmap order is preserved
-    for (Feature f : features) {
-      FeatureWeight fw = f.createWeight(searcher, needsScores);
-      fw.setRequest(req);
-      fw.setOriginalQuery(originalQuery);
-      fw.setExternalFeatureInfo(efi);
-      fw.process();
+    for (final Feature f : features) {
+      final FeatureWeight fw = f.createWeight(searcher, needsScores);
+
+      try{
+        fw.setRequest(req);
+        fw.setOriginalQuery(originalQuery);
+        fw.setExternalFeatureInfo(efi);
+        fw.process();
+      } catch (final Exception e) {
+        throw new FeatureException("Exception for " + fw.toString() + " "
+            + e.getMessage(), e);
+      }
+
       arr[i] = fw;
       ++i;
     }
@@ -178,12 +209,12 @@ public class ModelQuery extends Query {
         FeatureWeight[] allFeatures) {
       super(ModelQuery.this);
       this.searcher = searcher;
-      this.allFeatureWeights = allFeatures;
+      allFeatureWeights = allFeatures;
       this.modelFeatures = modelFeatures;
-      this.modelFeatureValuesNormalized = new float[modelFeatures.length];
-      this.allFeatureValues = new float[allFeatures.length];
-      this.allFeatureNames = new String[allFeatures.length];
-      this.allFeaturesUsed = new boolean[allFeatures.length];
+      modelFeatureValuesNormalized = new float[modelFeatures.length];
+      allFeatureValues = new float[allFeatures.length];
+      allFeatureNames = new String[allFeatures.length];
+      allFeaturesUsed = new boolean[allFeatures.length];
 
       for (int i = 0; i < allFeatures.length; ++i) {
         allFeatureNames[i] = allFeatures[i].getName();
@@ -196,10 +227,10 @@ public class ModelQuery extends Query {
      */
     public void normalize() {
       int pos = 0;
-      for (FeatureWeight feature : modelFeatures) {
-        int featureId = feature.getId();
+      for (final FeatureWeight feature : modelFeatures) {
+        final int featureId = feature.getId();
         if (allFeaturesUsed[featureId]) {
-          Normalizer norm = feature.getNorm();
+          final Normalizer norm = feature.getNorm();
           modelFeatureValuesNormalized[pos] = norm
               .normalize(allFeatureValues[featureId]);
         } else {
@@ -214,24 +245,26 @@ public class ModelQuery extends Query {
         throws IOException {
       // FIXME: This explain doens't skip null scorers like the scorer()
       // function
-      Explanation[] explanations = new Explanation[allFeatureValues.length];
+      final Explanation[] explanations = new Explanation[allFeatureValues.length];
       int index = 0;
-      for (FeatureWeight feature : allFeatureWeights) {
+      for (final FeatureWeight feature : allFeatureWeights) {
         explanations[index++] = feature.explain(context, doc);
       }
 
-      List<Explanation> featureExplanations = new ArrayList<>();
-      for (FeatureWeight f : modelFeatures) {
-        Normalizer n = f.getNorm();
+      final List<Explanation> featureExplanations = new ArrayList<>();
+      for (final FeatureWeight f : modelFeatures) {
+        final Normalizer n = f.getNorm();
         Explanation e = explanations[f.id];
-        if (n != IdentityNormalizer.INSTANCE) e = n.explain(e);
+        if (n != IdentityNormalizer.INSTANCE) {
+          e = n.explain(e);
+        }
         featureExplanations.add(e);
       }
       // TODO this calls twice the scorers, could be optimized.
-      ModelScorer bs = scorer(context);
+      final ModelScorer bs = scorer(context);
       bs.iterator().advance(doc);
 
-      float finalScore = bs.score();
+      final float finalScore = bs.score();
 
       return meta.explain(context, doc, finalScore, featureExplanations);
 
@@ -244,14 +277,14 @@ public class ModelQuery extends Query {
 
     @Override
     public void normalize(float norm, float topLevelBoost) {
-      for (FeatureWeight feature : allFeatureWeights) {
+      for (final FeatureWeight feature : allFeatureWeights) {
         feature.normalize(norm, topLevelBoost);
       }
     }
 
     @Override
     public void extractTerms(Set<Term> terms) {
-      for (FeatureWeight feature : allFeatureWeights) {
+      for (final FeatureWeight feature : allFeatureWeights) {
         feature.extractTerms(terms);
       }
     }
@@ -264,12 +297,12 @@ public class ModelQuery extends Query {
 
     @Override
     public ModelScorer scorer(LeafReaderContext context) throws IOException {
-      List<FeatureScorer> featureScorers = new ArrayList<FeatureScorer>(
+      final List<FeatureScorer> featureScorers = new ArrayList<FeatureScorer>(
           allFeatureWeights.length);
-      for (int i = 0; i < allFeatureWeights.length; i++) {
-        FeatureScorer scorer = allFeatureWeights[i].scorer(context);
+      for (final FeatureWeight allFeatureWeight : allFeatureWeights) {
+        final FeatureScorer scorer = allFeatureWeight.scorer(context);
         if (scorer != null) {
-          featureScorers.add(allFeatureWeights[i].scorer(context));
+          featureScorers.add(allFeatureWeight.scorer(context));
         }
       }
 
@@ -288,12 +321,12 @@ public class ModelQuery extends Query {
       public ModelScorer(Weight weight, List<FeatureScorer> featureScorers) {
         super(weight);
         docInfo = new HashMap<String,Object>();
-        for (FeatureScorer subSocer : featureScorers) {
+        for (final FeatureScorer subSocer : featureScorers) {
           subSocer.setDocInfo(docInfo);
         }
 
         if (featureScorers.size() <= 1) { // TODO: Allow the use of dense
-                                          // features in other cases
+          // features in other cases
           featureTraversalScorer = new DenseModelScorer(weight, featureScorers);
         } else {
           featureTraversalScorer = new SparseModelScorer(weight, featureScorers);
@@ -343,13 +376,13 @@ public class ModelQuery extends Query {
             throw new IllegalArgumentException(
                 "There must be at least 2 subScorers");
           }
-          this.subScorers = new DisiPriorityQueue(featureScorers.size());
-          for (Scorer scorer : featureScorers) {
+          subScorers = new DisiPriorityQueue(featureScorers.size());
+          for (final Scorer scorer : featureScorers) {
             final DisiWrapper w = new DisiWrapper(scorer);
-            this.subScorers.add(w);
+            subScorers.add(w);
           }
 
-          itr = new ModelQuerySparseIterator(this.subScorers);
+          itr = new ModelQuerySparseIterator(subScorers);
         }
 
         @Override
@@ -359,7 +392,7 @@ public class ModelQuery extends Query {
 
         @Override
         public float score() throws IOException {
-          DisiWrapper topList = subScorers.topList();
+          final DisiWrapper topList = subScorers.topList();
           // If target doc we wanted to advance to matches the actual doc
           // the underlying features advanced to, perform the feature
           // calculations,
@@ -368,8 +401,9 @@ public class ModelQuery extends Query {
           reset();
           if (activeDoc == targetDoc) {
             for (DisiWrapper w = topList; w != null; w = w.next) {
-              Scorer subScorer = w.scorer;
-              int featureId = ((FeatureWeight) subScorer.getWeight()).getId();
+              final Scorer subScorer = w.scorer;
+              final int featureId = ((FeatureWeight) subScorer.getWeight())
+                  .getId();
               allFeaturesUsed[featureId] = true;
               allFeatureValues[featureId] = subScorer.score();
             }
@@ -380,7 +414,7 @@ public class ModelQuery extends Query {
 
         @Override
         public int freq() throws IOException {
-          DisiWrapper subMatches = subScorers.topList();
+          final DisiWrapper subMatches = subScorers.topList();
           int freq = 1;
           for (DisiWrapper w = subMatches.next; w != null; w = w.next) {
             freq += 1;
@@ -395,8 +429,8 @@ public class ModelQuery extends Query {
 
         @Override
         public final Collection<ChildScorer> getChildren() {
-          ArrayList<ChildScorer> children = new ArrayList<>();
-          for (DisiWrapper scorer : subScorers) {
+          final ArrayList<ChildScorer> children = new ArrayList<>();
+          for (final DisiWrapper scorer : subScorers) {
             children.add(new ChildScorer(scorer.scorer, "SHOULD"));
           }
           return children;
@@ -426,7 +460,9 @@ public class ModelQuery extends Query {
             // calculations,
             // otherwise just continue with the model's scoring process with
             // empty features.
-            if (activeDoc < target) activeDoc = super.advance(target);
+            if (activeDoc < target) {
+              activeDoc = super.advance(target);
+            }
             targetDoc = target;
             return targetDoc;
           }
@@ -456,10 +492,11 @@ public class ModelQuery extends Query {
           reset();
           freq = 0;
           if (targetDoc == activeDoc) {
-            for (Scorer scorer : featureScorers) {
+            for (final Scorer scorer : featureScorers) {
               if (scorer.docID() == activeDoc) {
                 freq++;
-                int featureId = ((FeatureWeight) scorer.getWeight()).getId();
+                final int featureId = ((FeatureWeight) scorer.getWeight())
+                    .getId();
                 allFeaturesUsed[featureId] = true;
                 allFeatureValues[featureId] = scorer.score();
               }
@@ -471,8 +508,8 @@ public class ModelQuery extends Query {
 
         @Override
         public final Collection<ChildScorer> getChildren() {
-          ArrayList<ChildScorer> children = new ArrayList<>();
-          for (Scorer scorer : featureScorers) {
+          final ArrayList<ChildScorer> children = new ArrayList<>();
+          for (final Scorer scorer : featureScorers) {
             children.add(new ChildScorer(scorer, "SHOULD"));
           }
           return children;
@@ -499,7 +536,7 @@ public class ModelQuery extends Query {
           public int nextDoc() throws IOException {
             if (activeDoc <= targetDoc) {
               activeDoc = NO_MORE_DOCS;
-              for (Scorer scorer : featureScorers) {
+              for (final Scorer scorer : featureScorers) {
                 if (scorer.docID() != NO_MORE_DOCS) {
                   activeDoc = Math.min(activeDoc, scorer.iterator().nextDoc());
                 }
@@ -512,7 +549,7 @@ public class ModelQuery extends Query {
           public int advance(int target) throws IOException {
             if (activeDoc < target) {
               activeDoc = NO_MORE_DOCS;
-              for (Scorer scorer : featureScorers) {
+              for (final Scorer scorer : featureScorers) {
                 if (scorer.docID() != NO_MORE_DOCS) {
                   activeDoc = Math.min(activeDoc,
                       scorer.iterator().advance(target));

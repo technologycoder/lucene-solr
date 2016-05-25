@@ -18,22 +18,13 @@ package org.apache.solr.ltr.feature.impl;
  */
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
-import org.apache.solr.JSONTestUtil;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.common.util.StrUtils;
 import org.apache.solr.ltr.TestRerankBase;
-import org.apache.solr.ltr.ranking.LTRComponent;
 import org.apache.solr.ltr.ranking.RankSVMModel;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -69,7 +60,7 @@ public class TestOriginalScoreFeature extends TestRerankBase {
     loadModel("originalScore", RankSVMModel.class.getCanonicalName(),
         new String[] {"score"}, "{\"weights\":{\"score\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");
@@ -85,20 +76,19 @@ public class TestOriginalScoreFeature extends TestRerankBase {
     assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/id=='6'");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[3]/id=='7'");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
-    Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
+    final String res = restTestHarness.query("/query" + query.toQueryString());
+    final Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
         .fromJSON(res);
-    String doc0Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc0Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(0)).get("score")).toString();
-    String doc1Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc1Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(1)).get("score")).toString();
-    String doc2Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc2Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(2)).get("score")).toString();
-    String doc3Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc3Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(3)).get("score")).toString();
 
     query.add("fl", "[fv]");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr model=originalScore reRankDocs=4}");
 
     // res = restTestHarness.query("/query" + query.toQueryString());
@@ -130,24 +120,23 @@ public class TestOriginalScoreFeature extends TestRerankBase {
         new String[] {"origScore"}, "store2",
         "{\"weights\":{\"origScore\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score, fv:[fv]");
     query.add("rows", "4");
     query.add("wt", "json");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr model=origScore reRankDocs=4}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
-    Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
+    final String res = restTestHarness.query("/query" + query.toQueryString());
+    final Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
         .fromJSON(res);
-    String doc0Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc0Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(0)).get("score")).toString();
-    String doc1Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc1Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(1)).get("score")).toString();
-    String doc2Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc2Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(2)).get("score")).toString();
-    String doc3Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final String doc3Score = ((Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(3)).get("score")).toString();
     System.out.println(doc0Score);
 

@@ -22,7 +22,7 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.TestRerankBase;
 import org.apache.solr.ltr.ranking.LTRComponent;
-import org.apache.solr.ltr.ranking.LTRComponent.LTRParams;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.rest.ManagedResource;
 import org.apache.solr.rest.ManagedResourceStorage;
 import org.apache.solr.rest.RestManager;
@@ -40,35 +40,36 @@ public class TestModelManager extends TestRerankBase {
 
   @Before
   public void restart() throws Exception {
-    restTestHarness.delete(LTRParams.MSTORE_END_POINT + "/*");
-    restTestHarness.delete(LTRParams.FSTORE_END_POINT + "/*");
+    restTestHarness.delete(CommonLTRParams.FEATURE_STORE_END_POINT + "/*");
+    restTestHarness.delete(CommonLTRParams.MODEL_STORE_END_POINT + "/*");
 
   }
 
   @Test
   public void test() throws Exception {
-    SolrResourceLoader loader = new SolrResourceLoader(tmpSolrHome.toPath());
+    final SolrResourceLoader loader = new SolrResourceLoader(
+        tmpSolrHome.toPath());
 
-    RestManager.Registry registry = loader.getManagedResourceRegistry();
+    final RestManager.Registry registry = loader.getManagedResourceRegistry();
     assertNotNull(
         "Expected a non-null RestManager.Registry from the SolrResourceLoader!",
         registry);
 
-    String resourceId = "/schema/fstore1";
+    final String resourceId = "/schema/fstore1";
     registry.registerManagedResource(resourceId, ManagedFeatureStore.class,
         new LTRComponent());
 
-    String resourceId2 = "/schema/mstore1";
+    final String resourceId2 = "/schema/mstore1";
     registry.registerManagedResource(resourceId2, ManagedModelStore.class,
         new LTRComponent());
 
-    NamedList<String> initArgs = new NamedList<>();
+    final NamedList<String> initArgs = new NamedList<>();
 
-    RestManager restManager = new RestManager();
+    final RestManager restManager = new RestManager();
     restManager.init(loader, initArgs,
         new ManagedResourceStorage.InMemoryStorageIO());
 
-    ManagedResource res = restManager.getManagedResource(resourceId);
+    final ManagedResource res = restManager.getManagedResource(resourceId);
     assertTrue(res instanceof ManagedFeatureStore);
     assertEquals(res.getResourceId(), resourceId);
 
@@ -85,50 +86,50 @@ public class TestModelManager extends TestRerankBase {
 
     // Add features
     String feature = "{\"name\": \"test1\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }";
-    assertJPut(TestRerankBase.FEATURE_ENDPOINT, feature,
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, feature,
         "/responseHeader/status==0");
 
     feature = "{\"name\": \"test2\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }";
-    assertJPut(TestRerankBase.FEATURE_ENDPOINT, feature,
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, feature,
         "/responseHeader/status==0");
 
     feature = "{\"name\": \"test3\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }";
-    assertJPut(TestRerankBase.FEATURE_ENDPOINT, feature,
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, feature,
         "/responseHeader/status==0");
 
     feature = "{\"name\": \"test33\", \"store\": \"TEST\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }";
-    assertJPut(TestRerankBase.FEATURE_ENDPOINT, feature,
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, feature,
         "/responseHeader/status==0");
 
-    String multipleFeatures = "[{\"name\": \"test4\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }"
+    final String multipleFeatures = "[{\"name\": \"test4\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }"
         + ",{\"name\": \"test5\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} } ]";
-    assertJPut(TestRerankBase.FEATURE_ENDPOINT, multipleFeatures,
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, multipleFeatures,
         "/responseHeader/status==0");
 
     // Add bad feature (wrong params)_
-    String badfeature = "{\"name\": \"fvalue\", \"type\": \"org.apache.solr.ltr.feature.impl.FieldValueFeature\", \"params\": {\"value\": 1} }";
-    assertJPut(TestRerankBase.FEATURE_ENDPOINT, badfeature,
+    final String badfeature = "{\"name\": \"fvalue\", \"type\": \"org.apache.solr.ltr.feature.impl.FieldValueFeature\", \"params\": {\"value\": 1} }";
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, badfeature,
         "/responseHeader/status==400");
 
     // Add models
     String model = "{ \"name\":\"testmodel1\", \"type\":\"org.apache.solr.ltr.ranking.RankSVMModel\", \"features\":[] }";
     // fails since it does not have features
-    assertJPut(TestRerankBase.MODEL_ENDPOINT, model,
+    assertJPut(CommonLTRParams.MODEL_STORE_END_POINT, model,
         "/responseHeader/status==400");
     // fails since it does not have weights
     model = "{ \"name\":\"testmodel2\", \"type\":\"org.apache.solr.ltr.ranking.RankSVMModel\", \"features\":[{\"name\":\"test1\"}, {\"name\":\"test2\"}] }";
-    assertJPut(TestRerankBase.MODEL_ENDPOINT, model,
+    assertJPut(CommonLTRParams.MODEL_STORE_END_POINT, model,
         "/responseHeader/status==400");
     // success
     model = "{ \"name\":\"testmodel3\", \"type\":\"org.apache.solr.ltr.ranking.RankSVMModel\", \"features\":[{\"name\":\"test1\"}, {\"name\":\"test2\"}],\"params\":{\"weights\":{\"test1\":1.5,\"test2\":2.0}}}";
-    assertJPut(TestRerankBase.MODEL_ENDPOINT, model,
+    assertJPut(CommonLTRParams.MODEL_STORE_END_POINT, model,
         "/responseHeader/status==0");
     // success
-    String multipleModels = "[{ \"name\":\"testmodel4\", \"type\":\"org.apache.solr.ltr.ranking.RankSVMModel\", \"features\":[{\"name\":\"test1\"}, {\"name\":\"test2\"}],\"params\":{\"weights\":{\"test1\":1.5,\"test2\":2.0}} }\n"
+    final String multipleModels = "[{ \"name\":\"testmodel4\", \"type\":\"org.apache.solr.ltr.ranking.RankSVMModel\", \"features\":[{\"name\":\"test1\"}, {\"name\":\"test2\"}],\"params\":{\"weights\":{\"test1\":1.5,\"test2\":2.0}} }\n"
         + ",{ \"name\":\"testmodel5\", \"type\":\"org.apache.solr.ltr.ranking.RankSVMModel\", \"features\":[{\"name\":\"test1\"}, {\"name\":\"test2\"}],\"params\":{\"weights\":{\"test1\":1.5,\"test2\":2.0}} } ]";
-    assertJPut(TestRerankBase.MODEL_ENDPOINT, multipleModels,
+    assertJPut(CommonLTRParams.MODEL_STORE_END_POINT, multipleModels,
         "/responseHeader/status==0");
-    String qryResult = JQ(LTRParams.MSTORE_END_POINT);
+    final String qryResult = JQ(CommonLTRParams.MODEL_STORE_END_POINT);
 
     assert (qryResult.contains("\"name\":\"testmodel3\"")
         && qryResult.contains("\"name\":\"testmodel4\"") && qryResult
@@ -138,10 +139,11 @@ public class TestModelManager extends TestRerankBase {
      * assertJQ(LTRParams.MSTORE_END_POINT, "/models/[1]/name=='testmodel4'");
      * assertJQ(LTRParams.MSTORE_END_POINT, "/models/[2]/name=='testmodel5'");
      */
-    assertJQ(LTRParams.FSTORE_END_POINT, "/featureStores==['TEST','_DEFAULT_']");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/_DEFAULT_",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT,
+        "/featureStores==['TEST','_DEFAULT_']");
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/_DEFAULT_",
         "/features/[0]/name=='test1'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/TEST",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/TEST",
         "/features/[0]/name=='test33'");
   }
 
@@ -150,9 +152,9 @@ public class TestModelManager extends TestRerankBase {
     loadFeatures("features-ranksvm.json");
     loadModels("ranksvm-model.json");
 
-    assertJQ(LTRParams.MSTORE_END_POINT,
+    assertJQ(CommonLTRParams.MODEL_STORE_END_POINT,
         "/models/[0]/name=='6029760550880411648'");
-    assertJQ(LTRParams.FSTORE_END_POINT + "/_DEFAULT_",
+    assertJQ(CommonLTRParams.FEATURE_STORE_END_POINT + "/_DEFAULT_",
         "/features/[1]/name=='description'");
   }
 
@@ -161,8 +163,8 @@ public class TestModelManager extends TestRerankBase {
     // relies on these ManagedResources being activated in the
     // schema-rest.xml used by this test
     assertJQ("/schema/managed", "/responseHeader/status==0");
-    String newEndpoint = LTRParams.FSTORE_END_POINT;
-    String feature = "{\"name\": \"^&test1\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }";
+    final String newEndpoint = CommonLTRParams.FEATURE_STORE_END_POINT;
+    final String feature = "{\"name\": \"^&test1\", \"type\": \"org.apache.solr.ltr.feature.impl.ValueFeature\", \"params\": {\"value\": 1} }";
     assertJPut(newEndpoint, feature, "/responseHeader/status==400");
 
   }

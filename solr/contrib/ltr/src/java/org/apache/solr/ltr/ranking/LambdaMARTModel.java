@@ -25,11 +25,11 @@ import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.Explanation;
-import org.apache.solr.ltr.feature.ModelMetadata;
+import org.apache.solr.ltr.feature.LTRScoringAlgorithm;
 import org.apache.solr.ltr.util.ModelException;
 import org.apache.solr.ltr.util.NamedParams;
 
-public class LambdaMARTModel extends ModelMetadata {
+public class LambdaMARTModel extends LTRScoringAlgorithm {
 
   List<RegressionTree> trees = new ArrayList<RegressionTree>();
 
@@ -51,11 +51,12 @@ public class LambdaMARTModel extends ModelMetadata {
         return value;
       }
 
-      if (featureIndex < 0 || // unsupported feature
-          featureIndex > featureVector.length || // tree is looking for a
-                                                 // feature that does not
-                                                 // exist
-          featureVector[featureIndex] <= threshold) {
+      if ((featureIndex < 0) || // unsupported feature
+          (featureIndex > featureVector.length) /*
+                                                 * tree is looking for a feature
+                                                 * that does not exist
+                                                 */
+          || (featureVector[featureIndex] <= threshold)) {
         return left.score(featureVector);
       }
 
@@ -73,7 +74,7 @@ public class LambdaMARTModel extends ModelMetadata {
       // each branch and report
       // that here
 
-      if (featureIndex < 0 || featureIndex > featureVector.length) {
+      if ((featureIndex < 0) || (featureIndex > featureVector.length)) {
         rval += "'" + feature + "' does not exist in FV, Go Left | ";
         return rval + left.explain(featureVector);
       } else if (featureVector[featureIndex] <= threshold) {
@@ -94,14 +95,14 @@ public class LambdaMARTModel extends ModelMetadata {
         value = NamedParams.convertToFloat(map.get("value"));
       } else {
 
-        Object of = map.get("feature");
+        final Object of = map.get("feature");
         if (null == of) {
           throw new ModelException(
               "LambdaMARTModel tree node is missing feature");
         }
 
         feature = (String) of;
-        Integer idx = fname2index.get(feature);
+        final Integer idx = fname2index.get(feature);
         // this happens if the tree specifies a feature that does not exist
         // this could be due to lambdaSmart building off of pre-existing trees
         // that use a feature that is no longer output during feature extraction
@@ -110,7 +111,7 @@ public class LambdaMARTModel extends ModelMetadata {
         // or prune them back above the split on that feature
         featureIndex = (idx == null) ? -1 : idx;
 
-        Object ot = map.get("threshold");
+        final Object ot = map.get("threshold");
         if (null == ot) {
           throw new ModelException(
               "LambdaMARTModel tree node is missing threshold");
@@ -118,14 +119,14 @@ public class LambdaMARTModel extends ModelMetadata {
 
         threshold = NamedParams.convertToFloat(ot) + NODE_SPLIT_SLACK;
 
-        Object ol = map.get("left");
+        final Object ol = map.get("left");
         if (null == ol) {
           throw new ModelException("LambdaMARTModel tree node is missing left");
         }
 
         left = new RegressionTreeNode((Map<String,Object>) ol, fname2index);
 
-        Object or = map.get("right");
+        final Object or = map.get("right");
         if (null == or) {
           throw new ModelException("LambdaMARTModel tree node is missing right");
         }
@@ -150,7 +151,7 @@ public class LambdaMARTModel extends ModelMetadata {
 
     public RegressionTree(Map<String,Object> map,
         HashMap<String,Integer> fname2index) throws ModelException {
-      Object ow = map.get("weight");
+      final Object ow = map.get("weight");
       if (null == ow) {
         throw new ModelException(
             "LambdaMARTModel tree doesn't contain a weight");
@@ -158,7 +159,7 @@ public class LambdaMARTModel extends ModelMetadata {
 
       weight = NamedParams.convertToFloat(ow);
 
-      Object ot = map.get("tree");
+      final Object ot = map.get("tree");
 
       if (null == ot) {
         throw new ModelException("LambdaMARTModel tree doesn't contain a tree");
@@ -168,30 +169,30 @@ public class LambdaMARTModel extends ModelMetadata {
     }
   }
 
-  public LambdaMARTModel(String name, String type, List<Feature> features,
+  public LambdaMARTModel(String name, List<Feature> features,
       String featureStoreName, Collection<Feature> allFeatures,
       NamedParams params) throws ModelException {
-    super(name, type, features, featureStoreName, allFeatures, params);
+    super(name, features, featureStoreName, allFeatures, params);
 
     if (!hasParams()) {
       throw new ModelException("LambdaMARTModel doesn't contain any params");
     }
 
-    HashMap<String,Integer> fname2index = new HashMap<String,Integer>();
+    final HashMap<String,Integer> fname2index = new HashMap<String,Integer>();
     for (int i = 0; i < features.size(); ++i) {
-      String key = features.get(i).getName();
+      final String key = features.get(i).getName();
       fname2index.put(key, i);
     }
 
-    List<Object> jsonTrees = getParams().getList("trees");
+    final List<Object> jsonTrees = getParams().getList("trees");
 
-    if (jsonTrees == null || jsonTrees.isEmpty()) {
+    if ((jsonTrees == null) || jsonTrees.isEmpty()) {
       throw new ModelException("LambdaMARTModel doesn't contain any trees");
     }
 
-    for (Object o : jsonTrees) {
-      Map<String,Object> t = (Map<String,Object>) o;
-      RegressionTree rt = new RegressionTree(t, fname2index);
+    for (final Object o : jsonTrees) {
+      final Map<String,Object> t = (Map<String,Object>) o;
+      final RegressionTree rt = new RegressionTree(t, fname2index);
       trees.add(rt);
     }
 
@@ -200,7 +201,7 @@ public class LambdaMARTModel extends ModelMetadata {
   @Override
   public float score(float[] modelFeatureValuesNormalized) {
     float score = 0;
-    for (RegressionTree t : trees) {
+    for (final RegressionTree t : trees) {
       score += t.score(modelFeatureValuesNormalized);
     }
     return score;
@@ -215,28 +216,29 @@ public class LambdaMARTModel extends ModelMetadata {
   // 'this_feature_doesnt_exist' does not
   // exist in FV, Go Left | val: 50.0
   // -10.0 = tree 1 | val: -10.0
+  @Override
   public Explanation explain(LeafReaderContext context, int doc,
       float finalScore, List<Explanation> featureExplanations) {
     // FIXME this still needs lots of work
-    float[] fv = new float[featureExplanations.size()];
+    final float[] fv = new float[featureExplanations.size()];
     int index = 0;
-    for (Explanation featureExplain : featureExplanations) {
+    for (final Explanation featureExplain : featureExplanations) {
       fv[index] = featureExplain.getValue();
       index++;
     }
 
-    List<Explanation> details = new ArrayList<>();
+    final List<Explanation> details = new ArrayList<>();
     index = 0;
 
-    for (RegressionTree t : trees) {
-      float score = t.score(fv);
-      Explanation p = Explanation.match(score,
-          "tree " + index + " | " + t.explain(fv));
+    for (final RegressionTree t : trees) {
+      final float score = t.score(fv);
+      final Explanation p = Explanation.match(score, "tree " + index + " | "
+          + t.explain(fv));
       details.add(p);
       index++;
     }
 
-    return Explanation.match(finalScore, getName() + " [ " + getType()
-        + " ] model applied to features, sum of:", details);
+    return Explanation.match(finalScore, toString()
+        + " model applied to features, sum of:", details);
   }
 }

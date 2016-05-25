@@ -19,15 +19,15 @@ package org.apache.solr.ltr.util;
 
 import java.io.IOException;
 
-public class LtrException extends IOException {
+public class LTRException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
 
-  public LtrException(String message) {
+  public LTRException(String message) {
     super(message);
   }
 
-  public LtrException(String message, Exception parent) {
+  public LTRException(String message, Exception parent) {
     super(message, parent);
   }
 

@@ -64,7 +64,7 @@ public class TestFieldValueFeature extends TestRerankBase {
     loadModel("popularity-model", RankSVMModel.class.getCanonicalName(),
         new String[] {"popularity"}, "{\"weights\":{\"popularity\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");

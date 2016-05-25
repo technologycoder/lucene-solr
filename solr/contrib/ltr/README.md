@@ -9,6 +9,80 @@ Apache Solr Learning to Rank (LTR) provides a way for you to extract features
 directly inside Solr for use in training a machine learned model.  You can then
 deploy that model to Solr and use it to rerank your top X search results.
 
+# Test the plugin with solr/example/techproducts in a few easy steps!
+
+Solr provides some simple example of indices. In order to test the plugin with
+the techproducts example please follow these steps.
+
+1. Compile solr and the examples
+
+    `cd solr`
+    `ant dist`
+    `ant example`
+
+2. Run the example to setup the index
+
+   `./bin/solr -e techproducts`
+
+3. Stop solr and install the plugin:
+     1. Stop solr
+
+        `./bin/solr stop`
+     2. Create the lib folder
+
+        `mkdir example/techproducts/solr/techproducts/lib`
+     3. Install the plugin in the lib folder
+
+        `cp build/contrib/ltr/lucene-ltr-6.0.0-SNAPSHOT.jar example/techproducts/solr/techproducts/lib/`
+     4. Replace the original solrconfig with one importing all the ltr components
+
+        `cp contrib/ltr/example/solrconfig.xml example/techproducts/solr/techproducts/conf/`
+
+4. Run the example again
+
+   `./bin/solr -e techproducts`
+
+   Note you could also have just restarted your collection using the admin page.
+   You can find more detailed instructions [here](https://wiki.apache.org/solr/SolrPlugins).
+
+5. Deploy features and a model
+
+      `curl -XPUT 'http://localhost:8983/solr/techproducts/schema/feature-store'  --data-binary "@./contrib/ltr/example/techproducts-features.json"  -H 'Content-type:application/json'`
+
+      `curl -XPUT 'http://localhost:8983/solr/techproducts/schema/model-store'  --data-binary "@./contrib/ltr/example/techproducts-model.json"  -H 'Content-type:application/json'`
+
+6. Have fun !
+
+     * Access to the default feature store
+
+       http://localhost:8983/solr/techproducts/schema/feature-store/\_DEFAULT\_
+     * Access to the model store
+
+       http://localhost:8983/solr/techproducts/schema/model-store
+     * Perform a reranking query using the model, and retrieve the features
+
+       http://localhost:8983/solr/techproducts/query?indent=on&q=test&wt=json&rq={!ltr%20model=svm%20reRankDocs=25%20efi.user_query=%27test%27}&fl=[features],price,score,name
+
+
+BONUS: Train an actual machine learning model
+
+1. Download and install [liblinear](https://www.csie.ntu.edu.tw/~cjlin/liblinear/)
+
+2. Change `contrib/ltr/scripts/config.json` "trainingLibraryLocation" to point to the train directory where you installed liblinear.
+
+3. Extract features, train a reranking model, and deploy it to Solr.
+
+  `cd  contrib/ltr/scripts`
+
+  `python ltr_generateModel.py -c config.json`
+
+   This script deploys your features from `config.json` "featuresFile" to Solr.  Then it takes the relevance judged query
+   document pairs of "userQueriesFile" and merges it with the features extracted from Solr into a training
+   file.  That file is used to train a rankSVM model, which is then deployed to Solr for you to rerank results.
+
+4. Search and rerank the results using the trained model
+
+   http://localhost:8983/solr/techproducts/query?indent=on&q=test&wt=json&rq={!ltr%20model=ExampleModel%20reRankDocs=25%20efi.user_query=%27test%27}&fl=price,score,name
 
 # Changes to solrconfig.xml
 ```xml
@@ -20,7 +94,7 @@ deploy that model to Solr and use it to rerank your top X search results.
 
   <!--  Transformer that will encode the document features in the response.
   For each document the transformer will add the features as an extra field
-  in the response. The name of the field we will be the the name of the
+  in the response. The name of the field will be the the name of the
   transformer enclosed between brackets (in this case [features]).
   In order to get the feature vector you will have to
   specify that you want the field (e.g., fl="*,[features])  -->
@@ -57,22 +131,6 @@ deploy that model to Solr and use it to rerank your top X search results.
 </config>
 
 ```
-
-
-# Build the plugin
-In the solr/contrib/ltr directory run
-`ant dist`
-
-# Install the plugin
-In your solr installation, navigate to your collection's lib directory.
-In the solr install example, it would be solr/collection1/lib.
-If lib doesn't exist you will have to make it, and then copy the plugin's jar there.
-
-`cp lucene-solr/solr/dist/solr-ltr-X.Y.Z-SNAPSHOT.jar mySolrInstallPath/solr/myCollection/lib`
-
-Restart your collection using the admin page and you are good to go.
-You can find more detailed instructions [here](https://wiki.apache.org/solr/SolrPlugins).
-
 
 # Defining Features
 In the learning to rank plugin, you can define features in a feature space
@@ -134,8 +192,9 @@ part of the query to the ltr ranking framework. In this case, the
 fourth feature (userTextPhraseMatch) will be looking for an external field
 called 'user_text' passed in through the request, and will fire if there is
 a term match for the document field 'title' from the value of the external
-field 'user_text'. See the "Run a Rerank Query" section for how
-to pass in external information.
+field 'user_text'.  You can provide default values for external features as
+well by specifying ${myField:myDefault}, similar to how you would in a Solr config.
+See the "Run a Rerank Query" section for how to pass in external information.
 
 ### Custom Features
 Custom features can be created by extending from
@@ -247,17 +306,17 @@ You will need to convert the RankLib model format to the format specified above.
 # Deploy Models and Features
 To send features run
 
-`curl -XPUT 'http://localhost:8983/solr/collection1/schema/fstore' --data-binary @/path/features.json -H 'Content-type:application/json'`
+`curl -XPUT 'http://localhost:8983/solr/collection1/schema/feature-store' --data-binary @/path/features.json -H 'Content-type:application/json'`
 
 To send models run
 
-`curl -XPUT 'http://localhost:8983/solr/collection1/schema/mstore' --data-binary @/path/model.json -H 'Content-type:application/json'`
+`curl -XPUT 'http://localhost:8983/solr/collection1/schema/model-store' --data-binary @/path/model.json -H 'Content-type:application/json'`
 
 
 # View Models and Features
-`curl -XGET 'http://localhost:8983/solr/collection1/schema/fstore'`
-`curl -XGET 'http://localhost:8983/solr/collection1/schema/mstore'`
+`curl -XGET 'http://localhost:8983/solr/collection1/schema/feature-store'`
 
+`curl -XGET 'http://localhost:8983/solr/collection1/schema/model-store'`
 
 # Run a Rerank Query
 Add to your original solr query
@@ -278,53 +337,55 @@ example that matches the earlier shown userTextTitleMatch feature one could do:
 `rq={!ltr reRankDocs=3 model=externalmodel efi.user_text='Casablanca' efi.user_intent='movie'}`
 
 # Extract features
-To extract features you need to use the feature vector transformer + set the
-fv parameter to true (this required parameter will be removed in the future).
-For now you need to also use a dummy model with all the features you want to
-extract inside the features parameter list of the model (this limitation will
-also be changed in the future so you can extract features without a dummy model).
+To extract features you need to use the feature vector transformer `features`
 
-`fv=true&fl=*,score,[features]&rq={!ltr model=dummyModel reRankDocs=25}`
+`fl=*,score,[features]&rq={!ltr model=yourModel reRankDocs=25}`
 
-## Test the plugin with solr/example/techproducts in 6 steps
+If you use `[features]` together with your reranking model, it will return
+the array of features used by your model. Otherwise you can just ask solr to
+produce the features without doing the reranking:
 
-Solr provides some simple example of indices. In order to test the plugin with
-the techproducts example please follow these steps
+`fl=*,score,[features store=yourFeatureStore]`
 
-1. compile solr and the examples
+This will return the values of the features in the given store.
 
-    cd solr
-    ant dist
-    ant example
 
-2. run the example
+# Assemble training data
+In order to train a learning to rank model you need training data. Training data is
+what "teaches" the model what the appropriate weight for each feature is. In general
+training data is a collection of queries with associated documents and what their ranking/score
+should be. As an example:
+```
+secretary of state|John Kerry|0.66|CROWDSOURCE
+secretary of state|Cesar A. Perales|0.33|CROWDSOURCE
+secretary of state|New York State|0.0|CROWDSOURCE
+secretary of state|Colorado State University Secretary|0.0|CROWDSOURCE
 
-   ./bin/solr -e techproducts
+microsoft ceo|Satya Nadella|1.0|CLICK_LOG
+microsoft ceo|Microsoft|0.0|CLICK_LOG
+microsoft ceo|State|0.0|CLICK_LOG
+microsoft ceo|Secretary|0.0|CLICK_LOG
+```
+In this example the first column indicates the query, the second column indicates a unique id for that doc,
+the third column indicates the relative importance or relevance of that doc, and the fourth column indicates the source.
+There are 2 primary ways you might collect data for use with your machine learning algorithim. The first
+is to collect the clicks of your users given a specific query. There are many ways of preparing this data
+to train a model (http://www.cs.cornell.edu/people/tj/publications/joachims_etal_05a.pdf). The general idea
+is that if a user sees multiple documents and clicks the one lower down, that document should be scored higher
+than the one above it. The second way is explicitly through a crowdsourcing platform like Mechanical Turk or
+CrowdFlower. These platforms allow you to show human workers documents associated with a query and have them
+tell you what the correct ranking should be.
 
-3. stop it and install the plugin:
+At this point you'll need to collect feature vectors for each query document pair. You can use the information
+from the Extract features section above to do this. An example script has been included in scripts/ltr_generateModel.py.
 
-   ./bin/solr stop
-   #create the lib folder
-   mkdir example/techproducts/solr/techproducts/lib
-   # install the plugin in the lib folder
-   cp build/contrib/ltr/lucene-ltr-6.0.0-SNAPSHOT.jar example/techproducts/solr/techproducts/lib/
-   # replace the original solrconfig with one importing all the ltr componenet
-   cp contrib/ltr/example/solrconfig.xml example/techproducts/solr/techproducts/conf/
+# Explanation of the core reranking logic
+An LTR model is plugged into the ranking through the [LTRQParserPlugin](/solr/contrib/ltr/src/java/org/apache/solr/ltr/ranking/LTRQParserPlugin.java). The plugin will
+read from the request the model, an instance of [LTRScoringAlgorithm](solr/contrib/ltr/src/java/org/apache/solr/ltr/feature/LTRScoringAlgorithm.java),
+plus other parameters. The plugin will generate an [LTRQuery](solr/contrib/ltr/src/java/org/apache/solr/ltr/ranking/LTRQuery.java), a particular org.apache.solr.search. RankQuery.
+It wraps the original solr query for the first pass ranking, and uses the provided model in a
+[ModelQuery](solr/contrib/ltr/src/java/org/apache/solr/ltr/ranking/ModelQuery.java) to
+rescore and rerank the top documents.  The ModelQuery will take care of computing the values of all the
+[features](solr/contrib/ltr/src/java/org/apache/solr/ltr/ranking/Feature.java) and then will delegate the final score
+generation to the LTRScoringAlgorithm.
 
-4. run the example again
-
-   ./bin/solr -e techproducts
-
-5. index some features and a model
-
-   curl -XPUT 'http://localhost:8983/solr/techproducts/schema/fstore'  --data-binary "@./contrib/ltr/example/techproducts-features.json"  -H 'Content-type:application/json'
-   curl -XPUT 'http://localhost:8983/solr/techproducts/schema/mstore'  --data-binary "@./contrib/ltr/example/techproducts-model.json"  -H 'Content-type:application/json'
-
-6. have fun !
-
-   # access to the default feature store
-   http://localhost:8983/solr/techproducts/schema/fstore/_DEFAULT_
-   # access to the model store
-   http://localhost:8983/solr/techproducts/schema/mstore
-   # perform a query using the model, and retrieve the features
-   http://localhost:8983/solr/techproducts/query?indent=on&q=test&wt=json&rq={!ltr%20model=svm%20reRankDocs=25%20efi.query=%27test%27}&fl=*,[features],price,score,name&fv=true

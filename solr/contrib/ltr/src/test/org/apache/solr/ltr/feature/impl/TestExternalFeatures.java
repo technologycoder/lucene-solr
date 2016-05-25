@@ -20,7 +20,6 @@ package org.apache.solr.ltr.feature.impl;
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.ltr.TestRerankBase;
-import org.apache.solr.ltr.ranking.LTRComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -55,11 +54,10 @@ public class TestExternalFeatures extends TestRerankBase {
 
   @Test
   public void externalTest1() throws Exception {
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*,score");
     query.add("rows", "3");
-    query.add(LTRComponent.LTRParams.FV, "true");
 
     // Regular scores
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/id=='1'");
@@ -70,50 +68,65 @@ public class TestExternalFeatures extends TestRerankBase {
     assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/score==1.0");
 
     query.add("fl", "[fv]");
-    // Model is not specified so we should get a model does not exist exception
-    assertJQ("/query" + query.toQueryString(), "/error/msg=='model is null'");
-
-    // No match scores since user_query not passed in to external feature info
-    // and feature depended on it.
-    query.add("rq", "{!ltr reRankDocs=3 model=externalmodel}");
-
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/id=='1'");
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==0.0");
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/id=='2'");
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/score==0.0");
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/id=='3'");
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/score==0.0");
-
-    // Matched user query since it was passed in
-    query.remove("rq");
-    query
-        .add("rq", "{!ltr reRankDocs=3 model=externalmodel efi.user_query=w3}");
+    query.add("rq", "{!ltr reRankDocs=3 model=externalmodel efi.user_query=w3}");
 
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/id=='3'");
-    assertJQ("/query" + query.toQueryString(),
-        "/response/docs/[0]/score==0.999");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==0.999");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/id=='1'");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/score==0.0");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/id=='2'");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/score==0.0");
 
+    // Adding an efi in the transformer should not affect the rq ranking with a
+    // different value for efi of the same parameter
+    query.remove("fl");
+    query.add("fl", "id,[fv efi.user_query=w2]");
+
     System.out.println(restTestHarness.query("/query" + query.toQueryString()));
+
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/id=='3'");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/id=='1'");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/id=='2'");
   }
 
   @Test
   public void externalStopwordTest() throws Exception {
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*,score,fv:[fv]");
     query.add("rows", "1");
-    query.add(LTRComponent.LTRParams.FV, "true");
     // Stopword only query passed in
-    query.add("rq",
-        "{!ltr reRankDocs=3 model=externalmodel efi.user_query='a'}");
+    query.add("rq", "{!ltr reRankDocs=3 model=externalmodel efi.user_query='a'}");
 
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/fv==''");
 
     System.out.println(restTestHarness.query("/query" + query.toQueryString()));
   }
 
+  @Test
+  public void testEfiFeatureExtraction() throws Exception {
+    final SolrQuery query = new SolrQuery();
+    query.setQuery("*:*");
+    query.add("rows", "1");
+
+    // Features we're extracting depend on external feature info not passed in
+    query.add("fl", "[fv]");
+    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception for org.apache.solr.ltr.feature.impl.SolrFeature$SolrFeatureWeight [name=matchedTitle, params={q={!terms f=title}${user_query}}] Feature requires efi parameter that was not passed in request.'");
+
+    // Using nondefault store should still result in error with no efi
+    query.remove("fl");
+    query.add("fl", "[fv store=fstore2]");
+    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception for org.apache.solr.ltr.feature.impl.ValueFeature$ValueFeatureWeight [name=confidence, params={value=${myconf}}] Feature requires efi parameter that was not passed in request.'");
+
+    // Adding efi in features section should make it work
+    query.remove("fl");
+    query.add("fl", "score,fvalias:[fv store=fstore2 efi.myconf=2.3]");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/fvalias=='confidence:2.3;originalScore:1.0'");
+
+    // Adding efi in transformer + rq should still use the transformer's params for feature extraction
+    query.remove("fl");
+    query.add("fl", "score,fvalias:[fv store=fstore2 efi.myconf=2.3]");
+    query.add("rq", "{!ltr reRankDocs=3 model=externalmodel efi.user_query=w3}");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/fvalias=='confidence:2.3;originalScore:1.0'");
+  }
 }

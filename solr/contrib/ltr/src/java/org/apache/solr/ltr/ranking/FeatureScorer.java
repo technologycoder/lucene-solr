@@ -32,7 +32,7 @@ public abstract class FeatureScorer extends Scorer {
 
   public FeatureScorer(FeatureWeight weight) {
     super(weight);
-    this.name = weight.getName();
+    name = weight.getName();
   }
 
   @Override
@@ -59,8 +59,11 @@ public abstract class FeatureScorer extends Scorer {
   }
 
   public boolean hasDocParam(String key) {
-    if (docInfo != null) return docInfo.containsKey(key);
-    else return false;
+    if (docInfo != null) {
+      return docInfo.containsKey(key);
+    } else {
+      return false;
+    }
   }
 
   @Override

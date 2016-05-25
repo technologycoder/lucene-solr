@@ -17,7 +17,7 @@ package org.apache.solr.ltr.util;
  * limitations under the License.
  */
 
-public class InvalidFeatureNameException extends LtrException {
+public class InvalidFeatureNameException extends LTRException {
 
   private static final long serialVersionUID = 1L;
 

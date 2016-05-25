@@ -59,7 +59,7 @@ public class TestFieldLengthFeature extends TestRerankBase {
     loadModel("title-model", RankSVMModel.class.getCanonicalName(),
         new String[] {"title-length"}, "{\"weights\":{\"title-length\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");

@@ -86,23 +86,23 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   @Test
   public void testNoMatchSolrFeat1() throws Exception {
     // Tests model with all no matching features but 1
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*, score,fv:[fv]");
     query.add("rows", "4");
     query.add("fv", "true");
     query.add("rq", "{!ltr model=nomatchmodel reRankDocs=4}");
 
-    SolrQuery yesMatchFeatureQuery = new SolrQuery();
+    final SolrQuery yesMatchFeatureQuery = new SolrQuery();
     yesMatchFeatureQuery.setQuery("title:w1");
     yesMatchFeatureQuery.add("fl", "score");
     yesMatchFeatureQuery.add("rows", "4");
     String res = restTestHarness.query("/query"
         + yesMatchFeatureQuery.toQueryString());
     System.out.println(res);
-    Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
+    final Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
         .fromJSON(res);
-    Double doc0Score = (Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final Double doc0Score = (Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(0)).get("score");
 
     res = restTestHarness.query("/query" + query.toQueryString());
@@ -110,7 +110,7 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
 
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/id=='1'");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score=="
-        + doc0Score * 1.1);
+        + (doc0Score * 1.1));
     assertJQ("/query" + query.toQueryString(),
         "/response/docs/[0]/fv=='yesmatchfeature:" + doc0Score + "'");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/id=='2'");
@@ -128,23 +128,22 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   public void testNoMatchSolrFeat2() throws Exception {
     // Tests model with all no matching features, but 1 non-modal matching
     // feature for logging
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*, score,fv:[fv]");
     query.add("rows", "4");
-    query.add("fv", "true");
     query.add("rq", "{!ltr model=nomatchmodel2 reRankDocs=4}");
 
-    SolrQuery yesMatchFeatureQuery = new SolrQuery();
+    final SolrQuery yesMatchFeatureQuery = new SolrQuery();
     yesMatchFeatureQuery.setQuery("title:w1");
     yesMatchFeatureQuery.add("fl", "score");
     yesMatchFeatureQuery.add("rows", "4");
     String res = restTestHarness.query("/query"
         + yesMatchFeatureQuery.toQueryString());
     System.out.println(res);
-    Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
+    final Map<String,Object> jsonParse = (Map<String,Object>) ObjectBuilder
         .fromJSON(res);
-    Double doc0Score = (Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
+    final Double doc0Score = (Double) ((Map<String,Object>) ((ArrayList<Object>) ((Map<String,Object>) jsonParse
         .get("response")).get("docs")).get(0)).get("score");
 
     res = restTestHarness.query("/query" + query.toQueryString());
@@ -164,14 +163,14 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   @Test
   public void testNoMatchSolrFeat3() throws Exception {
     // Tests model with all no matching features
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*, score,fv:[fv]");
     query.add("rows", "4");
     query.add("fv", "true");
     query.add("rq", "{!ltr model=nomatchmodel3 reRankDocs=4}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
 
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==0.0");
@@ -188,14 +187,13 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
         "noMatchFeaturesStore",
         "{\"trees\":[{\"weight\":1.0, \"tree\":{\"feature\": \"matchedTitle\",\"threshold\": 0.5,\"left\":{\"value\" : -10},\"right\":{\"value\" : 9}}}]}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*, score,fv:[fv]");
     query.add("rows", "4");
-    query.add("fv", "true");
     query.add("rq", "{!ltr model=nomatchmodel4 reRankDocs=4}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
 
     assertJQ("/query" + query.toQueryString(),

@@ -38,18 +38,18 @@
  * </p>
  * <p>
  * A {@link org.apache.solr.ltr.ranking.ModelQuery} is created by providing an instance of
- * {@link org.apache.solr.ltr.feature.ModelMetadata}. An instance of
- * {@link org.apache.solr.ltr.feature.ModelMetadata}
+ * {@link org.apache.solr.ltr.feature.LTRScoringAlgorithm}. An instance of
+ * {@link org.apache.solr.ltr.feature.LTRScoringAlgorithm}
  * defines how to combine the features in order to create a new
  * score for a document. A new learning to rank model is plugged
- * into the framework  by extending {@link org.apache.solr.ltr.feature.ModelMetadata},
+ * into the framework  by extending {@link org.apache.solr.ltr.feature.LTRScoringAlgorithm},
  * (see for example {@link org.apache.solr.ltr.ranking.LambdaMARTModel} and {@link org.apache.solr.ltr.ranking.RankSVMModel}).
  * </p>
  * <p>
  * The {@link org.apache.solr.ltr.ranking.ModelQuery} will take care of computing the values of
  * all the features (see {@link org.apache.solr.ltr.ranking.Feature}) and then will delegate the final score
- * generation to the {@link org.apache.solr.ltr.feature.ModelMetadata}, by calling the method
- * {@link org.apache.solr.ltr.feature.ModelMetadata#score(float[] modelFeatureValuesNormalized) score(float[] modelFeatureValuesNormalized)}.
+ * generation to the {@link org.apache.solr.ltr.feature.LTRScoringAlgorithm}, by calling the method
+ * {@link org.apache.solr.ltr.feature.LTRScoringAlgorithm#score(float[] modelFeatureValuesNormalized) score(float[] modelFeatureValuesNormalized)}.
  * </p>
  * <p>
  * Finally, a {@link org.apache.solr.ltr.ranking.Feature} will produce a particular value for each document, so

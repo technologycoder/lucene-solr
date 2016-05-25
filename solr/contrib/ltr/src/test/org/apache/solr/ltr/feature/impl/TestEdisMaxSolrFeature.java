@@ -32,14 +32,14 @@ public class TestEdisMaxSolrFeature extends TestQueryFeature {
     loadModel("EdisMax-model", RankSVMModel.class.getCanonicalName(),
         new String[] {"SomeEdisMax"}, "{\"weights\":{\"SomeEdisMax\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");
 
     query.add("rq", "{!ltr model=EdisMax-model reRankDocs=4}");
     query.set("debugQuery", "on");
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
     assertJQ("/query" + query.toQueryString(), "/response/numFound/==4");
   }

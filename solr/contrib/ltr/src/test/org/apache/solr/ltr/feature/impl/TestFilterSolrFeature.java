@@ -21,6 +21,7 @@ import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.ltr.TestRerankBase;
 import org.apache.solr.ltr.ranking.RankSVMModel;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class TestFilterSolrFeature extends TestRerankBase {
     loadModel("Term-modelFQ", RankSVMModel.class.getCanonicalName(),
         new String[] {"SomeTermFQ", "SomeEfiFQ"},
         "{\"weights\":{\"SomeTermFQ\":1.6, \"SomeEfiFQ\":2.0}}");
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*, score");
     query.add("rows", "3");
@@ -72,7 +73,7 @@ public class TestFilterSolrFeature extends TestRerankBase {
     query.add("rq",
         "{!ltr model=Term-modelFQ reRankDocs=5 efi.user_query='w5'}");
 
-    String res = restTestHarness.query("/query" + query.toQueryString());
+    final String res = restTestHarness.query("/query" + query.toQueryString());
     System.out.println(res);
     assertJQ("/query" + query.toQueryString(), "/response/numFound/==5");
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==3.6");
@@ -82,9 +83,10 @@ public class TestFilterSolrFeature extends TestRerankBase {
   @Test
   public void testBadFeature() throws Exception {
     // Missing q/fq
-    String feature = getFeatureInJson("badFeature", "test",
+    final String feature = getFeatureInJson("badFeature", "test",
         SolrFeature.class.getCanonicalName(), "{\"df\":\"foo\"]}");
-    assertJPut(FEATURE_ENDPOINT, feature, "/responseHeader/status==500");
+    assertJPut(CommonLTRParams.FEATURE_STORE_END_POINT, feature,
+        "/responseHeader/status==500");
   }
 
 }

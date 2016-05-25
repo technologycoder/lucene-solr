@@ -28,7 +28,7 @@ public class NameValidator {
     if (name == null) {
       return false;
     }
-    Matcher matcher = pattern.matcher(name);
+    final Matcher matcher = pattern.matcher(name);
     return matcher.find();
   }
 

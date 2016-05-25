@@ -20,8 +20,8 @@ package org.apache.solr.ltr.feature.impl;
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.ltr.TestRerankBase;
-import org.apache.solr.ltr.ranking.LTRComponent;
 import org.apache.solr.ltr.ranking.RankSVMModel;
+import org.apache.solr.ltr.util.CommonLTRParams;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,7 +72,7 @@ public class TestValueFeature extends TestRerankBase {
     loadModel("m3", RankSVMModel.class.getCanonicalName(), new String[] {"c3"},
         "c3", "{\"weights\":{\"c3\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");
@@ -92,7 +92,7 @@ public class TestValueFeature extends TestRerankBase {
     loadModel("m4", RankSVMModel.class.getCanonicalName(), new String[] {"c4"},
         "c4", "{\"weights\":{\"c4\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");
@@ -112,12 +112,11 @@ public class TestValueFeature extends TestRerankBase {
     loadModel("m5", RankSVMModel.class.getCanonicalName(), new String[] {"c5"},
         "c5", "{\"weights\":{\"c5\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score,fvonly:[fvonly]");
     query.add("rows", "4");
     query.add("wt", "json");
-    query.add(LTRComponent.LTRParams.FV, "true");
     query.add("rq", "{!ltr model=m5 reRankDocs=4}");
 
     // String res = restTestHarness.query("/query" + query.toQueryString());
@@ -134,7 +133,7 @@ public class TestValueFeature extends TestRerankBase {
     loadModel("m6", RankSVMModel.class.getCanonicalName(), new String[] {"c6"},
         "c6", "{\"weights\":{\"c6\":1.0}}");
 
-    SolrQuery query = new SolrQuery();
+    final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");
