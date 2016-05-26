@@ -81,10 +81,6 @@ public class ModelQuery extends Query {
     return meta.getFeatureStoreName();
   }
 
-  public Collection<Feature> getAllFeatures() {
-    return meta.getAllFeatures();
-  }
-
   public void setOriginalQuery(Query mainQuery) {
     originalQuery = mainQuery;
   }
@@ -146,21 +142,18 @@ public class ModelQuery extends Query {
     return request;
   }
 
-  public List<Feature> getFeatures() {
-    return meta.getFeatures();
-  }
-
   @Override
   public ModelWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    final Collection<Feature> features = getAllFeatures();
-    final List<Feature> modelFeatures = getFeatures();
+    final FeatureWeight[] allFeatureWeights = createWeights(meta.getAllFeatures(),
+        searcher, needsScores);
+    final FeatureWeight[] modelFeaturesWeights = createWeights(meta.getFeatures(),
+        searcher, needsScores);
 
-    return new ModelWeight(searcher, getWeights(modelFeatures, searcher,
-        needsScores), getWeights(features, searcher, needsScores));
+    return new ModelWeight(searcher, modelFeaturesWeights, allFeatureWeights);
   }
 
-  private FeatureWeight[] getWeights(Collection<Feature> features,
+  private FeatureWeight[] createWeights(Collection<Feature> features,
       IndexSearcher searcher, boolean needsScores) throws IOException {
     final FeatureWeight[] arr = new FeatureWeight[features.size()];
     int i = 0;
