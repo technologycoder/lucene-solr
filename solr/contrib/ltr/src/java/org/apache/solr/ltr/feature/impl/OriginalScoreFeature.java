@@ -18,11 +18,13 @@ package org.apache.solr.ltr.feature.impl;
  */
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Weight;
 import org.apache.solr.ltr.feature.norm.Normalizer;
@@ -31,31 +33,24 @@ import org.apache.solr.ltr.ranking.FeatureScorer;
 import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.NamedParams;
+import org.apache.solr.request.SolrQueryRequest;
 
 public class OriginalScoreFeature extends Feature {
 
   @Override
   public OriginalScoreWeight createWeight(IndexSearcher searcher,
-      boolean needsScores) throws IOException {
-    return new OriginalScoreWeight(searcher, name, params, norm, id);
+      boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
+    return new OriginalScoreWeight(searcher, name, params, norm, id, request, originalQuery, efi);
 
   }
 
   public class OriginalScoreWeight extends FeatureWeight {
 
-    Weight w = null;
+    final Weight w;
 
     public OriginalScoreWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(OriginalScoreFeature.this, searcher, name, params, norm, id);
-
-    }
-
-    @Override
-    public void process() throws IOException {
-      // I can't set w before in the constructor because I would need to have it
-      // in the query for doing that. But the query/feature is shared among
-      // different threads so I can't set the original query there.
+        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
+      super(OriginalScoreFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
       w = searcher.createNormalizedWeight(originalQuery, true);
     };
 

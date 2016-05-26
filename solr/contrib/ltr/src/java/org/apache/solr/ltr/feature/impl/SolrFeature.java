@@ -20,6 +20,7 @@ package org.apache.solr.ltr.feature.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSet;
@@ -48,9 +49,9 @@ import org.apache.solr.search.SyntaxError;
 public class SolrFeature extends Feature {
 
   @Override
-  public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
+  public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new SolrFeatureWeight(searcher, name, params, norm, id);
+    return new SolrFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
   }
 
   public class SolrFeatureWeight extends FeatureWeight {
@@ -59,12 +60,8 @@ public class SolrFeature extends Feature {
     List<Query> queryAndFilters;
 
     public SolrFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) throws IOException {
-      super(SolrFeature.this, searcher, name, params, norm, id);
-    }
-
-    @Override
-    public void process() throws IOException {
+        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
+      super(SolrFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
       try {
         final String df = (String) getParams().get(CommonParams.DF);
         final String defaultParser = (String) getParams().get("defaultParser");
@@ -83,7 +80,7 @@ public class SolrFeature extends Feature {
 
         solrQuery = macroExpander.expand(solrQuery);
         if (solrQuery == null) {
-          throw new FeatureException("Feature requires efi parameter that was not passed in request.");
+          throw new FeatureException(this.getClass().getCanonicalName()+" requires efi parameter that was not passed in request.");
         }
 
         final SolrQueryRequest req = makeRequest(request.getCore(), solrQuery,
