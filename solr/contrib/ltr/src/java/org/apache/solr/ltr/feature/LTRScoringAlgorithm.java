@@ -18,6 +18,7 @@ package org.apache.solr.ltr.feature;
  */
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.lucene.index.LeafReaderContext;
@@ -58,7 +59,11 @@ public abstract class LTRScoringAlgorithm {
    * @return the features
    */
   public List<Feature> getFeatures() {
-    return features;
+    return Collections.unmodifiableList(features);
+  }
+
+  public int numFeatures() {
+    return features.size();
   }
 
   public NamedParams getParams() {
