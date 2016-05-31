@@ -36,7 +36,7 @@ public class RankSVMModel extends LTRScoringAlgorithm {
   public static final String WEIGHTS_PARAM = "weights";
 
   public RankSVMModel(String name, List<Feature> features,
-      String featureStoreName, Collection<Feature> allFeatures,
+      String featureStoreName, List<Feature> allFeatures,
       NamedParams params) throws ModelException {
     super(name, features, featureStoreName, allFeatures, params);
 

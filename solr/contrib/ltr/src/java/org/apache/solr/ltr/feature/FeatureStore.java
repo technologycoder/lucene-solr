@@ -67,8 +67,9 @@ public class FeatureStore {
     store.put(feature.getName(), feature);
   }
 
-  public Collection<Feature> getFeatures() {
-    return Collections.unmodifiableCollection(store.values());
+  public List<Feature> getFeatures() {
+    final List<Feature> storeValues = new ArrayList<Feature>(store.values());
+    return Collections.unmodifiableList(storeValues);
   }
 
   public void clear() {

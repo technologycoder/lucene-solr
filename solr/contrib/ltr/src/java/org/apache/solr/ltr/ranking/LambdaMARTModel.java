@@ -170,7 +170,7 @@ public class LambdaMARTModel extends LTRScoringAlgorithm {
   }
 
   public LambdaMARTModel(String name, List<Feature> features,
-      String featureStoreName, Collection<Feature> allFeatures,
+      String featureStoreName, List<Feature> allFeatures,
       NamedParams params) throws ModelException {
     super(name, features, featureStoreName, allFeatures, params);
 
