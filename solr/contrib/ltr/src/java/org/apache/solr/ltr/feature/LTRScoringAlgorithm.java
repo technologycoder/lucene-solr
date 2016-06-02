@@ -35,11 +35,11 @@ public abstract class LTRScoringAlgorithm {
   private final String name;
   private final String featureStoreName;
   private final List<Feature> features;
-  private final Collection<Feature> allFeatures;
+  private final List<Feature> allFeatures;
   private final NamedParams params;
 
   public LTRScoringAlgorithm(String name, List<Feature> features,
-      String featureStoreName, Collection<Feature> allFeatures,
+      String featureStoreName, List<Feature> allFeatures,
       NamedParams params) {
     this.name = name;
     this.features = features;

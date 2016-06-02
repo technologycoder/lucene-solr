@@ -78,7 +78,7 @@ public class TestReRankingPipeline extends LuceneTestCase {
   private class MockModel extends LTRScoringAlgorithm {
 
     public MockModel(String name, List<Feature> features,
-        String featureStoreName, Collection<Feature> allFeatures,
+        String featureStoreName, List<Feature> allFeatures,
         NamedParams params) {
       super(name, features, featureStoreName, allFeatures, params);
     }

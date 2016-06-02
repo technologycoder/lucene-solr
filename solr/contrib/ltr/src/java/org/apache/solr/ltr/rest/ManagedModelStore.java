@@ -204,7 +204,7 @@ public class ManagedModelStore extends ManagedResource implements
           type,
           LTRScoringAlgorithm.class,
           new String[0], // no sub packages
-          new Class[] { String.class, List.class, String.class, Collection.class, NamedParams.class },
+          new Class[] { String.class, List.class, String.class, List.class, NamedParams.class },
           new Object[] { name, features, featureStoreName, fstore.getFeatures(), params });
     } catch (final Exception e) {
       throw new ModelException("Model type does not exist " + type, e);

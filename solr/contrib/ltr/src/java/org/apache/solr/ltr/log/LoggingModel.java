@@ -18,13 +18,13 @@ public class LoggingModel extends LTRScoringAlgorithm {
 
   final static String LOGGING_MODEL_NAME = "logging-model";
 
-  public LoggingModel(String featureStoreName, Collection<Feature> allFeatures){
+  public LoggingModel(String featureStoreName, List<Feature> allFeatures){
     this(LOGGING_MODEL_NAME, Collections.emptyList(), featureStoreName, allFeatures, NamedParams.EMPTY);
   }
 
 
   protected LoggingModel(String name, List<Feature> features, String featureStoreName,
-      Collection<Feature> allFeatures, NamedParams params) {
+      List<Feature> allFeatures, NamedParams params) {
     super(name, features, featureStoreName, allFeatures, params);
   }
 
