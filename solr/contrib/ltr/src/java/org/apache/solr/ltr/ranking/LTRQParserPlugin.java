@@ -82,13 +82,12 @@ public class LTRQParserPlugin extends QParserPlugin {
             "Must provide model in the request");
       }
 
-      ModelQuery reRankModel = null;
-      try {
-        final LTRScoringAlgorithm meta = mr.getModel(modelName);
-        reRankModel = new ModelQuery(meta);
-      } catch (final ModelException e) {
-        throw new SolrException(ErrorCode.BAD_REQUEST, e);
+      final LTRScoringAlgorithm meta = mr.getModel(modelName);
+      if (meta == null) {
+        throw new SolrException(ErrorCode.BAD_REQUEST,
+            "cannot find " + CommonLTRParams.MODEL + " " + modelName);
       }
+      final ModelQuery reRankModel = new ModelQuery(meta);
 
       int reRankDocs = localParams.getInt(CommonLTRParams.RERANK_DOCS,
           CommonLTRParams.DEFAULT_RERANK_DOCS);

@@ -132,6 +132,11 @@ public class ManagedModelStore extends ManagedResource implements
     }
 
     Feature meta = featureStore.get(name);
+    if (meta == null) {
+      throw new FeatureException("feature " + name
+          + " not found in store " + featureStore.getName());
+    }
+
     meta = (Feature) meta.clone();
     meta.setNorm(norm);
 
@@ -276,7 +281,7 @@ public class ManagedModelStore extends ManagedResource implements
     store.addModel(modeldata);
   }
 
-  public LTRScoringAlgorithm getModel(String modelName) throws ModelException {
+  public LTRScoringAlgorithm getModel(String modelName) {
     // this function replicates getModelStore().getModel(modelName), but
     // it simplifies the testing (we can avoid to mock also a ModelStore).
     return store.getModel(modelName);

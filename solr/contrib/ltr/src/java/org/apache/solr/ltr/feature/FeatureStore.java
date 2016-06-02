@@ -19,27 +19,26 @@ package org.apache.solr.ltr.feature;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.solr.ltr.ranking.Feature;
-import org.apache.solr.ltr.util.FeatureException;
 
 public class FeatureStore {
-  LinkedHashMap<String,Feature> store = new LinkedHashMap<>();
-  String storeName;
+  private final LinkedHashMap<String,Feature> store = new LinkedHashMap<>(); // LinkedHashMap because we need predictable iteration order
+  private final String name;
 
-  public FeatureStore(String storeName) {
-    this.storeName = storeName;
+  public FeatureStore(String name) {
+    this.name = name;
   }
 
-  public Feature get(String name) throws FeatureException {
-    if (!store.containsKey(name)) {
-      throw new FeatureException("missing feature " + name
-          + ". Store name was: '" + storeName
-          + "'. Possibly this feature exists in another context.");
-    }
+  public String getName() {
+    return name;
+  }
+
+  public Feature get(String name) {
     return store.get(name);
   }
 
@@ -52,12 +51,12 @@ public class FeatureStore {
   }
 
   public List<Object> featuresAsManagedResources() {
-    final List<Object> features = new ArrayList<Object>();
+    final List<Object> features = new ArrayList<Object>(store.size());
     for (final Feature f : store.values()) {
-      final Map<String,Object> o = new LinkedHashMap<>();
+      final Map<String,Object> o = new LinkedHashMap<>(4, 1.0f);
       o.put("name", f.getName());
       o.put("type", f.getClass().getCanonicalName());
-      o.put("store", storeName);
+      o.put("store", name);
       o.put("params", f.getParams());
       features.add(o);
     }
@@ -69,12 +68,16 @@ public class FeatureStore {
   }
 
   public Collection<Feature> getFeatures() {
-    return store.values();
+    return Collections.unmodifiableCollection(store.values());
   }
 
   public void clear() {
     store.clear();
+  }
 
+  @Override
+  public String toString() {
+    return "FeatureStore [features=" + store.keySet() + "]";
   }
 
 }
