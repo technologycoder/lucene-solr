@@ -27,7 +27,7 @@ import java.util.Map;
 import org.apache.solr.ltr.ranking.Feature;
 
 public class FeatureStore {
-  private final Map<String,Feature> store = new LinkedHashMap<>(); // LinkedHashMap because we need predictable iteration order
+  private final LinkedHashMap<String,Feature> store = new LinkedHashMap<>(); // LinkedHashMap because we need predictable iteration order
   private final String name;
 
   public FeatureStore(String name) {
