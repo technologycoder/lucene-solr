@@ -50,13 +50,13 @@ public class FieldValueFeature extends Feature {
     if (!params.containsKey(CommonLTRParams.FEATURE_FIELD_PARAM)) {
       throw new FeatureException("missing param field");
     }
+    fieldName = (String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM);
+    fields.add(fieldName);
   }
 
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
       throws IOException {
-    fieldName = (String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM);
-    fields.add(fieldName);
     return new FieldValueFeatureWeight(searcher, name, params, norm, id);
   }
 
