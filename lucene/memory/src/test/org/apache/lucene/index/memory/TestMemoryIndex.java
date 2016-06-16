@@ -54,7 +54,6 @@ import org.apache.lucene.index.SortedNumericDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -138,23 +137,33 @@ public class TestMemoryIndex extends LuceneTestCase {
     MemoryIndex mi = new MemoryIndex();
     mi.addField("field", "some terms be here", analyzer);
     TestUtil.checkReader(mi.createSearcher().getIndexReader());
+    assertNotNull(mi.toString());
+    System.out.println(mi.toString());
     
     // all combinations of offsets/payloads options
     mi = new MemoryIndex(true, true);
     mi.addField("field", "some terms be here", analyzer);
     TestUtil.checkReader(mi.createSearcher().getIndexReader());
+    assertNotNull(mi.toString());
+    System.out.println(mi.toString());
     
     mi = new MemoryIndex(true, false);
     mi.addField("field", "some terms be here", analyzer);
     TestUtil.checkReader(mi.createSearcher().getIndexReader());
+    assertNotNull(mi.toString());
+    System.out.println(mi.toString());
     
     mi = new MemoryIndex(false, true);
     mi.addField("field", "some terms be here", analyzer);
     TestUtil.checkReader(mi.createSearcher().getIndexReader());
+    assertNotNull(mi.toString());
+    System.out.println(mi.toString());
     
     mi = new MemoryIndex(false, false);
     mi.addField("field", "some terms be here", analyzer);
     TestUtil.checkReader(mi.createSearcher().getIndexReader());
+    assertNotNull(mi.toString());
+    System.out.println(mi.toString());
     
     analyzer.close();
   }
@@ -463,46 +472,6 @@ public class TestMemoryIndex extends LuceneTestCase {
     assertArrayEquals(packedPoint, leafReader.getPointValues().getMaxPackedValue("field"));
 
     assertEquals("term", leafReader.getBinaryDocValues("field").get(0).utf8ToString());
-  }
-
-  @Test
-  public void testToString() throws IOException, ParseException {
-
-    MemoryIndex mi = new MemoryIndex();
-    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
-    mi.addField("author", "Tales of James", analyzer);
-
-    assertNotNull(mi.toString());
-  }
-
-  @Test
-  public void testOffsetToString() throws IOException, ParseException {
-
-    MemoryIndex mi = new MemoryIndex(true);
-    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
-    mi.addField("author", "Tales of James", analyzer);
-
-    assertNotNull(mi.toString());
-  }
-
-  @Test
-  public void testPayloadToString() throws IOException, ParseException {
-
-    MemoryIndex mi = new MemoryIndex(true, true);
-    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
-    mi.addField("author", "Tales of James", analyzer);
-
-    assertNotNull(mi.toString());
-  }
-
-  @Test
-  public void testPayloadNoPositionsToString() throws IOException, ParseException {
-
-    MemoryIndex mi = new MemoryIndex(false, true);
-    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
-    mi.addField("author", "Tales of James", analyzer);
-
-    assertNotNull(mi.toString());
   }
 
 }
