@@ -604,6 +604,7 @@ public class MemoryIndex {
     int sumPositions = 0;
     int sumTerms = 0;
     final BytesRef spare = new BytesRef();
+    final BytesRefBuilder payloadBuilder = storePayloads ? new BytesRefBuilder() : null;
     for (Map.Entry<String, Info> entry : fields.entrySet()) {
       String fieldName = entry.getKey();
       Info info = entry.getValue();
@@ -611,6 +612,7 @@ public class MemoryIndex {
       result.append(fieldName + ":\n");
       SliceByteStartArray sliceArray = info.sliceArray;
       int numPositions = 0;
+      int numPayloads = 0;
       SliceReader postingsReader = new SliceReader(intBlockPool);
       for (int j = 0; j < info.terms.size(); j++) {
         int ord = info.sortedTerms[j];
@@ -630,6 +632,13 @@ public class MemoryIndex {
             }
           }
           result.append(")");
+          if (storePayloads) {
+            int payloadIndex = postingsReader.readInt();
+            if (payloadIndex != -1) {
+                numPayloads += 1;
+                result.append(" : " + payloadsBytesRefs.get(payloadBuilder, payloadIndex));
+            }
+          }
           if (!postingsReader.endOfSlice()) {
             result.append(",");
           }
@@ -642,6 +651,7 @@ public class MemoryIndex {
 
       result.append("\tterms=" + info.terms.size());
       result.append(", positions=" + numPositions);
+      result.append(", payloads=" + numPayloads);
       result.append("\n");
       sumPositions += numPositions;
       sumTerms += info.terms.size();

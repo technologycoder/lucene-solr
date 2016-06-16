@@ -26,6 +26,7 @@ import org.apache.lucene.index.FieldInvertState;
 import org.apache.lucene.index.LeafReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.TermQuery;
@@ -156,5 +157,44 @@ public class TestMemoryIndex extends LuceneTestCase {
     TestUtil.checkReader(reader);
   }
 
+  @Test
+  public void testToString() throws IOException, ParseException {
+
+    MemoryIndex mi = new MemoryIndex();
+    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
+    mi.addField("author", "Tales of James", analyzer);
+
+    assertNotNull(mi.toString());
+  }
+
+  @Test
+  public void testOffsetToString() throws IOException, ParseException {
+
+    MemoryIndex mi = new MemoryIndex(true);
+    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
+    mi.addField("author", "Tales of James", analyzer);
+
+    assertNotNull(mi.toString());
+  }
+
+  @Test
+  public void testPayloadToString() throws IOException, ParseException {
+
+    MemoryIndex mi = new MemoryIndex(true, true);
+    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
+    mi.addField("author", "Tales of James", analyzer);
+
+    assertNotNull(mi.toString());
+  }
+
+  @Test
+  public void testPayloadNoPositionsToString() throws IOException, ParseException {
+
+    MemoryIndex mi = new MemoryIndex(false, true);
+    mi.addField("content", "Readings about Salmons and other select Alaska fishing Manuals", analyzer);
+    mi.addField("author", "Tales of James", analyzer);
+
+    assertNotNull(mi.toString());
+  }
 
 }
