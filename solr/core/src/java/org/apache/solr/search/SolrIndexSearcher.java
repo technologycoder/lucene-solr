@@ -53,7 +53,6 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.MultiPostingsEnum;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.index.PostingsEnum;
-import org.apache.lucene.index.SlowCompositeReaderWrapper;
 import org.apache.lucene.index.SortedDocValues;
 import org.apache.lucene.index.SortedSetDocValues;
 import org.apache.lucene.index.StoredFieldVisitor;
@@ -94,7 +93,6 @@ import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.TotalHitCountCollector;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.uninverting.UninvertingReader;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.FixedBitSet;
@@ -109,10 +107,12 @@ import org.apache.solr.core.DirectoryFactory.DirContext;
 import org.apache.solr.core.SolrConfig;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.core.SolrInfoMBean;
+import org.apache.solr.index.SlowCompositeReaderWrapper;
 import org.apache.solr.request.LocalSolrQueryRequest;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.request.SolrRequestInfo;
 import org.apache.solr.response.SolrQueryResponse;
+import org.apache.solr.schema.BoolField;
 import org.apache.solr.schema.EnumField;
 import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.schema.SchemaField;
@@ -122,6 +122,7 @@ import org.apache.solr.schema.TrieFloatField;
 import org.apache.solr.schema.TrieIntField;
 import org.apache.solr.search.facet.UnInvertedField;
 import org.apache.solr.search.stats.StatsSource;
+import org.apache.solr.uninverting.UninvertingReader;
 import org.apache.solr.update.IndexFingerprint;
 import org.apache.solr.update.SolrIndexConfig;
 import org.slf4j.Logger;
@@ -841,8 +842,15 @@ public class SolrIndexSearcher extends IndexSearcher implements Closeable, SolrI
             break;
           case SORTED:
             SortedDocValues sdv = leafReader.getSortedDocValues(fieldName);
-            if (sdv.getOrd(docid) >= 0) {
-              doc.addField(fieldName, sdv.get(docid).utf8ToString());
+            int ord = sdv.getOrd(docid);
+            if (ord >= 0) {
+              // Special handling for Boolean fields since they're stored as 'T' and 'F'.
+              if (schemaField.getType() instanceof BoolField) {
+                final BytesRef bRef = sdv.lookupOrd(ord);
+                doc.addField(fieldName, schemaField.getType().toObject(schemaField, bRef));
+              } else {
+                doc.addField(fieldName, sdv.get(docid).utf8ToString());
+              }
             }
             break;
           case SORTED_NUMERIC:
