@@ -35,15 +35,15 @@ import org.apache.solr.request.SolrQueryRequest;
 
 public abstract class FeatureWeight extends Weight {
 
-  protected String name;
-  protected NamedParams params = NamedParams.EMPTY;
-  protected Normalizer norm = IdentityNormalizer.INSTANCE;
-  protected IndexSearcher searcher;
-  protected SolrQueryRequest request;
-  protected Map<String,String> efi;
-  protected MacroExpander macroExpander;
-  protected Query originalQuery;
-  protected int id;
+  final protected String name;
+  final protected NamedParams params;
+  final protected Normalizer norm;
+  final protected IndexSearcher searcher;
+  final protected SolrQueryRequest request;
+  final protected Map<String,String> efi;
+  final protected MacroExpander macroExpander;
+  final protected Query originalQuery;
+  final protected int id;
 
   /**
    * Initialize a feature without the normalizer from the feature file. This is
@@ -67,29 +67,18 @@ public abstract class FeatureWeight extends Weight {
    *          features.
    */
   public FeatureWeight(Query q, IndexSearcher searcher, String name,
-      NamedParams params, Normalizer norm, int id) {
+      NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
     super(q);
     this.searcher = searcher;
     this.name = name;
     this.params = params;
     this.id = id;
     this.norm = norm;
-  }
-
-  public final void setRequest(SolrQueryRequest request) {
     this.request = request;
-  }
-
-  public final void setExternalFeatureInfo(Map<String,String> efi) {
+    this.originalQuery = originalQuery;
     this.efi = efi;
     macroExpander = new MacroExpander(efi);
   }
-
-  /**
-   * Called once after all parameters have been set on the weight. Override this
-   * to do things with the original query, request, or external parameters.
-   */
-  public void process() throws IOException {}
 
   public String getName() {
     return name;
@@ -151,11 +140,4 @@ public abstract class FeatureWeight extends Weight {
         + "]";
   }
 
-  /**
-   * @param originalQuery
-   *          the originalQuery to set
-   */
-  public final void setOriginalQuery(Query originalQuery) {
-    this.originalQuery = originalQuery;
-  }
 }

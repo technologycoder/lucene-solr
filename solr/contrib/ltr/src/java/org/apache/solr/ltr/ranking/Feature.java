@@ -18,6 +18,7 @@ package org.apache.solr.ltr.ranking;
  */
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -25,6 +26,7 @@ import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
+import org.apache.solr.request.SolrQueryRequest;
 
 /**
  * A 'recipe' for computing a feature
@@ -66,9 +68,8 @@ public abstract class Feature extends Query implements Cloneable {
         + ", params=" + params + "]";
   }
 
-  @Override
   public abstract FeatureWeight createWeight(IndexSearcher searcher,
-      boolean needsScores) throws IOException;
+      boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException;
 
   @Override
   public int hashCode() {

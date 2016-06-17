@@ -18,6 +18,7 @@ package org.apache.solr.ltr.feature.impl;
  */
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.lucene.document.Document;
@@ -25,6 +26,7 @@ import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.ranking.FeatureScorer;
@@ -32,6 +34,7 @@ import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
+import org.apache.solr.request.SolrQueryRequest;
 
 import com.google.common.collect.Sets;
 
@@ -55,9 +58,9 @@ public class FieldValueFeature extends Feature {
   }
 
   @Override
-  public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
+  public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new FieldValueFeatureWeight(searcher, name, params, norm, id);
+    return new FieldValueFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
   }
 
   @Override
@@ -69,8 +72,8 @@ public class FieldValueFeature extends Feature {
   public class FieldValueFeatureWeight extends FeatureWeight {
 
     public FieldValueFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(FieldValueFeature.this, searcher, name, params, norm, id);
+        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
+      super(FieldValueFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
     }
 
     @Override

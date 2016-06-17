@@ -111,12 +111,12 @@ public class TestExternalFeatures extends TestRerankBase {
 
     // Features we're extracting depend on external feature info not passed in
     query.add("fl", "[fv]");
-    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception for org.apache.solr.ltr.feature.impl.SolrFeature$SolrFeatureWeight [name=matchedTitle, params={q={!terms f=title}${user_query}}] Feature requires efi parameter that was not passed in request.'");
+    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception from createWeight for Feature [name=matchedTitle, type=SolrFeature, id=0, params={q={!terms f=title}${user_query}}] org.apache.solr.ltr.feature.impl.SolrFeature.SolrFeatureWeight requires efi parameter that was not passed in request.'");
 
     // Using nondefault store should still result in error with no efi
     query.remove("fl");
     query.add("fl", "[fv store=fstore2]");
-    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception for org.apache.solr.ltr.feature.impl.ValueFeature$ValueFeatureWeight [name=confidence, params={value=${myconf}}] Feature requires efi parameter that was not passed in request.'");
+    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception from createWeight for Feature [name=confidence, type=ValueFeature, id=0, params={value=${myconf}}] org.apache.solr.ltr.feature.impl.ValueFeature.ValueFeatureWeight requires efi parameter that was not passed in request.'");
 
     // Adding efi in features section should make it work
     query.remove("fl");

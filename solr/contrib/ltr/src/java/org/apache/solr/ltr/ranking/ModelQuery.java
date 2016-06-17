@@ -160,20 +160,15 @@ public class ModelQuery extends Query {
     final SolrQueryRequest req = getRequest();
     // since the feature store is a linkedhashmap order is preserved
     for (final Feature f : features) {
-      final FeatureWeight fw = f.createWeight(searcher, needsScores);
+      try {
+        final FeatureWeight fw = f.createWeight(searcher, needsScores, req, originalQuery, efi);
 
-      try{
-        fw.setRequest(req);
-        fw.setOriginalQuery(originalQuery);
-        fw.setExternalFeatureInfo(efi);
-        fw.process();
+        arr[i] = fw;
+        ++i;
       } catch (final Exception e) {
-        throw new FeatureException("Exception for " + fw.toString() + " "
+        throw new FeatureException("Exception from createWeight for " + f.toString() + " "
             + e.getMessage(), e);
       }
-
-      arr[i] = fw;
-      ++i;
     }
     return arr;
   }

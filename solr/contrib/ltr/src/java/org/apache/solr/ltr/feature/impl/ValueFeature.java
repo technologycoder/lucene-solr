@@ -18,16 +18,19 @@ package org.apache.solr.ltr.feature.impl;
  */
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
 import org.apache.solr.ltr.ranking.FeatureScorer;
 import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
+import org.apache.solr.request.SolrQueryRequest;
 
 public class ValueFeature extends Feature {
 
@@ -64,31 +67,22 @@ public class ValueFeature extends Feature {
   }
 
   @Override
-  public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores)
+  public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new ValueFeatureWeight(searcher, name, params, norm, id);
+    return new ValueFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
   }
 
   public class ValueFeatureWeight extends FeatureWeight {
 
-    protected float featureValue;
+    final protected float featureValue;
 
     public ValueFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id) {
-      super(ValueFeature.this, searcher, name, params, norm, id);
-    }
-
-    @Override
-    public void process() throws IOException {
-      // Value replace from external feature info if applicable. Each request
-      // can change the
-      // value if it is using ${myExternalValue} for the configValueStr,
-      // otherwise use the
-      // constant value provided in the config.
+        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
+      super(ValueFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
       if (configValueStr != null) {
         final String expandedValue = macroExpander.expand(configValueStr);
         if (expandedValue == null) {
-          throw new FeatureException("Feature requires efi parameter that was not passed in request.");
+          throw new FeatureException(this.getClass().getCanonicalName()+" requires efi parameter that was not passed in request.");
         }
 
         featureValue = Float.parseFloat(expandedValue);
