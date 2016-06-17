@@ -23,8 +23,32 @@ import org.apache.solr.ltr.util.NormalizerException;
 
 public class StandardNormalizer extends Normalizer {
 
-  private float avg;
-  private float std;
+  private float avg = 0f;
+  private float std = 1f;
+
+  public float getAvg() {
+    return avg;
+  }
+
+  public void setAvg(float avg) {
+    this.avg = avg;
+  }
+
+  public float getStd() {
+    return std;
+  }
+
+  public void setStd(float std) {
+    this.std = std;
+  }
+
+  public void setAvg(String avg) {
+    this.avg = Float.parseFloat(avg);
+  }
+
+  public void setStd(String std) {
+    this.std = Float.parseFloat(std);
+  }
 
   @Override
   public void init(NamedParams params) throws NormalizerException {

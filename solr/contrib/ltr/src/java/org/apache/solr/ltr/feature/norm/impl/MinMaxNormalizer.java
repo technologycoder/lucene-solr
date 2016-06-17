@@ -23,9 +23,41 @@ import org.apache.solr.ltr.util.NormalizerException;
 
 public class MinMaxNormalizer extends Normalizer {
 
-  private float min;
-  private float max;
-  private float delta;
+  private float min = Float.NEGATIVE_INFINITY;
+  private float max = Float.POSITIVE_INFINITY;
+  private float delta = max - min;
+
+  private void updateDelta() {
+    delta = max - min;
+  }
+
+  public float getMin() {
+    return min;
+  }
+
+  public void setMin(float min) {
+    this.min = min;
+    updateDelta();
+  }
+
+  public void setMin(String min) {
+    this.min = Float.parseFloat(min);
+    updateDelta();
+  }
+
+  public float getMax() {
+    return max;
+  }
+
+  public void setMax(float max) {
+    this.max = max;
+    updateDelta();
+  }
+
+  public void setMax(String max) {
+    this.max = Float.parseFloat(max);
+    updateDelta();
+  }
 
   @Override
   public void init(NamedParams params) throws NormalizerException {
@@ -48,7 +80,7 @@ public class MinMaxNormalizer extends Normalizer {
           "invalid param value for normalizer MinMaxNormalizer", e);
     }
 
-    delta = max - min;
+    updateDelta();
     if (delta <= 0) {
       throw new NormalizerException(
           "invalid param value for MinMaxNormalizer, min must be lower than max ");

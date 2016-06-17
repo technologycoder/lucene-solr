@@ -9,7 +9,7 @@
             "name":"popularity",
             "norm": {
                 "type":"org.apache.solr.ltr.feature.norm.impl.MinMaxNormalizer",
-                "params":{ "min":0.0, "max":10.0 }
+                "params":{ "min":"0.0f", "max":"10.0f" }
             }
         },
         {"name":"text"},
