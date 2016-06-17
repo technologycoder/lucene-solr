@@ -17,8 +17,11 @@
 package org.apache.lucene.search;
 
 import java.io.IOException;
+import java.util.AbstractCollection;
 import java.util.Arrays;
-
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.LeafReader;
@@ -301,6 +304,54 @@ public abstract class PointInSetQuery extends Query {
         return Relation.CELL_INSIDE_QUERY;
       }
     }
+  }
+
+  public Collection<byte[]> getPackedPoints() {
+    return new AbstractCollection<byte[]>() {
+
+      @Override
+      public Iterator<byte[]> iterator() {
+        int size = (int) sortedPackedPoints.size();
+        PrefixCodedTerms.TermIterator iterator = sortedPackedPoints.iterator();
+        return new Iterator<byte[]>() {
+
+          int upto = 0;
+
+          @Override
+          public boolean hasNext() {
+            return upto < size;
+          }
+
+          @Override
+          public byte[] next() {
+            if (upto == size) {
+              throw new NoSuchElementException();
+            }
+
+            upto++;
+            BytesRef next = iterator.next();
+            return Arrays.copyOfRange(next.bytes, next.offset, next.length);
+          }
+        };
+      }
+
+      @Override
+      public int size() {
+        return (int) sortedPackedPoints.size();
+      }
+    };
+  }
+
+  public String getField() {
+    return field;
+  }
+
+  public int getNumDims() {
+    return numDims;
+  }
+
+  public int getBytesPerDim() {
+    return bytesPerDim;
   }
 
   @Override
