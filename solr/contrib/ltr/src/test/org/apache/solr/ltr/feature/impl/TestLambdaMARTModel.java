@@ -19,27 +19,19 @@ package org.apache.solr.ltr.feature.impl;
 
 //import static org.junit.internal.matchers.StringContains.containsString;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.lucene.util.LuceneTestCase.SuppressCodecs;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.ltr.TestRerankBase;
-import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.ModelException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @SuppressCodecs({"Lucene3x", "Lucene41", "Lucene40", "Appending"})
 public class TestLambdaMARTModel extends TestRerankBase {
 
-  @SuppressWarnings("unused")
-  private static final Logger logger = LoggerFactory.getLogger(MethodHandles
-      .lookup().lookupClass());
 
   @BeforeClass
   public static void before() throws Exception {
