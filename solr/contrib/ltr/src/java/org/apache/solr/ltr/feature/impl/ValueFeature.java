@@ -74,18 +74,20 @@ public class ValueFeature extends Feature {
 
   public class ValueFeatureWeight extends FeatureWeight {
 
-    final protected float featureValue;
+    final protected Float featureValue;
 
     public ValueFeatureWeight(IndexSearcher searcher, String name,
         NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
       super(ValueFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
       if (configValueStr != null) {
         final String expandedValue = macroExpander.expand(configValueStr);
-        if (expandedValue == null) {
-          throw new FeatureException(this.getClass().getCanonicalName()+" requires efi parameter that was not passed in request.");
+        if (expandedValue != null) {
+          featureValue = Float.parseFloat(expandedValue);
+        }else{
+          featureValue=null;
         }
 
-        featureValue = Float.parseFloat(expandedValue);
+
       } else {
         featureValue = configValue;
       }
@@ -93,7 +95,10 @@ public class ValueFeature extends Feature {
 
     @Override
     public FeatureScorer scorer(LeafReaderContext context) throws IOException {
-      return new ValueFeatureScorer(this, featureValue, "ValueFeature");
+      if(featureValue!=null)
+        return new ValueFeatureScorer(this, featureValue, "ValueFeature");
+      else
+        return null;
     }
 
     /**

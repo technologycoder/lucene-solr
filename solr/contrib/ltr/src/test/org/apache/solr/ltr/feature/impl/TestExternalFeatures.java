@@ -115,9 +115,8 @@ public class TestExternalFeatures extends TestRerankBase {
 
     // Using nondefault store should still result in error with no efi
     query.remove("fl");
-    query.add("fl", "[fv store=fstore2]");
-    assertJQ("/query" + query.toQueryString(), "/error/msg=='Exception from createWeight for Feature [name=confidence, type=ValueFeature, id=0, params={value=${myconf}}] org.apache.solr.ltr.feature.impl.ValueFeature.ValueFeatureWeight requires efi parameter that was not passed in request.'");
-
+    query.add("fl", "fvalias:[fv store=fstore2]");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/fvalias=='originalScore:0.0'");
     // Adding efi in features section should make it work
     query.remove("fl");
     query.add("fl", "score,fvalias:[fv store=fstore2 efi.myconf=2.3]");
