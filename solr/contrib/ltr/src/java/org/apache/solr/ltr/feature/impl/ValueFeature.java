@@ -36,6 +36,7 @@ public class ValueFeature extends Feature {
 
   protected float configValue = -1f;
   protected String configValueStr = null;
+  protected boolean required = false;
   /** name of the attribute containing the value of this feature **/
   private static final String VALUE_FIELD = "value";
 
@@ -45,6 +46,9 @@ public class ValueFeature extends Feature {
   public void init(String name, NamedParams params, int id)
       throws FeatureException {
     super.init(name, params, id);
+    final Object paramRequired = params.get("required");
+    if (paramRequired != null)
+      this.required = (boolean) paramRequired;
     final Object paramValue = params.get(VALUE_FIELD);
     if (paramValue == null) {
       throw new FeatureException("Missing the field 'value' in params for "
@@ -83,7 +87,9 @@ public class ValueFeature extends Feature {
         final String expandedValue = macroExpander.expand(configValueStr);
         if (expandedValue != null) {
           featureValue = Float.parseFloat(expandedValue);
-        }else{
+        } else if (required) {
+          throw new FeatureException(this.getClass().getCanonicalName() + " requires efi parameter that was not passed in request.");
+        } else {
           featureValue=null;
         }
 
