@@ -33,12 +33,13 @@ import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.SolrQueryRequest;
 
 public class ValueFeature extends Feature {
+  /** name of the attribute containing the value of this feature **/
+  private static final String VALUE_FIELD = "value";
+  private static final String REQUIRED_PARAM = "required";
 
   protected float configValue = -1f;
   protected String configValueStr = null;
   protected boolean required = false;
-  /** name of the attribute containing the value of this feature **/
-  private static final String VALUE_FIELD = "value";
 
   public ValueFeature() {}
 
@@ -46,7 +47,7 @@ public class ValueFeature extends Feature {
   public void init(String name, NamedParams params, int id)
       throws FeatureException {
     super.init(name, params, id);
-    final Object paramRequired = params.get("required");
+    final Object paramRequired = params.get(REQUIRED_PARAM);
     if (paramRequired != null)
       this.required = (boolean) paramRequired;
     final Object paramValue = params.get(VALUE_FIELD);
