@@ -1,0 +1,3 @@
+<ivy-module version="2.0">
+    <info organisation="org.apache.solr" module="analysis-bbnews"/>
+</ivy-module>

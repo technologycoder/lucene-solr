@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<project name="solr-analysis-bbnews" default="default">
+
+  <description>
+    Analysis components specific to Bloomberg (News)
+  </description>
+
+  <import file="../contrib-build.xml"/>
+
+</project>
