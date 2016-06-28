@@ -8,6 +8,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.solr.core.SolrCore;
 
 //analyser filter for considering the last payload value as the term frequency
+@Deprecated // in favour of com.bloomberg.news.lucene.analysis RepeatingTokenFilter
 public class RepeatingTokenFilter extends TokenFilter {
     private final char              delimiter;
     private final CharTermAttribute termAtt           = addAttribute(CharTermAttribute.class);

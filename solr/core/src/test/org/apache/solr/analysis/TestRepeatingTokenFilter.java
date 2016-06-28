@@ -27,6 +27,7 @@ import org.apache.lucene.util.LuceneTestCase;
  * limitations under the License.
  */
 
+@Deprecated // in favour of com.bloomberg.news.lucene.analysis TestRepeatingTokenFilter
 public class TestRepeatingTokenFilter extends LuceneTestCase{
   
   public final void testRepeatingToken() throws IOException
