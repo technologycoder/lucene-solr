@@ -11,7 +11,7 @@ import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.IndexSchema;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -31,8 +31,6 @@ import java.io.UnsupportedEncodingException;
  */
 
 public class XmlQParserPlugin extends QParserPlugin {
-
-  private static String contentEncoding = "UTF8";
 
   public void init(@SuppressWarnings("rawtypes") NamedList args) {
   }
@@ -62,9 +60,7 @@ public class XmlQParserPlugin extends QParserPlugin {
               schema.getQueryAnalyzer()));
 
       try {
-        return solr_parser.parse(new ByteArrayInputStream(qstr.getBytes(contentEncoding)));
-      } catch (UnsupportedEncodingException e) {
-        throw new SyntaxError(e.getMessage() + " in " + req.toString());
+        return solr_parser.parse(new ByteArrayInputStream(qstr.getBytes(StandardCharsets.UTF_8)));
       } catch (ParserException e) {
         throw new SyntaxError(e.getMessage() + " in " + req.toString());
       }
