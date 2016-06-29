@@ -24,10 +24,7 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
-import org.apache.solr.ltr.ranking.FeatureScorer;
-import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.SolrQueryRequest;
@@ -74,22 +71,22 @@ public class ValueFeature extends Feature {
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new ValueFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
+    return new ValueFeatureWeight(searcher, request, originalQuery, efi);
   }
 
   public class ValueFeatureWeight extends FeatureWeight {
 
     final protected Float featureValue;
 
-    public ValueFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
-      super(ValueFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
+    public ValueFeatureWeight(IndexSearcher searcher, 
+        SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
+      super(ValueFeature.this, searcher, request, originalQuery, efi);
       if (configValueStr != null) {
         final String expandedValue = macroExpander.expand(configValueStr);
         if (expandedValue != null) {
           featureValue = Float.parseFloat(expandedValue);
         } else if (required) {
-          throw new FeatureException(this.getClass().getCanonicalName() + " requires efi parameter that was not passed in request.");
+          throw new FeatureException(this.getClass().getSimpleName() + " requires efi parameter that was not passed in request.");
         } else {
           featureValue=null;
         }
@@ -103,10 +100,13 @@ public class ValueFeature extends Feature {
     @Override
     public FeatureScorer scorer(LeafReaderContext context) throws IOException {
       if(featureValue!=null)
-        return new ValueFeatureScorer(this, featureValue, "ValueFeature");
+        return new ValueFeatureScorer(this, featureValue);
       else
         return null;
     }
+    
+
+    
 
     /**
      * Default FeatureScorer class that returns the score passed in. Can be used
@@ -116,25 +116,17 @@ public class ValueFeature extends Feature {
     public class ValueFeatureScorer extends FeatureScorer {
 
       float constScore;
-      String featureType;
       DocIdSetIterator itr;
 
-      public ValueFeatureScorer(FeatureWeight weight, float constScore,
-          String featureType) {
+      public ValueFeatureScorer(FeatureWeight weight, float constScore) {
         super(weight);
         this.constScore = constScore;
-        this.featureType = featureType;
         itr = new MatchAllIterator();
       }
 
       @Override
       public float score() {
         return constScore;
-      }
-
-      @Override
-      public String toString() {
-        return featureType + " [name=" + name + " value=" + constScore + "]";
       }
 
       @Override

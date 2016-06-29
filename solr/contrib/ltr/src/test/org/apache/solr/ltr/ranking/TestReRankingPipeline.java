@@ -265,7 +265,7 @@ public class TestReRankingPipeline extends LuceneTestCase {
     ModelScorer modelScr = wgt.scorer(null);
     modelScr.setDocInfoParam("ORIGINAL_SCORE", 1);
     for (final ChildScorer feat : modelScr.getChildren()) {
-      assert (((FeatureScorer) feat.child).hasDocParam("ORIGINAL_SCORE"));
+      assert (((Feature.FeatureWeight.FeatureScorer) feat.child).hasDocParam("ORIGINAL_SCORE"));
     }
 
     features = makeFieldValueFeatures(new int[] {0, 1, 2}, "final-score");
@@ -278,7 +278,7 @@ public class TestReRankingPipeline extends LuceneTestCase {
     modelScr = wgt.scorer(null);
     modelScr.setDocInfoParam("ORIGINAL_SCORE", 1);
     for (final ChildScorer feat : modelScr.getChildren()) {
-      assert (((FeatureScorer) feat.child).hasDocParam("ORIGINAL_SCORE"));
+      assert (((Feature.FeatureWeight.FeatureScorer) feat.child).hasDocParam("ORIGINAL_SCORE"));
     }
   }
 

@@ -18,7 +18,6 @@ package org.apache.solr.ltr.ranking;
  */
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +79,7 @@ public class RankSVMModel extends LTRScoringAlgorithm {
     for (final Explanation featureExplain : featureExplanations) {
       final List<Explanation> featureDetails = new ArrayList<>();
       featureDetails.add(Explanation.match(featureToWeight[index],
-          "weight on feature [would be cool to have the name :)]"));
+          "weight on feature"));
       featureDetails.add(featureExplain);
 
       details.add(Explanation.match(featureExplain.getValue()

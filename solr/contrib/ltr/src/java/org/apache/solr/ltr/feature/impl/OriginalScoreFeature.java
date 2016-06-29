@@ -22,17 +22,12 @@ import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSetIterator;
-import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Weight;
-import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
-import org.apache.solr.ltr.ranking.FeatureScorer;
-import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.CommonLTRParams;
-import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.SolrQueryRequest;
 
 public class OriginalScoreFeature extends Feature {
@@ -40,7 +35,7 @@ public class OriginalScoreFeature extends Feature {
   @Override
   public OriginalScoreWeight createWeight(IndexSearcher searcher,
       boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
-    return new OriginalScoreWeight(searcher, name, params, norm, id, request, originalQuery, efi);
+    return new OriginalScoreWeight(searcher, request, originalQuery, efi);
 
   }
 
@@ -48,21 +43,19 @@ public class OriginalScoreFeature extends Feature {
 
     final Weight w;
 
-    public OriginalScoreWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
-      super(OriginalScoreFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
+    public OriginalScoreWeight(IndexSearcher searcher, 
+        SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
+      super(OriginalScoreFeature.this, searcher, request, originalQuery, efi);
       w = searcher.createNormalizedWeight(originalQuery, true);
     };
 
+    
     @Override
-    public Explanation explain(LeafReaderContext context, int doc)
-        throws IOException {
-      // Explanation e = w.explain(context, doc);
-      final Scorer s = w.scorer(context);
-      s.iterator().advance(doc);
-      final float score = s.score();
-      return Explanation.match(score, "original score query: " + originalQuery);
+    public String toString() {
+      return "OriginalScoreFeature [query:" + originalQuery.toString() + "]";
     }
+
+    
 
     @Override
     public FeatureScorer scorer(LeafReaderContext context) throws IOException {
@@ -86,11 +79,6 @@ public class OriginalScoreFeature extends Feature {
         // we shouldn't need to calc original score again.
         return hasDocParam(CommonLTRParams.ORIGINAL_DOC_SCORE) ? (Float) getDocParam(CommonLTRParams.ORIGINAL_DOC_SCORE)
             : originalScorer.score();
-      }
-
-      @Override
-      public String toString() {
-        return "OriginalScoreFeature [query:" + originalQuery.toString() + "]";
       }
 
       @Override

@@ -56,7 +56,7 @@ public class TestLTRQParserExplain extends TestRerankBase {
     // query.add("wt","json");
     // assertJQ(
     // "/query" + query.toQueryString(),
-    // "/debug/explain/7=='\n8.5 = svm [ org.apache.solr.ltr.ranking.RankSVMModel ] model applied to features, sum of:\n  1.5 = prod of:\n    1.5 = weight on feature [would be cool to have the name :)]\n    1.0 = ValueFeature [name=constant1 value=1.0]\n  7.0 = prod of:\n    3.5 = weight on feature [would be cool to have the name :)]\n    2.0 = ValueFeature [name=constant2 value=2.0]\n'");
+    // "/debug/explain/7=='\n8.5 = svm [ org.apache.solr.ltr.ranking.RankSVMModel ] model applied to features, sum of:\n  1.5 = prod of:\n    1.5 = weight on feature\n    1.0 = ValueFeature [name=constant1 value=1.0]\n  7.0 = prod of:\n    3.5 = weight on feature\n    2.0 = ValueFeature [name=constant2 value=2.0]\n'");
     query.add("wt", "xml");
     System.out.println(restTestHarness.query("/query" + query.toQueryString()));
   }
@@ -76,7 +76,7 @@ public class TestLTRQParserExplain extends TestRerankBase {
 
     assertJQ(
         "/query" + query.toQueryString(),
-        "/debug/explain/9=='\n13.5 = RankSVMModel(name=svm2) model applied to features, sum of:\n  1.5 = prod of:\n    1.5 = weight on feature [would be cool to have the name :)]\n    1.0 = ValueFeature [name=constant1 value=1.0]\n  7.0 = prod of:\n    3.5 = weight on feature [would be cool to have the name :)]\n    2.0 = ValueFeature [name=constant2 value=2.0]\n  5.0 = prod of:\n    1.0 = weight on feature [would be cool to have the name :)]\n    5.0 = FieldValueFeature [name=pop fields=[popularity]]\n'");
+        "/debug/explain/9=='\n13.5 = RankSVMModel(name=svm2) model applied to features, sum of:\n  1.5 = prod of:\n    1.5 = weight on feature\n    1.0 = ValueFeature [name=constant1, params={value=1}]\n  7.0 = prod of:\n    3.5 = weight on feature\n    2.0 = ValueFeature [name=constant2, params={value=2}]\n  5.0 = prod of:\n    1.0 = weight on feature\n    5.0 = FieldValueFeature [name=pop, params={field=popularity}]\n'");
     query.add("wt", "xml");
     System.out.println(restTestHarness.query("/query" + query.toQueryString()));
   }
@@ -99,10 +99,10 @@ public class TestLTRQParserExplain extends TestRerankBase {
     query.add("wt", "json");
     assertJQ(
         "/query" + query.toQueryString(),
-        "/debug/explain/7=='\n3.5116758 = RankSVMModel(name=6029760550880411648) model applied to features, sum of:\n  0.0 = prod of:\n    0.0 = weight on feature [would be cool to have the name :)]\n    1.0 = ValueFeature [name=title value=1.0]\n  0.2 = prod of:\n    0.1 = weight on feature [would be cool to have the name :)]\n    2.0 = ValueFeature [name=description value=2.0]\n  0.4 = prod of:\n    0.2 = weight on feature [would be cool to have the name :)]\n    2.0 = ValueFeature [name=keywords value=2.0]\n  0.09 = prod of:\n    0.3 = weight on feature [would be cool to have the name :)]\n    0.3 = normalized using MinMaxNormalizer [params {min=0.0f, max=10.0f}]\n      3.0 = ValueFeature [name=popularity value=3.0]\n  1.6 = prod of:\n    0.4 = weight on feature [would be cool to have the name :)]\n    4.0 = ValueFeature [name=text value=4.0]\n  0.6156155 = prod of:\n    0.1231231 = weight on feature [would be cool to have the name :)]\n    5.0 = ValueFeature [name=queryIntentPerson value=5.0]\n  0.60606056 = prod of:\n    0.12121211 = weight on feature [would be cool to have the name :)]\n    5.0 = ValueFeature [name=queryIntentCompany value=5.0]\n'}");
+        "/debug/explain/7=='\n3.5116758 = RankSVMModel(name=6029760550880411648) model applied to features, sum of:\n  0.0 = prod of:\n    0.0 = weight on feature\n    1.0 = ValueFeature [name=title, params={value=1}]\n  0.2 = prod of:\n    0.1 = weight on feature\n    2.0 = ValueFeature [name=description, params={value=2}]\n  0.4 = prod of:\n    0.2 = weight on feature\n    2.0 = ValueFeature [name=keywords, params={value=2}]\n  0.09 = prod of:\n    0.3 = weight on feature\n    0.3 = normalized using MinMaxNormalizer [params {min=0.0f, max=10.0f}]\n      3.0 = ValueFeature [name=popularity, params={value=3}]\n  1.6 = prod of:\n    0.4 = weight on feature\n    4.0 = ValueFeature [name=text, params={value=4}]\n  0.6156155 = prod of:\n    0.1231231 = weight on feature\n    5.0 = ValueFeature [name=queryIntentPerson, params={value=5}]\n  0.60606056 = prod of:\n    0.12121211 = weight on feature\n    5.0 = ValueFeature [name=queryIntentCompany, params={value=5}]\n'}");
     assertJQ(
         "/query" + query.toQueryString(),
-        "/debug/explain/9=='\n3.5116758 = RankSVMModel(name=6029760550880411648) model applied to features, sum of:\n  0.0 = prod of:\n    0.0 = weight on feature [would be cool to have the name :)]\n    1.0 = ValueFeature [name=title value=1.0]\n  0.2 = prod of:\n    0.1 = weight on feature [would be cool to have the name :)]\n    2.0 = ValueFeature [name=description value=2.0]\n  0.4 = prod of:\n    0.2 = weight on feature [would be cool to have the name :)]\n    2.0 = ValueFeature [name=keywords value=2.0]\n  0.09 = prod of:\n    0.3 = weight on feature [would be cool to have the name :)]\n    0.3 = normalized using MinMaxNormalizer [params {min=0.0f, max=10.0f}]\n      3.0 = ValueFeature [name=popularity value=3.0]\n  1.6 = prod of:\n    0.4 = weight on feature [would be cool to have the name :)]\n    4.0 = ValueFeature [name=text value=4.0]\n  0.6156155 = prod of:\n    0.1231231 = weight on feature [would be cool to have the name :)]\n    5.0 = ValueFeature [name=queryIntentPerson value=5.0]\n  0.60606056 = prod of:\n    0.12121211 = weight on feature [would be cool to have the name :)]\n    5.0 = ValueFeature [name=queryIntentCompany value=5.0]\n'}");
+        "/debug/explain/9=='\n3.5116758 = RankSVMModel(name=6029760550880411648) model applied to features, sum of:\n  0.0 = prod of:\n    0.0 = weight on feature\n    1.0 = ValueFeature [name=title, params={value=1}]\n  0.2 = prod of:\n    0.1 = weight on feature\n    2.0 = ValueFeature [name=description, params={value=2}]\n  0.4 = prod of:\n    0.2 = weight on feature\n    2.0 = ValueFeature [name=keywords, params={value=2}]\n  0.09 = prod of:\n    0.3 = weight on feature\n    0.3 = normalized using MinMaxNormalizer [params {min=0.0f, max=10.0f}]\n      3.0 = ValueFeature [name=popularity, params={value=3}]\n  1.6 = prod of:\n    0.4 = weight on feature\n    4.0 = ValueFeature [name=text, params={value=4}]\n  0.6156155 = prod of:\n    0.1231231 = weight on feature\n    5.0 = ValueFeature [name=queryIntentPerson, params={value=5}]\n  0.60606056 = prod of:\n    0.12121211 = weight on feature\n    5.0 = ValueFeature [name=queryIntentCompany, params={value=5}]\n'}");
   }
 
   @Test
@@ -123,15 +123,15 @@ public class TestLTRQParserExplain extends TestRerankBase {
     query.add("wt", "json");
     assertJQ(
         "/query" + query.toQueryString(),
-        "/debug/explain/7=='\n5.0 = RankSVMModel(name=svm-efi) model applied to features, sum of:\n  5.0 = prod of:\n    1.0 = weight on feature [would be cool to have the name :)]\n    5.0 = ValueFeature [name=sampleConstant value=5.0]\n" +
+        "/debug/explain/7=='\n5.0 = RankSVMModel(name=svm-efi) model applied to features, sum of:\n  5.0 = prod of:\n    1.0 = weight on feature\n    5.0 = ValueFeature [name=sampleConstant, params={value=5}]\n" +
             "  0.0 = prod of:\n" +
-            "    2.0 = weight on feature [would be cool to have the name :)]\n" +
+            "    2.0 = weight on feature\n" +
             "    0.0 = The feature has no value\n'}");
     assertJQ(
         "/query" + query.toQueryString(),
-        "/debug/explain/9=='\n5.0 = RankSVMModel(name=svm-efi) model applied to features, sum of:\n  5.0 = prod of:\n    1.0 = weight on feature [would be cool to have the name :)]\n    5.0 = ValueFeature [name=sampleConstant value=5.0]\n" +
+        "/debug/explain/9=='\n5.0 = RankSVMModel(name=svm-efi) model applied to features, sum of:\n  5.0 = prod of:\n    1.0 = weight on feature\n    5.0 = ValueFeature [name=sampleConstant, params={value=5}]\n" +
             "  0.0 = prod of:\n" +
-            "    2.0 = weight on feature [would be cool to have the name :)]\n" +
+            "    2.0 = weight on feature\n" +
             "    0.0 = The feature has no value\n'}");
   }
 

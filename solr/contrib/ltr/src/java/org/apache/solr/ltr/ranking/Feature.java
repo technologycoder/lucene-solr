@@ -18,13 +18,21 @@ package org.apache.solr.ltr.ranking;
  */
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.lucene.index.LeafReaderContext;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Scorer;
+import org.apache.lucene.search.Weight;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.util.FeatureException;
+import org.apache.solr.ltr.util.MacroExpander;
 import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.SolrQueryRequest;
 
@@ -38,6 +46,17 @@ public abstract class Feature extends Query implements Cloneable {
   protected int id;
   protected NamedParams params = NamedParams.EMPTY;
 
+
+  /**
+   * @param name
+   *          Name of the feature
+   * @param params
+   *          Custom parameters that the feature may use
+   * @param id
+   *          Unique ID for this feature. Similar to feature name, except it can
+   *          be used to directly access the feature in the global list of
+   *          features.
+   */
   public void init(String name, NamedParams params, int id)
       throws FeatureException {
     this.name = name;
@@ -64,7 +83,8 @@ public abstract class Feature extends Query implements Cloneable {
 
   @Override
   public String toString(String field) {
-    return "Feature [name=" + name + ", type=" + getClass().getSimpleName() + ", id=" + id
+    return getClass().getSimpleName() 
+        + " [name=" + name 
         + ", params=" + params + "]";
   }
 
@@ -138,6 +158,151 @@ public abstract class Feature extends Query implements Cloneable {
   public void setNorm(Normalizer norm) {
     this.norm = norm;
 
+  }
+  
+  
+  
+  public abstract class FeatureWeight extends Weight {
+
+    final protected IndexSearcher searcher;
+    final protected SolrQueryRequest request;
+    final protected Map<String,String> efi;
+    final protected MacroExpander macroExpander;
+    final protected Query originalQuery;
+
+    /**
+     * Initialize a feature without the normalizer from the feature file. This is
+     * called on initial construction since multiple models share the same
+     * features, but have different normalizers. A concrete model's feature is
+     * copied through featForNewModel().
+     *
+     * @param q
+     *          Solr query associated with this FeatureWeight
+     * @param searcher
+     *          Solr searcher available for features if they need them
+     */
+    public FeatureWeight(Query q, IndexSearcher searcher, 
+        SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
+      super(q);
+      this.searcher = searcher;
+      this.request = request;
+      this.originalQuery = originalQuery;
+      this.efi = efi;
+      macroExpander = new MacroExpander(efi);
+    }
+
+    public String getName() {
+      return Feature.this.name;
+    }
+
+    public Normalizer getNorm() {
+      return Feature.this.norm;
+    }
+
+    public NamedParams getParams() {
+      return Feature.this.params;
+    }
+
+    public int getId() {
+      return Feature.this.id;
+    }
+
+    public float getDefaultValue() {
+      return 0;
+    }
+
+    @Override
+    public abstract FeatureScorer scorer(LeafReaderContext context)
+        throws IOException;
+
+    @Override
+    public Explanation explain(LeafReaderContext context, int doc)
+        throws IOException {
+      final FeatureScorer r = scorer(context);
+      float score = getDefaultValue();
+      if (r != null) {
+        r.iterator().advance(doc);
+        if (r.docID() == doc) score = r.score();
+        return Explanation.match(score, toString());
+      }else{
+        return Explanation.match(score, "The feature has no value");
+      }
+    }
+
+    /**
+     * Used in the FeatureWeight's explain. Each feature should implement this
+     * returning properties of the specific scorer useful for an explain. For
+     * example "MyCustomClassFeature [name=" + name + "myVariable:" + myVariable +
+     * "]";  If not provided, a default implementation will return basic feature 
+     * properties, which might not include query time specific values.
+     */
+    @Override
+    public String toString() {
+      return Feature.this.toString();
+    }
+    
+    
+    @Override
+    public float getValueForNormalization() throws IOException {
+      return 1f;
+    }
+
+    @Override
+    public void normalize(float norm, float topLevelBoost) {
+      // For advanced features that use Solr weights internally, you must override
+      // and pass this call on to them
+    }
+
+    @Override
+    public void extractTerms(Set<Term> terms) {
+      // needs to be implemented by query subclasses
+      throw new UnsupportedOperationException();
+    }
+
+    
+    
+    /**
+     * A 'recipe' for computing a feature
+     */
+    public abstract class FeatureScorer extends Scorer {
+
+      protected String name;
+      private HashMap<String,Object> docInfo;
+
+      public FeatureScorer(Feature.FeatureWeight weight) {
+        super(weight);
+        name = weight.getName();
+      }
+
+      @Override
+      public abstract float score() throws IOException;
+
+
+      /**
+       * Used to provide context from initial score steps to later reranking steps.
+       */
+      public void setDocInfo(HashMap<String,Object> iDocInfo) {
+        docInfo = iDocInfo;
+      }
+
+      public Object getDocParam(String key) {
+        return docInfo.get(key);
+      }
+
+      public boolean hasDocParam(String key) {
+        if (docInfo != null) {
+          return docInfo.containsKey(key);
+        } else {
+          return false;
+        }
+      }
+
+      @Override
+      public int freq() throws IOException {
+        throw new UnsupportedOperationException();
+      }
+    }
+    
   }
 
 }
