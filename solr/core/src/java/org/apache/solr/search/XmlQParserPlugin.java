@@ -9,7 +9,6 @@ import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.schema.IndexSchema;
-import org.apache.solr.search.xml.SolrCoreParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -56,7 +55,7 @@ public class XmlQParserPlugin extends QParserPlugin {
         return null;
 
       final IndexSchema schema = req.getSchema();
-      SolrCoreParser solr_parser = new SolrCoreParser(
+      BBSolrCoreParser solr_parser = new BBSolrCoreParser(
           req,
           new BBCoreParser(
               QueryParsing.getDefaultField(schema, getParam(CommonParams.DF)),

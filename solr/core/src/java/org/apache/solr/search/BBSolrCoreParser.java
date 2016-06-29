@@ -1,4 +1,4 @@
-package org.apache.solr.search.xml;
+package org.apache.solr.search;
 
 import java.io.InputStream;
 
@@ -9,6 +9,10 @@ import org.apache.lucene.search.Query;
 
 import org.apache.solr.schema.IndexSchema;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.xml.BoostedQueryBuilder;
+import org.apache.solr.search.xml.RangeFilterBuilder;
+import org.apache.solr.search.xml.RangeQueryBuilder;
+import org.apache.solr.search.xml.WildcardQueryBuilder;
 import org.w3c.dom.Element;
 
 /*
@@ -32,11 +36,11 @@ import org.w3c.dom.Element;
  * Assembles a QueryBuilder which uses Query objects from Solr's <code>search</code> module
  * in addition to Query objects supported by the passed in Lucene <code>CoreParser</code>.
  */
-public class SolrCoreParser implements QueryBuilder {
+public class BBSolrCoreParser implements QueryBuilder {
 
   private final CoreParser lucene_parser;
 
-  public SolrCoreParser(SolrQueryRequest req, CoreParser parser) {
+  public BBSolrCoreParser(SolrQueryRequest req, CoreParser parser) {
     lucene_parser = parser;
 
     final IndexSchema schema = req.getSchema();
