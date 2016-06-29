@@ -41,7 +41,7 @@ public class TermFreqDocIdSetIterator extends CustomDocIdSetIterator {
   public boolean match() throws IOException {
     return
         termFreqRange == null ||
-        termFreqRange.includes(((PostingsEnum)docIdSetIterator()).freq());
+        termFreqRange.includes(((Scorer)docIdSetIterator()).freq());
   }
 
   public TermFreqDocIdSetIterator(DocIdSetIterator docsIter, IntegerRange termFreqRange) {
