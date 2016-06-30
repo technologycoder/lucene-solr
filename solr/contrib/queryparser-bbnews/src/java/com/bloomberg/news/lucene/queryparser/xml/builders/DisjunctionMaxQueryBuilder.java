@@ -1,4 +1,4 @@
-package org.apache.lucene.queryparser.xml.builders;
+package com.bloomberg.news.lucene.queryparser.xml.builders;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -29,12 +29,11 @@ import org.w3c.dom.NodeList;
 /**
  * Builder for {@link DisjunctionMaxQuery}
  */
-@Deprecated // in favour of com.bloomberg.news.lucene.queryparser.xml.builders.DisjunctionMaxQueryBuilder
-public class BBDisjunctionMaxQueryBuilder implements QueryBuilder {
+public class DisjunctionMaxQueryBuilder implements QueryBuilder {
 
   private final QueryBuilder factory;
 
-  public BBDisjunctionMaxQueryBuilder(QueryBuilder factory) {
+  public DisjunctionMaxQueryBuilder(QueryBuilder factory) {
     this.factory = factory;
   }
 
