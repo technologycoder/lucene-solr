@@ -59,6 +59,7 @@
         <include name="solr-core-${version}.jar" />
         <include name="solr-analysis-bbnews-${version}.jar" />
         <include name="solr-ltr-${version}.jar" />
+        <include name="solr-queryparser-bbnews-${version}.jar" />
       </lib>
       <fileset dir="${dest}/web" excludes="${exclude.from.war}"/> <!-- contribs' additions -->
       <fileset dir="web" excludes="${exclude.from.war}"/>
