@@ -2,6 +2,8 @@ package org.apache.solr.search;
 
 import java.io.InputStream;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.queryparser.xml.BBCoreParser;
 import org.apache.lucene.queryparser.xml.CoreParser;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
@@ -36,29 +38,20 @@ import org.w3c.dom.Element;
  * Assembles a QueryBuilder which uses Query objects from Solr's <code>search</code> module
  * in addition to Query objects supported by the passed in Lucene <code>CoreParser</code>.
  */
-public class BBSolrCoreParser implements QueryBuilder {
+public class BBSolrCoreParser extends BBCoreParser {
 
-  private final CoreParser lucene_parser;
-
-  public BBSolrCoreParser(SolrQueryRequest req, CoreParser parser) {
-    lucene_parser = parser;
+  public BBSolrCoreParser(String defaultField, Analyzer analyzer,
+      SolrQueryRequest req) {
+    super(defaultField, analyzer);
 
     final IndexSchema schema = req.getSchema();
 
-    lucene_parser.addQueryBuilder("RangeQuery", new RangeQueryBuilder(schema));
-    lucene_parser.addFilterBuilder("RangeFilter", new RangeFilterBuilder(schema));
+    queryFactory.addBuilder("RangeQuery", new RangeQueryBuilder(schema));
+    filterFactory.addBuilder("RangeFilter", new RangeFilterBuilder(schema));
 
-    lucene_parser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder(schema));
+    queryFactory.addBuilder("WildcardQuery", new WildcardQueryBuilder(schema));
 
-    lucene_parser.addQueryBuilder("BoostedQuery", new BoostedQueryBuilder(this, req));
+    queryFactory.addBuilder("BoostedQuery", new BoostedQueryBuilder(this, req));
   }
 
-  public Query parse(InputStream xmlStream) throws ParserException {
-    return lucene_parser.parse(xmlStream);
-  }
-
-  @Override
-  public Query getQuery(Element e) throws ParserException {
-    return lucene_parser.getQuery(e);
-  }
 }

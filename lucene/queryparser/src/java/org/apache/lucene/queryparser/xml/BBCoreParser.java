@@ -22,7 +22,7 @@ import org.apache.lucene.queryparser.xml.builders.*;
  */
 
 /**
- * CoreParser + custom builders
+ * CoreParser + Bloomberg (News) specific custom builders
  */
 public class BBCoreParser extends CoreParser {
 

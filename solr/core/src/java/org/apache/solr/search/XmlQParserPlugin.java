@@ -1,6 +1,6 @@
 package org.apache.solr.search;
 
-import org.apache.lucene.queryparser.xml.BBCoreParser;
+import org.apache.lucene.queryparser.xml.CoreParser;
 import org.apache.lucene.queryparser.xml.ParserException;
 import org.apache.lucene.search.Query;
 
@@ -53,14 +53,13 @@ public class XmlQParserPlugin extends QParserPlugin {
         return null;
 
       final IndexSchema schema = req.getSchema();
-      BBSolrCoreParser solr_parser = new BBSolrCoreParser(
-          req,
-          new BBCoreParser(
-              QueryParsing.getDefaultField(schema, getParam(CommonParams.DF)),
-              schema.getQueryAnalyzer()));
+      CoreParser solrParser = new BBSolrCoreParser(
+          QueryParsing.getDefaultField(schema, getParam(CommonParams.DF)),
+          schema.getQueryAnalyzer(),
+          req);
 
       try {
-        return solr_parser.parse(new ByteArrayInputStream(qstr.getBytes(StandardCharsets.UTF_8)));
+        return solrParser.parse(new ByteArrayInputStream(qstr.getBytes(StandardCharsets.UTF_8)));
       } catch (ParserException e) {
         throw new SyntaxError(e.getMessage() + " in " + req.toString());
       }
