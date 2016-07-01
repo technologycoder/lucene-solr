@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.ja;
+package com.bloomberg.news.lucene.analysis.ja;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -37,7 +37,6 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
  * It is important that punctuation is not discarded by the tokenizer so use
  * {@code discardPunctuation="false"} in your {@link JapaneseTokenizerFactory}.
  */
-@Deprecated // in favour of com.bloomberg.news.*.JapaneseNumberFilterFactory
 public class JapaneseNumberFilterFactory extends TokenFilterFactory {
 
   public JapaneseNumberFilterFactory(Map<String, String> args) {

@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.ja;
+package com.bloomberg.news.lucene.analysis.ja;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -85,7 +85,6 @@ import org.apache.lucene.analysis.tokenattributes.PositionLengthAttribute;
  * Japanese formal numbers (daiji), accounting numbers and decimal fractions are currently
  * not supported.
  */
-@Deprecated // in favour of com.bloomberg.news.*.JapaneseNumberFilter
 public class JapaneseNumberFilter extends TokenFilter {
 
   private final CharTermAttribute termAttr = addAttribute(CharTermAttribute.class);

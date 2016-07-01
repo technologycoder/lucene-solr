@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.ja;
+package com.bloomberg.news.lucene.analysis.ja;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -25,11 +25,12 @@ import java.util.Map;
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.ja.JapaneseTokenizerFactory;
+import org.apache.lucene.analysis.util.StringMockResourceLoader;
 
 /**
  * Simple tests for {@link org.apache.lucene.analysis.ja.JapaneseNumberFilterFactory}
  */
-@Deprecated // in favour of com.bloomberg.news.*.TestJapaneseNumberFilterFactory
 public class TestJapaneseNumberFilterFactory extends BaseTokenStreamTestCase {
   public void testBasics() throws IOException {
 

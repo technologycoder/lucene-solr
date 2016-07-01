@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.ja;
+package com.bloomberg.news.lucene.analysis.ja;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -29,6 +29,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.BaseTokenStreamTestCase;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.ja.JapaneseTokenizer;
 import org.apache.lucene.analysis.miscellaneous.SetKeywordMarkerFilter;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.util.CharArraySet;
@@ -36,7 +37,6 @@ import org.apache.lucene.util.Version;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Deprecated // in favour of com.bloomberg.news.*.TestJapaneseNumberFilter
 public class TestJapaneseNumberFilter extends BaseTokenStreamTestCase {
 
   private Analyzer analyzer = new Analyzer() {
