@@ -18,4 +18,22 @@
     </dirset>
   </path>
 
+  <target name="jflex" depends="-install-jflex,clean-jflex"/>
+
+  <macrodef name="run-jflex">
+    <attribute name="dir"/>
+    <attribute name="name"/>
+    <sequential>
+      <jflex file="@{dir}/@{name}.jflex" outdir="@{dir}" nobak="on" inputstreamctor="false"/>
+    </sequential>
+  </macrodef>
+
+  <target name="clean-jflex">
+    <delete>
+      <fileset dir="src" includes="**/*.java">
+        <containsregexp expression="generated.*by.*JFlex"/>
+      </fileset>
+    </delete>
+  </target>
+
 </project>
