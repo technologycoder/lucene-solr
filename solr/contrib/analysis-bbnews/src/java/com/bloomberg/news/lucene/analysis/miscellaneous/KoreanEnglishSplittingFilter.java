@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.miscellaneous;
+package com.bloomberg.news.lucene.analysis.miscellaneous;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -29,8 +29,7 @@ import org.apache.lucene.analysis.tokenattributes.PositionIncrementAttribute;
  * Splits along Hangul/ASCII alphanumeric boundaries
  */
 
-@Deprecated // in favour of com.bloomberg.news.*.KoreanEnglishSplittingFilter
-public final class BBKoreanEnglishSplittingFilter extends TokenFilter {
+public final class KoreanEnglishSplittingFilter extends TokenFilter {
 
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("[0-9]*\\.?[0-9]+");
 
@@ -47,16 +46,16 @@ public final class BBKoreanEnglishSplittingFilter extends TokenFilter {
     private int endOffset = 0;
     private boolean previousWasOriginal = false;
 
-    public BBKoreanEnglishSplittingFilter(TokenStream input) {
+    public KoreanEnglishSplittingFilter(TokenStream input) {
         this(input, true, false);
     }
 
-    public BBKoreanEnglishSplittingFilter(TokenStream input, boolean incrementPositionForNumbers) {
+    public KoreanEnglishSplittingFilter(TokenStream input, boolean incrementPositionForNumbers) {
         this(input, incrementPositionForNumbers, false);
     }
 
     /**
-     * Create a new {@link BBKoreanEnglishSplittingFilter}.
+     * Create a new {@link KoreanEnglishSplittingFilter}.
      *
      * @param input
      *          TokenStream to filter
@@ -66,7 +65,7 @@ public final class BBKoreanEnglishSplittingFilter extends TokenFilter {
      *          should the original tokens be kept on the input stream with a 0 position increment
      *          from the split tokens
      **/
-    public BBKoreanEnglishSplittingFilter(TokenStream input, boolean incrementPositionForNumbers, boolean preserveOriginal) {
+    public KoreanEnglishSplittingFilter(TokenStream input, boolean incrementPositionForNumbers, boolean preserveOriginal) {
         super(input);
         this.incrementPositionForNumbers = incrementPositionForNumbers;
         this.preserveOriginal = preserveOriginal;

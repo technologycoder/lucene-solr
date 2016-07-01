@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.miscellaneous;
+package com.bloomberg.news.lucene.analysis.miscellaneous;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -23,18 +23,17 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
- * Factory for {@link BBKoreanEnglishSplittingFilter}.
+ * Factory for {@link KoreanEnglishSplittingFilter}.
  *
- * @see BBKoreanEnglishSplittingFilter
+ * @see KoreanEnglishSplittingFilter
  */
-@Deprecated // in favour of com.bloomberg.news.*.KoreanEnglishSplittingFilterFactory
-public class BBKoreanEnglishSplittingFilterFactory extends TokenFilterFactory {
+public class KoreanEnglishSplittingFilterFactory extends TokenFilterFactory {
   
   protected final boolean incrementPositionForNumbers;
   protected final boolean preserveOriginal;
   
   /** Creates a new TrimFilterFactory */
-  public BBKoreanEnglishSplittingFilterFactory(Map<String,String> args) {
+  public KoreanEnglishSplittingFilterFactory(Map<String,String> args) {
     super(args);
     incrementPositionForNumbers = getBoolean(args, "incrementPositionForNumbers", true);
     preserveOriginal = getBoolean(args, "preserveOriginal", false);
@@ -44,9 +43,9 @@ public class BBKoreanEnglishSplittingFilterFactory extends TokenFilterFactory {
   }
   
   @Override
-  public BBKoreanEnglishSplittingFilter create(TokenStream input) {
-    final BBKoreanEnglishSplittingFilter filter = 
-          new BBKoreanEnglishSplittingFilter(input, incrementPositionForNumbers, preserveOriginal);
+  public KoreanEnglishSplittingFilter create(TokenStream input) {
+    final KoreanEnglishSplittingFilter filter = 
+          new KoreanEnglishSplittingFilter(input, incrementPositionForNumbers, preserveOriginal);
     return filter;
   }
 }
