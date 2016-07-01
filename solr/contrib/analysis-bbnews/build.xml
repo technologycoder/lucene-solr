@@ -8,4 +8,14 @@
 
   <import file="../contrib-build.xml"/>
 
+  <target name="compile-test" depends="-compile-test-lucene-analysis,common-solr.compile-test"/>
+
+  <path id="test.classpath">
+    <path refid="solr.test.base.classpath"/>
+    <dirset dir="${common.dir}/build/analysis/">
+      <include name="**/classes/java"/>
+      <include name="**/classes/test"/>
+    </dirset>
+  </path>
+
 </project>

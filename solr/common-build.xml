@@ -445,6 +445,12 @@
     </sequential>
   </macrodef>
 
+  <target name="-compile-test-lucene-analysis">
+    <ant dir="${common.dir}/analysis" target="compile-test" inheritAll="false">
+      <propertyset refid="uptodate.and.compiled.properties"/>
+    </ant>
+  </target>
+
   <!-- Solr contrib targets -->
   <target name="-compile-analysis-extras">
     <ant dir="${common-solr.dir}/contrib/analysis-extras" target="compile" inheritAll="false">
