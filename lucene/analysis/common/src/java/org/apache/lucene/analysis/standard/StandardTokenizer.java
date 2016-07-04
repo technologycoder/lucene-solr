@@ -53,9 +53,9 @@ import org.apache.lucene.util.Version;
  * </ul>
  */
 
-public final class StandardTokenizer extends Tokenizer {
-  /** A private instance of the JFlex-constructed scanner */
-  private StandardTokenizerInterface scanner;
+public class StandardTokenizer extends Tokenizer {
+  /** A protected instance of the JFlex-constructed scanner */
+  protected StandardTokenizerInterface scanner;
 
   public static final int ALPHANUM          = 0;
   /** @deprecated (3.1) */
@@ -143,7 +143,7 @@ public final class StandardTokenizer extends Tokenizer {
     init(matchVersion);
   }
 
-  private final void init(Version matchVersion) {
+  protected void init(Version matchVersion) {
     if (matchVersion.onOrAfter(Version.LUCENE_47)) {
       this.scanner = new StandardTokenizerImpl(input);
     } else if (matchVersion.onOrAfter(Version.LUCENE_40)) {
