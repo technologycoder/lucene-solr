@@ -34,6 +34,7 @@ import org.apache.lucene.util.Version;
  * to use a BBFinancialStandardTokenizerImpl scanner. 
  * 
  */
+@Deprecated // in favour of com.bloomberg.news.*.FinancialStandardTokenizer
 public final class BBFinancialStandardTokenizer extends Tokenizer {
   /** A private instance of the JFlex-constructed scanner */
   private StandardTokenizerInterface scanner;

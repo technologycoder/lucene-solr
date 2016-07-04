@@ -1,4 +1,4 @@
-package org.apache.lucene.analysis.standard;
+package com.bloomberg.news.lucene.analysis.standard;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -21,7 +21,6 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 /**
  * Custom implementation copied and modified from StandardTokenizerImpl.
- * @Deprecated // in favour of com.bloomberg.news.*.FinancialStandardTokenizerImpl
  */
 %%
 
@@ -29,13 +28,13 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 %integer
 %final
 %public
-%class BBFinancialStandardTokenizerImpl
+%class FinancialStandardTokenizerImpl
 %implements StandardTokenizerInterface
 %function getNextToken
 %char
 %buffer 4096
 
-%include SUPPLEMENTARY.jflex-macro
+%include ../../../../../../../../../../../lucene/analysis/common/src/java/org/apache/lucene/analysis/standard/SUPPLEMENTARY.jflex-macro
 // 00A3 = pound, 00A5 = yen
 ALetter           = (\p{WB:ALetter} | \p{Block:Currency_Symbols} | [&@#$\u00A3\u00A5] | {ALetterSupp})
 Format            = (\p{WB:Format}                                                    | {FormatSupp})

@@ -18,7 +18,12 @@
     </dirset>
   </path>
 
-  <target name="jflex" depends="-install-jflex,clean-jflex"/>
+  <target name="jflex" depends="-install-jflex,clean-jflex,
+                                -jflex-FinancialStandardTokenizer"/>
+
+  <target name="-jflex-FinancialStandardTokenizer" depends="init,-install-jflex">
+    <run-jflex dir="src/java/com/bloomberg/news/lucene/analysis/standard" name="FinancialStandardTokenizerImpl"/>
+  </target>
 
   <macrodef name="run-jflex">
     <attribute name="dir"/>
