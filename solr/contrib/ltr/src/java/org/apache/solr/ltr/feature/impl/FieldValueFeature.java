@@ -27,10 +27,7 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
-import org.apache.solr.ltr.ranking.FeatureScorer;
-import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
@@ -60,20 +57,15 @@ public class FieldValueFeature extends Feature {
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new FieldValueFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
+    return new FieldValueFeatureWeight(searcher, request, originalQuery, efi);
   }
 
-  @Override
-  public String toString(String f) {
-    return "FieldValueFeature [field:" + fieldName + "]";
-
-  }
 
   public class FieldValueFeatureWeight extends FeatureWeight {
 
-    public FieldValueFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
-      super(FieldValueFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
+    public FieldValueFeatureWeight(IndexSearcher searcher, 
+        SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
+      super(FieldValueFeature.this, searcher, request, originalQuery, efi);
     }
 
     @Override
@@ -126,11 +118,6 @@ public class FieldValueFeature extends Feature {
         }
         // TODO define default value
         return 0;
-      }
-
-      @Override
-      public String toString() {
-        return "FieldValueFeature [name=" + name + " fields=" + fields + "]";
       }
 
       @Override

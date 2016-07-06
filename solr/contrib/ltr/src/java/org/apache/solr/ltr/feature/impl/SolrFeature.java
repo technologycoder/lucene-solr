@@ -33,12 +33,8 @@ import org.apache.lucene.util.Bits;
 import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrCore;
-import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
-import org.apache.solr.ltr.ranking.FeatureScorer;
-import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.FeatureException;
-import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.LocalSolrQueryRequest;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
@@ -51,7 +47,7 @@ public class SolrFeature extends Feature {
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new SolrFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
+    return new SolrFeatureWeight(searcher, request, originalQuery, efi);
   }
 
   public class SolrFeatureWeight extends FeatureWeight {
@@ -59,9 +55,9 @@ public class SolrFeature extends Feature {
     Query query;
     List<Query> queryAndFilters;
 
-    public SolrFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
-      super(SolrFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
+    public SolrFeatureWeight(IndexSearcher searcher, 
+        SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
+      super(SolrFeature.this, searcher, request, originalQuery, efi);
       try {
         final String df = (String) getParams().get(CommonParams.DF);
         final String defaultParser = (String) getParams().get("defaultParser");
@@ -80,7 +76,7 @@ public class SolrFeature extends Feature {
 
         solrQuery = macroExpander.expand(solrQuery);
         if (solrQuery == null) {
-          throw new FeatureException(this.getClass().getCanonicalName()+" requires efi parameter that was not passed in request.");
+          throw new FeatureException(this.getClass().getSimpleName()+" requires efi parameter that was not passed in request.");
         }
 
         final SolrQueryRequest req = makeRequest(request.getCore(), solrQuery,
@@ -217,11 +213,6 @@ public class SolrFeature extends Feature {
       }
 
       @Override
-      public String toString() {
-        return "SolrFeature [function:" + q + "]";
-      }
-
-      @Override
       public DocIdSetIterator iterator() {
         return itr;
       }
@@ -286,11 +277,6 @@ public class SolrFeature extends Feature {
       @Override
       public float score() throws IOException {
         return 1f;
-      }
-
-      @Override
-      public String toString() {
-        return "SolrFeature [function:" + fq + "]";
       }
 
       @Override

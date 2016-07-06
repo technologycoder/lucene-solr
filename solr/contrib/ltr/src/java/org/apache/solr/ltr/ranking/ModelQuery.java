@@ -40,6 +40,8 @@ import org.apache.solr.ltr.feature.LTRScoringAlgorithm;
 import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
 import org.apache.solr.ltr.log.FeatureLogger;
+import org.apache.solr.ltr.ranking.Feature.FeatureWeight;
+import org.apache.solr.ltr.ranking.Feature.FeatureWeight.FeatureScorer;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.request.SolrQueryRequest;
 
@@ -242,7 +244,7 @@ public class ModelQuery extends Query {
       final List<Explanation> featureExplanations = new ArrayList<>();
       for (final FeatureWeight f : modelFeatures) {
         final Normalizer n = f.getNorm();
-        Explanation e = explanations[f.id];
+        Explanation e = explanations[f.getId()];
         if (n != IdentityNormalizer.INSTANCE) {
           e = n.explain(e);
         }

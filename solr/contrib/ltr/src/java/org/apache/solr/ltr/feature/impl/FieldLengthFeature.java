@@ -27,10 +27,7 @@ import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.SmallFloat;
-import org.apache.solr.ltr.feature.norm.Normalizer;
 import org.apache.solr.ltr.ranking.Feature;
-import org.apache.solr.ltr.ranking.FeatureScorer;
-import org.apache.solr.ltr.ranking.FeatureWeight;
 import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.NamedParams;
@@ -78,20 +75,15 @@ public class FieldLengthFeature extends Feature {
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
-    return new FieldLengthFeatureWeight(searcher, name, params, norm, id, request, originalQuery, efi);
+    return new FieldLengthFeatureWeight(searcher, request, originalQuery, efi);
   }
 
-  @Override
-  public String toString(String f) {
-    return "FieldLengthFeature [field:" + field + "]";
-
-  }
 
   public class FieldLengthFeatureWeight extends FeatureWeight {
 
-    public FieldLengthFeatureWeight(IndexSearcher searcher, String name,
-        NamedParams params, Normalizer norm, int id, SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
-      super(FieldLengthFeature.this, searcher, name, params, norm, id, request, originalQuery, efi);
+    public FieldLengthFeatureWeight(IndexSearcher searcher, 
+        SolrQueryRequest request, Query originalQuery, Map<String,String> efi) {
+      super(FieldLengthFeature.this, searcher, request, originalQuery, efi);
     }
 
     @Override
@@ -131,11 +123,6 @@ public class FieldLengthFeature extends Feature {
         final float numTerms = (float) Math.pow(1f / norm, 2);
 
         return numTerms;
-      }
-
-      @Override
-      public String toString() {
-        return "FieldLengthFeature [name=" + name + " field=" + field + "]";
       }
 
       @Override
