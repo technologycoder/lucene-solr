@@ -20,6 +20,7 @@ package com.bloomberg.news.lucene.analysis.ja;
 import java.util.Map;
 
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.ja.JapaneseTokenizerFactory;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 /**
