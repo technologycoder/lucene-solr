@@ -90,7 +90,7 @@ public class CloudSolrServer extends SolrServer {
   Random rand = new Random();
   
   private final boolean updatesToLeaders;
-  private boolean directeUpdateToLeadersOnly = false;
+  private boolean directUpdatesToLeadersOnly = false;
   private boolean parallelUpdates = true;
   private ExecutorService threadPool = Executors
       .newCachedThreadPool(new SolrjNamedThreadFactory(
@@ -266,7 +266,7 @@ public class CloudSolrServer extends SolrServer {
   }
 
   public void setDirectUpdateToLeadersOnly(boolean directeUpdateToLeadersOnly) {
-    this.directeUpdateToLeadersOnly = directeUpdateToLeadersOnly;
+    this.directUpdatesToLeadersOnly = directeUpdateToLeadersOnly;
   }
 
   private NamedList directUpdate(AbstractUpdateRequest request, ClusterState clusterState) throws SolrServerException {
@@ -420,7 +420,7 @@ public class CloudSolrServer extends SolrServer {
       List<String> urls = new ArrayList<>();
       Replica leader = slice.getLeader();
       if (leader == null) {
-        if (this.directeUpdateToLeadersOnly) {
+        if (this.directUpdatesToLeadersOnly) {
           continue;
         }
         // take unoptimized general path - we cannot find a leader yet
@@ -429,7 +429,7 @@ public class CloudSolrServer extends SolrServer {
       ZkCoreNodeProps zkProps = new ZkCoreNodeProps(leader);
       String url = zkProps.getCoreUrl();
       urls.add(url);
-      if (this.directeUpdateToLeadersOnly == false) {
+      if (this.directUpdatesToLeadersOnly == false) {
         Collection<Replica> replicas = slice.getReplicas();
         Iterator<Replica> replicaIterator = replicas.iterator();
         while (replicaIterator.hasNext()) {
@@ -526,7 +526,7 @@ public class CloudSolrServer extends SolrServer {
         if (response != null) {
           return response;
         }
-        if (this.directeUpdateToLeadersOnly) {
+        if (this.directUpdatesToLeadersOnly) {
           throw new SolrException(ErrorCode.SERVICE_UNAVAILABLE, "directUpdate[ToLeadersOnly] could not find a leader");
         }
       }
