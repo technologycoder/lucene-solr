@@ -90,7 +90,7 @@ public class CloudSolrServer extends SolrServer {
   Random rand = new Random();
   
   private final boolean updatesToLeaders;
-  private boolean directUpdatesToLeadersOnly = false;
+  private boolean directUpdatesToLeadersOnly = true;
   private boolean parallelUpdates = true;
   private ExecutorService threadPool = Executors
       .newCachedThreadPool(new SolrjNamedThreadFactory(
