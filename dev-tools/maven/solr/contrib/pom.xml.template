@@ -31,6 +31,7 @@
   <name>Apache Solr Contrib aggregator POM</name>
   <packaging>pom</packaging>
   <modules>
+    <module>analysis-bbnews</module>
     <module>analysis-extras</module>
     <module>clustering</module>
     <module>dataimporthandler</module>
