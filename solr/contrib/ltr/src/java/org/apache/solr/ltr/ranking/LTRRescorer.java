@@ -125,12 +125,12 @@ public class LTRRescorer extends Rescorer {
 
     final List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
 
-    int readerUpto = -1;
+
     int endDoc = 0;
     int docBase = 0;
 
     ModelScorer scorer = null;
-    int hitUpto = 0;
+
 
     final ModelWeight modelWeight = (ModelWeight) searcher
         .createNormalizedWeight(reRankModel, true);
@@ -153,15 +153,15 @@ public class LTRRescorer extends Rescorer {
     // The heap is just anticipating the sorting of the array, so I don't think
     // it would
     // save time.
+    int hitUpto = 0;
 
     while (hitUpto < hits.length) {
       final ScoreDoc hit = hits[hitUpto];
       final int docID = hit.doc;
 
       LeafReaderContext readerContext = null;
-      while (docID >= endDoc) {
-        readerUpto++;
-        readerContext = leaves.get(readerUpto);
+      for (int readerUpTo = 0; docID >= endDoc; readerUpTo++) {
+        readerContext = leaves.get(readerUpTo);
         endDoc = readerContext.docBase + readerContext.reader().maxDoc();
       }
 
@@ -217,13 +217,10 @@ public class LTRRescorer extends Rescorer {
           }
         }
       }
-
       hitUpto++;
     }
 
     // Must sort all documents that we reranked, and then select the top N
-
-    // ScoreDoc[] reranked = heap.getArray();
     Arrays.sort(reranked, new Comparator<ScoreDoc>() {
       @Override
       public int compare(ScoreDoc a, ScoreDoc b) {
