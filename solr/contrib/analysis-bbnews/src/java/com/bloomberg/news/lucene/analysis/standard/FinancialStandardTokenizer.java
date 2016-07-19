@@ -25,7 +25,7 @@ import org.apache.lucene.util.Version;
 public final class FinancialStandardTokenizer extends StandardTokenizer {
 
   /**
-   * Creates a new instance of the {@link com.bloomberg.news.analysis.standard.FinancialStandardTokenizer}.  Attaches
+   * Creates a new instance of the {@link com.bloomberg.news.lucene.analysis.standard.FinancialStandardTokenizer}.  Attaches
    * the <code>input</code> to the newly created JFlex scanner.
    *
    * @param input The input reader
