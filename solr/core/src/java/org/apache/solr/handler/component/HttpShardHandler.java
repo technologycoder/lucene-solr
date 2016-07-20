@@ -254,7 +254,7 @@ public class HttpShardHandler extends ShardHandler {
     final SolrQueryRequest req = rb.req;
     final SolrParams params = req.getParams();
     final String shards = params.get(ShardParams.SHARDS);
-    
+
       // since the cost of grabbing cloud state is still up in the air, we grab it only
       // if we need it.
       ClusterState clusterState = null;
@@ -350,7 +350,7 @@ public class HttpShardHandler extends ShardHandler {
 
 
         HttpShardHandlerFactory.ReplicaListTransformer replicaListTransformer = httpShardHandlerFactory.getReplicaListTransformer(req);
-        
+
         for (int i=0; i<rb.shards.length; i++) {
           if (rb.shards[i] == null) {
             if (clusterState == null) {

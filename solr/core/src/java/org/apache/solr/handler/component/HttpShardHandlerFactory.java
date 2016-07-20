@@ -65,12 +65,12 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
   // Consider CallerRuns policy and a lower max threads to throttle
   // requests at some point (or should we simply return failure?)
   private ThreadPoolExecutor commExecutor = new ThreadPoolExecutor(
-      0,
-      Integer.MAX_VALUE,
-      5, TimeUnit.SECONDS, // terminate idle threads after 5 sec
-      new SynchronousQueue<Runnable>(),  // directly hand off tasks
-      new DefaultSolrThreadFactory("httpShardExecutor")
-  );
+                                                                   0,
+                                                                   Integer.MAX_VALUE,
+                                                                   5, TimeUnit.SECONDS, // terminate idle threads after 5 sec
+                                                                   new SynchronousQueue<Runnable>(),  // directly hand off tasks
+                                                                   new DefaultSolrThreadFactory("httpShardExecutor")
+                                                                   );
 
   protected HttpClient defaultClient;
   private LBHttpSolrServer loadbalancer;
@@ -115,6 +115,52 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
     }
   };
   
+  protected class BBSolrHostReplicaListTransformer implements ReplicaListTransformer {
+    private final BBHostSet bbHostSet;
+    private static final int DEFAULT_MOD = 100;
+    private static final String DEFAULT_STRATEGY = "";
+    public BBSolrHostReplicaListTransformer(String replicaStrategy, String replicaPermutationSeed, String replicaPermutationMod, Random r)
+    {
+      log.debug("Raw: replication strategy = {} ; seed = {} ; mod = {}",
+                replicaStrategy, replicaPermutationSeed, replicaPermutationMod);
+      if (replicaStrategy == null) {
+        log.warn("Missing replication strategy. Defaulting to uniform host weights.");
+        replicaStrategy = DEFAULT_STRATEGY;
+      }
+
+      int permutationMod;
+      if (replicaPermutationMod == null) {
+        log.warn("Missing replication mod. Defaulting to {}.", DEFAULT_MOD);
+        permutationMod = DEFAULT_MOD;
+      } else {
+        permutationMod = Integer.parseInt(replicaPermutationMod);
+        if (permutationMod <= 0) {
+          log.warn("Invalid mod ({}). Defaulting to {}.", permutationMod, DEFAULT_MOD);
+          permutationMod = DEFAULT_MOD;
+        }
+      }
+
+      int permutationSeed;
+      if (replicaPermutationSeed == null) {
+        permutationSeed = -1;
+      } else {
+        permutationSeed = Integer.parseInt(replicaPermutationSeed);
+      }
+      if (permutationSeed < 0 || permutationSeed >= permutationMod) {
+        permutationSeed = r.nextInt(permutationMod);
+        log.warn("Missing or invalid seed ({}), defaulting to random seed ({}).", replicaPermutationSeed, permutationSeed);
+      }
+
+      log.debug("Using: replication strategy = {} ; seed = {} ; mod = {}",
+                replicaStrategy, permutationSeed, permutationMod);
+      bbHostSet = new BBHostSet(replicaStrategy, permutationSeed, permutationMod, r);
+    }
+    public void transform(List<Replica> replicas)
+    {
+      bbHostSet.transform(replicas);
+    }
+  };
+
   private final Random r = new Random();
 
   private final ReplicaListTransformer shufflingReplicaListTransformer = new ShufflingReplicaListTransformer(r);
@@ -176,16 +222,16 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
     }
 
     BlockingQueue<Runnable> blockingQueue = (this.queueSize == -1) ?
-        new SynchronousQueue<Runnable>(this.accessPolicy) :
-        new ArrayBlockingQueue<Runnable>(this.queueSize, this.accessPolicy);
+      new SynchronousQueue<Runnable>(this.accessPolicy) :
+      new ArrayBlockingQueue<Runnable>(this.queueSize, this.accessPolicy);
 
     this.commExecutor = new ThreadPoolExecutor(
-        this.corePoolSize,
-        this.maximumPoolSize,
-        this.keepAliveTime, TimeUnit.SECONDS,
-        blockingQueue,
-        new DefaultSolrThreadFactory("httpShardExecutor")
-    );
+                                               this.corePoolSize,
+                                               this.maximumPoolSize,
+                                               this.keepAliveTime, TimeUnit.SECONDS,
+                                               blockingQueue,
+                                               new DefaultSolrThreadFactory("httpShardExecutor")
+                                               );
 
     ModifiableSolrParams clientParams = new ModifiableSolrParams();
     clientParams.set(HttpClientUtil.PROP_MAX_CONNECTIONS_PER_HOST, maxConnectionsPerHost);
@@ -285,7 +331,7 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
     
     HostAffinityReplicaComparator(Set<String> liveNodes, Random r, Map<String,Integer> hostPrioritiesMap) {
       log.debug("HostAffinityReplicaComparator liveNodes={} r={} hostPrioritiesMap={}",
-          liveNodes, r, hostPrioritiesMap);
+                liveNodes, r, hostPrioritiesMap);
       this.hostPrioritiesMap = hostPrioritiesMap;
 
       final Set<String> liveHosts = new HashSet<String>();
@@ -299,7 +345,7 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
       log.debug("HostAffinityReplicaComparator shuffled liveHosts={}", shuffledLiveHostsList);
 
       if (hostPrioritiesMap != null) {
-        Comparator<String> host_comparator = new HostComparator();      
+        Comparator<String> host_comparator = new HostComparator();
         Collections.sort(shuffledLiveHostsList, host_comparator); // sort is guarantee to be a stable sort
         log.debug("HostAffinityReplicaComparator shuffled-then-stable-sorted liveHosts={}", shuffledLiveHostsList);
       }
@@ -319,7 +365,7 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
     
     NodeAffinityReplicaComparator(Set<String> liveNodes, Random r, Comparator<Replica> hostAffinityReplicaComparator) {
       log.debug("NodeAffinityReplicaComparator liveNodes={} r={} hostAffinityReplicaComparator={}",
-          liveNodes, r, hostAffinityReplicaComparator);
+                liveNodes, r, hostAffinityReplicaComparator);
       this.hostAffinityReplicaComparator = hostAffinityReplicaComparator;
 
       shuffledLiveNodesList = new ArrayList<String>(liveNodes);
@@ -344,13 +390,16 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
   ReplicaListTransformer getReplicaListTransformer(final SolrQueryRequest req)
   {
     SolrParams params = req.getParams();
+    log.debug("getReplicaListTransformer ; params = {}", params);
     boolean hostAffinity = false;
     boolean nodeAffinity = false;
+    boolean solrhostAffinity = false;
     Map<String,Integer> hostPrioritiesMap = null;
     
     String[] replicaAffinities = params.getParams("replicaAffinity");
     if (replicaAffinities != null) {
       for (String replicaAffinity : replicaAffinities) {
+        log.debug("replicaAffinity=={} ; params = {}", replicaAffinity, params);
         if ("host".equals(replicaAffinity)) {
           hostAffinity = true;
           // hostAffinity may or may not be supplemented by hostPriorities
@@ -368,14 +417,20 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
                 hostPrioritiesMap.put(hostPriority, defaultPriority);
               } else {
                 hostPrioritiesMap.put(
-                    hostPriority.substring(0, delimiter_pos),
-                    new Integer( Integer.parseInt(hostPriority.substring(delimiter_pos+1)) ));
+                                      hostPriority.substring(0, delimiter_pos),
+                                      new Integer( Integer.parseInt(hostPriority.substring(delimiter_pos+1)) ));
               }
             }
           }
         }
         else if ("node".equals(replicaAffinity)) {
           nodeAffinity = true;
+        }
+        else if ("solrhost".equals(replicaAffinity)) {
+          String replicaStrategy = params.get("replicaAffinity.solrhost.hostWeights");
+          String replicaPermutationMod = params.get("replicaAffinity.solrhost.mod");
+          String replicaPermutationSeed = params.get("replicaAffinity.solrhost.seed");
+          return new BBSolrHostReplicaListTransformer(replicaStrategy, replicaPermutationSeed, replicaPermutationMod, r);
         }
       }
     }
@@ -395,9 +450,9 @@ public class HttpShardHandlerFactory extends ShardHandlerFactory implements org.
       return new SortingReplicaListTransformer(replicaComparator);
     } else {
       return shufflingReplicaListTransformer;
-    }    
+    }
   }
-  
+
   /**
    * Creates a new completion service for use by a single set of distributed requests.
    */
