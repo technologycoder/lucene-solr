@@ -37,12 +37,12 @@ public class HandyQueryBuilder extends SolrQueryBuilder {
 
   @Override
   public Query getQuery(Element e) throws ParserException {
-    final BooleanQuery.Builder bq = new BooleanQuery.Builder();
+    final BooleanQuery bq = new BooleanQuery();
     final Query lhsQ = getSubQuery(e, "Left");
     final Query rhsQ = getSubQuery(e, "Right");
     bq.add(new BooleanClause(lhsQ, BooleanClause.Occur.SHOULD));
     bq.add(new BooleanClause(rhsQ, BooleanClause.Occur.SHOULD));
-    return bq.build();
+    return bq;
   }
 
   private Query getSubQuery(Element e, String name) throws ParserException {
