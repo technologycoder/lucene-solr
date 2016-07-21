@@ -256,6 +256,10 @@ public class SolrResourceLoader implements ResourceLoader,Closeable
     this( instanceDir, null, null );
   }
   
+  public SolrResourceLoader() {
+    this(SolrResourceLoader.locateSolrHome(), null, null);
+  }
+
   /** Ensures a directory name always ends with a '/'. */
   public  static String normalizeDir(String path) {
     return ( path != null && (!(path.endsWith("/") || path.endsWith("\\"))) )? path + File.separator : path;
