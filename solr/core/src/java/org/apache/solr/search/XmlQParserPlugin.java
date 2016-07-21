@@ -57,6 +57,7 @@ public class XmlQParserPlugin extends QParserPlugin {
       final Analyzer analyzer = schema.getQueryAnalyzer();
 
       final BBSolrCoreParser solrParser = new BBSolrCoreParser(defaultField, analyzer, req);
+      solrParser.init(args);
       try {
         return solrParser.parse(new ByteArrayInputStream(qstr.getBytes(StandardCharsets.UTF_8)));
       } catch (ParserException e) {

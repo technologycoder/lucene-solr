@@ -19,40 +19,26 @@ package org.apache.solr.search;
 import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.queryparser.xml.BBCoreParser;
+import org.apache.lucene.queryparser.xml.CoreParser;
 import org.apache.lucene.queryparser.xml.QueryBuilder;
 
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.request.SolrQueryRequest;
-import org.apache.solr.schema.IndexSchema;
-import org.apache.solr.search.xml.BoostedQueryBuilder;
-import org.apache.solr.search.xml.RangeFilterBuilder;
-import org.apache.solr.search.xml.RangeQueryBuilder;
-import org.apache.solr.search.xml.WildcardQueryBuilder;
 import org.apache.solr.util.plugin.NamedListInitializedPlugin;
 
 /**
  * Assembles a QueryBuilder which uses Query objects from Solr's <code>search</code> module
- * in addition to Query objects supported by the Lucene <code>BBCoreParser</code>.
+ * in addition to Query objects supported by the Lucene <code>CoreParser</code>.
  */
-public class BBSolrCoreParser extends BBCoreParser implements NamedListInitializedPlugin {
+public class SolrCoreParser extends CoreParser implements NamedListInitializedPlugin {
 
   protected final SolrQueryRequest req;
 
-  public BBSolrCoreParser(String defaultField, Analyzer analyzer,
+  public SolrCoreParser(String defaultField, Analyzer analyzer,
       SolrQueryRequest req) {
     super(defaultField, analyzer);
     this.req = req;
-
-    final IndexSchema schema = req.getSchema();
-
-    queryFactory.addBuilder("RangeQuery", new RangeQueryBuilder(schema));
-    filterFactory.addBuilder("RangeFilter", new RangeFilterBuilder(schema));
-
-    queryFactory.addBuilder("WildcardQuery", new WildcardQueryBuilder(schema));
-
-    queryFactory.addBuilder("BoostedQuery", new BoostedQueryBuilder(this, req));
   }
 
   @Override
