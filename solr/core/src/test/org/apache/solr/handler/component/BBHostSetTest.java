@@ -65,6 +65,13 @@ public class BBHostSetTest extends SolrTestCaseJ4 {
     return (low + r.nextInt(1+(high-low)));
   }
 
+  private int getOrDefault(HashMap<String, Integer> stats, String key, int defaultValue) {
+    if (stats.containsKey(key)) {
+      return stats.get(key);
+    }
+    return defaultValue;
+  }
+  
   @BeforeClass
   private static void testInit() {
     r = random();
@@ -269,25 +276,25 @@ public class BBHostSetTest extends SolrTestCaseJ4 {
       live = copy(liveAll);
       assertTrue("transform", hostSet.transform(live));
       String sig = formReplicaOrderSig(live);
-      stats.put(sig, stats.getOrDefault(sig, 0) + 1);
+      stats.put(sig, getOrDefault(stats, sig, 0) + 1);
     }
 
     final double sixthOfCasesMin = .7*(n/6);
     final double sixthOfCasesMax = 1.4*(n/6);
     log.info("stats = {}", stats);
-    assertTrue("stats ABC", stats.getOrDefault(signatureABC, 0) > sixthOfCasesMin);
-    assertTrue("stats ACB", stats.getOrDefault(signatureACB, 0) > sixthOfCasesMin);
-    assertTrue("stats BAC", stats.getOrDefault(signatureBAC, 0) > sixthOfCasesMin);
-    assertTrue("stats BCA", stats.getOrDefault(signatureBCA, 0) > sixthOfCasesMin);
-    assertTrue("stats CAB", stats.getOrDefault(signatureCAB, 0) > sixthOfCasesMin);
-    assertTrue("stats CBA", stats.getOrDefault(signatureCBA, 0) > sixthOfCasesMin);
+    assertTrue("stats ABC", getOrDefault(stats, signatureABC, 0) > sixthOfCasesMin);
+    assertTrue("stats ACB", getOrDefault(stats, signatureACB, 0) > sixthOfCasesMin);
+    assertTrue("stats BAC", getOrDefault(stats, signatureBAC, 0) > sixthOfCasesMin);
+    assertTrue("stats BCA", getOrDefault(stats, signatureBCA, 0) > sixthOfCasesMin);
+    assertTrue("stats CAB", getOrDefault(stats, signatureCAB, 0) > sixthOfCasesMin);
+    assertTrue("stats CBA", getOrDefault(stats, signatureCBA, 0) > sixthOfCasesMin);
 
-    assertTrue("stats ABC", stats.getOrDefault(signatureABC, 0) < sixthOfCasesMax);
-    assertTrue("stats ACB", stats.getOrDefault(signatureACB, 0) < sixthOfCasesMax);
-    assertTrue("stats BAC", stats.getOrDefault(signatureBAC, 0) < sixthOfCasesMax);
-    assertTrue("stats BCA", stats.getOrDefault(signatureBCA, 0) < sixthOfCasesMax);
-    assertTrue("stats CAB", stats.getOrDefault(signatureCAB, 0) < sixthOfCasesMax);
-    assertTrue("stats CBA", stats.getOrDefault(signatureCBA, 0) < sixthOfCasesMax);
+    assertTrue("stats ABC", getOrDefault(stats, signatureABC, 0) < sixthOfCasesMax);
+    assertTrue("stats ACB", getOrDefault(stats, signatureACB, 0) < sixthOfCasesMax);
+    assertTrue("stats BAC", getOrDefault(stats, signatureBAC, 0) < sixthOfCasesMax);
+    assertTrue("stats BCA", getOrDefault(stats, signatureBCA, 0) < sixthOfCasesMax);
+    assertTrue("stats CAB", getOrDefault(stats, signatureCAB, 0) < sixthOfCasesMax);
+    assertTrue("stats CBA", getOrDefault(stats, signatureCBA, 0) < sixthOfCasesMax);
   }
 
   @Test
@@ -309,24 +316,24 @@ public class BBHostSetTest extends SolrTestCaseJ4 {
       live = copy(liveAll);
       assertTrue("transform", hostSet.transform(live));
       String sig = formReplicaOrderSig(live);
-      stats.put(sig, stats.getOrDefault(sig, 0) + 1);
+      stats.put(sig, getOrDefault(stats, sig, 0) + 1);
     }
     final double twelfthOfCasesMin = .7*(n/12);
     final double twelfthOfCasesMax = 1.4*(n/12);
     log.info("stats = {}", stats);
-    assertTrue("stats ABC", stats.getOrDefault(signatureABC, 0) > twelfthOfCasesMin*3);
-    assertTrue("stats ACB", stats.getOrDefault(signatureACB, 0) > twelfthOfCasesMin*3);
-    assertTrue("stats BAC", stats.getOrDefault(signatureBAC, 0) > twelfthOfCasesMin*2);
-    assertTrue("stats BCA", stats.getOrDefault(signatureBCA, 0) > twelfthOfCasesMin*1);
-    assertTrue("stats CAB", stats.getOrDefault(signatureCAB, 0) > twelfthOfCasesMin*2);
-    assertTrue("stats CBA", stats.getOrDefault(signatureCBA, 0) > twelfthOfCasesMin*1);
+    assertTrue("stats ABC", getOrDefault(stats, signatureABC, 0) > twelfthOfCasesMin*3);
+    assertTrue("stats ACB", getOrDefault(stats, signatureACB, 0) > twelfthOfCasesMin*3);
+    assertTrue("stats BAC", getOrDefault(stats, signatureBAC, 0) > twelfthOfCasesMin*2);
+    assertTrue("stats BCA", getOrDefault(stats, signatureBCA, 0) > twelfthOfCasesMin*1);
+    assertTrue("stats CAB", getOrDefault(stats, signatureCAB, 0) > twelfthOfCasesMin*2);
+    assertTrue("stats CBA", getOrDefault(stats, signatureCBA, 0) > twelfthOfCasesMin*1);
 
-    assertTrue("stats ABC", stats.getOrDefault(signatureABC, 0) < twelfthOfCasesMax*3);
-    assertTrue("stats ACB", stats.getOrDefault(signatureACB, 0) < twelfthOfCasesMax*3);
-    assertTrue("stats BAC", stats.getOrDefault(signatureBAC, 0) < twelfthOfCasesMax*2);
-    assertTrue("stats BCA", stats.getOrDefault(signatureBCA, 0) < twelfthOfCasesMax*1);
-    assertTrue("stats CAB", stats.getOrDefault(signatureCAB, 0) < twelfthOfCasesMax*2);
-    assertTrue("stats CBA", stats.getOrDefault(signatureCBA, 0) < twelfthOfCasesMax*1);
+    assertTrue("stats ABC", getOrDefault(stats, signatureABC, 0) < twelfthOfCasesMax*3);
+    assertTrue("stats ACB", getOrDefault(stats, signatureACB, 0) < twelfthOfCasesMax*3);
+    assertTrue("stats BAC", getOrDefault(stats, signatureBAC, 0) < twelfthOfCasesMax*2);
+    assertTrue("stats BCA", getOrDefault(stats, signatureBCA, 0) < twelfthOfCasesMax*1);
+    assertTrue("stats CAB", getOrDefault(stats, signatureCAB, 0) < twelfthOfCasesMax*2);
+    assertTrue("stats CBA", getOrDefault(stats, signatureCBA, 0) < twelfthOfCasesMax*1);
   }
 
 }

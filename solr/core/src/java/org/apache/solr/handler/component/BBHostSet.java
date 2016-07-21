@@ -120,7 +120,10 @@ public class BBHostSet {
     for (Replica replica: replicas) {
       String node = node_name(replica);
       if (node.isEmpty()) continue;
-      int weight = hostWeights.getOrDefault(node, 0);
+      int weight = 0;
+      if (hostWeights.containsKey(node)) {
+        weight = hostWeights.get(node);
+      }
 
       if (weight < 0) {
         replicaNegWeight.addLast(replica);
