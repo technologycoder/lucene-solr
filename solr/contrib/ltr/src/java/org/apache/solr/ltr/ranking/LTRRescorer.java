@@ -26,6 +26,7 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Rescorer;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
@@ -44,10 +45,34 @@ import org.apache.solr.search.SolrIndexSearcher;
  * */
 public class LTRRescorer extends Rescorer {
 
-  ModelQuery reRankModel;
+  final ModelQuery reRankModel;
 
   public LTRRescorer(ModelQuery reRankModel) {
     this.reRankModel = reRankModel;
+  }
+
+  @Override
+  public int hashCode() {
+    return reRankModel.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o != null && getClass() == o.getClass()) {
+      final LTRRescorer other = (LTRRescorer)o;
+      return this.reRankModel.equals(other.reRankModel);
+    } else {
+      return false;
+    }
+  }
+
+  @Override
+  public String toString() {
+    return LTRRescorer.class.getSimpleName()+"("+reRankModel.toString()+")";
+  }
+
+  public void setOriginalQuery(Query mainQuery) {
+    this.reRankModel.setOriginalQuery(mainQuery);
   }
 
   private void heapAdjust(ScoreDoc[] hits, int size, int root) {

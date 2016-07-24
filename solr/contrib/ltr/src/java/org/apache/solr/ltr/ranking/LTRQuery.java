@@ -27,6 +27,7 @@ import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Rescorer;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.TopDocsCollector;
 import org.apache.lucene.search.Weight;
@@ -44,19 +45,19 @@ import org.apache.solr.search.RankQuery;
  */
 public class LTRQuery extends RankQuery {
   private Query mainQuery = new MatchAllDocsQuery();
-  private final ModelQuery reRankModel;
+  private final LTRRescorer reRankRescorer;
   private final int reRankDocs;
   private Map<BytesRef,Integer> boostedPriority;
 
-  public LTRQuery(ModelQuery reRankModel, int reRankDocs) {
-    this.reRankModel = reRankModel;
+  public LTRQuery(int reRankDocs, LTRRescorer reRankRescorer) {
     this.reRankDocs = reRankDocs;
+    this.reRankRescorer = reRankRescorer;
   }
 
   @Override
   public int hashCode() {
     //FIXME this hash function must be double checked
-    return (mainQuery.hashCode() + reRankModel.hashCode() + reRankDocs);
+    return (mainQuery.hashCode() + reRankRescorer.hashCode() + reRankDocs);
   }
 
   @Override
@@ -67,7 +68,7 @@ public class LTRQuery extends RankQuery {
   private boolean equalsTo(LTRQuery other) {
     
     return (mainQuery.equals(other.mainQuery)
-        && reRankModel.equals(other.reRankModel) && (reRankDocs == other.reRankDocs));
+        && reRankRescorer.equals(other.reRankRescorer) && (reRankDocs == other.reRankDocs));
   }
 
 
@@ -77,7 +78,7 @@ public class LTRQuery extends RankQuery {
     if (_mainQuery != null) {
       mainQuery = _mainQuery;
     }
-    reRankModel.setOriginalQuery(mainQuery);
+    reRankRescorer.setOriginalQuery(mainQuery);
     return this;
   }
 
@@ -103,23 +104,21 @@ public class LTRQuery extends RankQuery {
       }
     }
 
-    return new LTRCollector(reRankDocs, reRankModel, cmd, searcher,
+    return new LTRCollector(reRankDocs, reRankRescorer, cmd, searcher,
         boostedPriority);
-    // return new LTRCollector(reRankDocs, reRankModel, cmd, searcher,
-    // boostedPriority);
   }
 
   @Override
   public String toString(String field) {
-    return "{!ltr mainQuery='" + mainQuery.toString() + "' reRankModel='"
-        + reRankModel.toString() + "' reRankDocs=" + reRankDocs + "}";
+    return "{!ltr mainQuery='" + mainQuery.toString() + "' reRankRescorer='"
+        + reRankRescorer.toString() + "' reRankDocs=" + reRankDocs + "}";
   }
 
   @Override
   public Weight createWeight(IndexSearcher searcher, boolean needsScores, float boost)
       throws IOException {
     final Weight mainWeight = mainQuery.createWeight(searcher, needsScores, boost);
-    return new LTRWeight(searcher, mainWeight, reRankModel);
+    return new LTRWeight(searcher, mainWeight, reRankRescorer);
   }
 
   /**
@@ -127,14 +126,14 @@ public class LTRQuery extends RankQuery {
    * this really does is have an explain using the reRankQuery.
    */
   public class LTRWeight extends Weight {
-    private final ModelQuery reRankModel;
+    private final Rescorer reRankRescorer;
     private final Weight mainWeight;
     private final IndexSearcher searcher;
 
     public LTRWeight(IndexSearcher searcher, Weight mainWeight,
-        ModelQuery reRankModel) throws IOException {
+        Rescorer reRankRescorer) throws IOException {
       super(LTRQuery.this);
-      this.reRankModel = reRankModel;
+      this.reRankRescorer = reRankRescorer;
       this.mainWeight = mainWeight;
       this.searcher = searcher;
     }
@@ -143,7 +142,7 @@ public class LTRQuery extends RankQuery {
     public Explanation explain(LeafReaderContext context, int doc)
         throws IOException {
       final Explanation mainExplain = mainWeight.explain(context, doc);
-      return new LTRRescorer(reRankModel).explain(searcher, mainExplain,
+      return reRankRescorer.explain(searcher, mainExplain,
           context.docBase + doc);
     }
 

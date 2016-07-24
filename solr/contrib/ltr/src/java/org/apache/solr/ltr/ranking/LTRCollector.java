@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.Rescorer;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
@@ -50,18 +51,18 @@ public class LTRCollector extends TopDocsCollector {
 
   private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   
-  private final ModelQuery reRankModel;
+  private final Rescorer reRankRescorer;
   private TopDocsCollector mainCollector;
   private final IndexSearcher searcher;
   private final int reRankDocs;
   private final Map<BytesRef,Integer> boostedPriority;
 
   @SuppressWarnings("unchecked")
-  public LTRCollector(int reRankDocs, ModelQuery reRankModel, QueryCommand cmd,
+  public LTRCollector(int reRankDocs, Rescorer reRankRescorer, QueryCommand cmd,
       IndexSearcher searcher, Map<BytesRef,Integer> boostedPriority)
       throws IOException {
     super(null);
-    this.reRankModel = reRankModel;
+    this.reRankRescorer = reRankRescorer;
     this.reRankDocs = reRankDocs;
     this.boostedPriority = boostedPriority;
     Sort sort = cmd.getSort();
@@ -107,7 +108,7 @@ public class LTRCollector extends TopDocsCollector {
       final TopDocs mainDocs = mainCollector.topDocs(0, reRankDocs);
       TopDocs topRerankDocs;
       try {
-        topRerankDocs = new LTRRescorer(reRankModel).rescore(searcher,
+        topRerankDocs = reRankRescorer.rescore(searcher,
             mainDocs, howMany);
       } catch (final IOException e) {
         log.error("LTRRescorer reranking failed. ", e);
