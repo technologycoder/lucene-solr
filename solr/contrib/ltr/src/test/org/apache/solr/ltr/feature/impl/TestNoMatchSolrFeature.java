@@ -84,7 +84,7 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   }
 
   @Test
-  public void testNoMatchSolrFeat1() throws Exception {
+  public void test2NoMatch1YesMatchFeatureReturnsFvWith1FeatureAndDocScoreScaledByModel() throws Exception {
     // Tests model with all no matching features but 1
     final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
@@ -125,9 +125,8 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   }
 
   @Test
-  public void testNoMatchSolrFeat2() throws Exception {
-    // Tests model with all no matching features, but 1 non-modal matching
-    // feature for logging
+  public void test1NoMatchFeatureReturnsFvWith1MatchingFeatureFromStoreAndDocWith0Score() throws Exception {
+    // Tests model with all no matching features, but 1 feature store feature matching for extraction
     final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*, score,fv:[fv]");
@@ -161,7 +160,7 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   }
 
   @Test
-  public void testNoMatchSolrFeat3() throws Exception {
+  public void tesOnlyNoMatchFeaturesInStoreAndModelReturnsZeroScore() throws Exception {
     // Tests model with all no matching features
     final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
@@ -178,8 +177,9 @@ public class TestNoMatchSolrFeature extends TestRerankBase {
   }
 
   @Test
-  public void testNoMatchSolrFeat4() throws Exception {
+  public void tesOnlyNoMatchFeaturesInStoreAndModelReturnsNonzeroScore() throws Exception {
     // Tests model with all no matching features but expects a non 0 score
+    //  LambdaMART will return scores even for docs without any feature matches
     loadModel(
         "nomatchmodel4",
         LambdaMARTModel.class.getCanonicalName(),

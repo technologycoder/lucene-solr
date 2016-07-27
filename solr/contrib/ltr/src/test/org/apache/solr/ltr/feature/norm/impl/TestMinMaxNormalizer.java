@@ -55,14 +55,14 @@ public class TestMinMaxNormalizer {
   }
 
   @Test(expected = NormalizerException.class)
-  public void testInvalidMinMaxMissingInvalidDelta() throws NormalizerException {
+  public void testMinMaxNormalizerMinLargerThanMax() throws NormalizerException {
     Normalizer.getInstance(
         MinMaxNormalizer.class.getCanonicalName(),
         new NamedParams().add("max", "0.0f").add("min", "10.0f"), solrResourceLoader);
   }
 
   @Test(expected = NormalizerException.class)
-  public void testInvalidMinMaxMissingInvalidDelta2()
+  public void testMinMaxNormalizerMinEqualToMax()
       throws NormalizerException {
 
     Normalizer.getInstance(
