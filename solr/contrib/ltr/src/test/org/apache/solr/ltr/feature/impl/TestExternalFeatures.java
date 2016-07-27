@@ -53,7 +53,7 @@ public class TestExternalFeatures extends TestRerankBase {
   }
 
   @Test
-  public void externalTest1() throws Exception {
+  public void testEfiInTransformerShouldNotChangeOrderOfRerankedResults() throws Exception {
     final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*,score");
@@ -90,7 +90,7 @@ public class TestExternalFeatures extends TestRerankBase {
   }
 
   @Test
-  public void externalStopwordTest() throws Exception {
+  public void testFeaturesUseStopwordQueryReturnEmptyFeatureVector() throws Exception {
     final SolrQuery query = new SolrQuery();
     query.setQuery("*:*");
     query.add("fl", "*,score,fv:[fv]");
@@ -98,6 +98,7 @@ public class TestExternalFeatures extends TestRerankBase {
     // Stopword only query passed in
     query.add("rq", "{!ltr reRankDocs=3 model=externalmodel efi.user_query='a'}");
 
+    // Features are query title matches, which remove stopwords, leaving blank query, so no matches
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/fv==''");
 
     System.out.println(restTestHarness.query("/query" + query.toQueryString()));

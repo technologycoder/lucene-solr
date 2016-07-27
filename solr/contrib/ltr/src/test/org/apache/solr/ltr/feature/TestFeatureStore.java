@@ -73,7 +73,7 @@ public class TestFeatureStore extends TestRerankBase {
   }
 
   @Test
-  public void testMissingFeature() throws InvalidFeatureNameException {
+  public void testMissingFeatureReturnsNull() {
     final FeatureStore fs = fstore.getFeatureStore("fstore-testFeature3");
     for (int i = 0; i < 5; i++) {
       fstore.addFeature("testc" + (float) i,
@@ -85,7 +85,7 @@ public class TestFeatureStore extends TestRerankBase {
   }
 
   @Test(expected = FeatureException.class)
-  public void testMissingFeature2() throws InvalidFeatureNameException,
+  public void testAddingFeatureWithInvalidParams() throws InvalidFeatureNameException,
       FeatureException {
     final FeatureStore fs = fstore.getFeatureStore("fstore-testFeature4");
     for (int i = 0; i < 5; i++) {

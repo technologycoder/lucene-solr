@@ -50,23 +50,23 @@ public class TestValueFeature extends TestRerankBase {
   }
 
   @Test(expected = Exception.class)
-  public void testValueFeature1() throws Exception {
+  public void testValueFeatureWithBlankParams() throws Exception {
     loadFeature("c1", ValueFeature.class.getCanonicalName(), "{}");
   }
 
   @Test(expected = Exception.class)
-  public void testValueFeature2() throws Exception {
+  public void testValueFeatureWithEmptyValue() throws Exception {
     loadFeature("c2", ValueFeature.class.getCanonicalName(), "{\"value\":\"\"}");
   }
 
   @Test(expected = Exception.class)
-  public void testValueFeature3() throws Exception {
+  public void testValueFeatureWithWhitespaceValue() throws Exception {
     loadFeature("c2", ValueFeature.class.getCanonicalName(),
         "{\"value\":\" \"}");
   }
 
   @Test
-  public void testValueFeature4() throws Exception {
+  public void testRerankingWithConstantValueFeatureReplacesDocScore() throws Exception {
     loadFeature("c3", ValueFeature.class.getCanonicalName(), "c3",
         "{\"value\":2}");
     loadModel("m3", RankSVMModel.class.getCanonicalName(), new String[] {"c3"},
@@ -79,34 +79,35 @@ public class TestValueFeature extends TestRerankBase {
     query.add("wt", "json");
     query.add("rq", "{!ltr model=m3 reRankDocs=4}");
 
-    // String res = restTestHarness.query("/query" + query.toQueryString());
-    // System.out.println("\n\n333333\n\n" + res);
-
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==2.0");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/score==2.0");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/score==2.0");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[3]/score==2.0");
   }
 
   @Test
-  public void testValueFeature5() throws Exception {
-    loadFeature("c4", ValueFeature.class.getCanonicalName(), "c4",
-        "{\"value\":\"2\"}");
-    loadModel("m4", RankSVMModel.class.getCanonicalName(), new String[] {"c4"},
-        "c4", "{\"weights\":{\"c4\":1.0}}");
+  public void testRerankingWithEfiValueFeatureReplacesDocScore() throws Exception {
+    loadFeature("c6", ValueFeature.class.getCanonicalName(), "c6",
+        "{\"value\":\"${val6}\"}");
+    loadModel("m6", RankSVMModel.class.getCanonicalName(), new String[] {"c6"},
+        "c6", "{\"weights\":{\"c6\":1.0}}");
 
     final SolrQuery query = new SolrQuery();
     query.setQuery("title:w1");
     query.add("fl", "*, score");
     query.add("rows", "4");
     query.add("wt", "json");
-    query.add("rq", "{!ltr model=m4 reRankDocs=4}");
-
-    // String res = restTestHarness.query("/query" + query.toQueryString());
-    // System.out.println("\n\n44444\n\n" + res);
+    query.add("rq", "{!ltr model=m6 reRankDocs=4 efi.val6='2'}");
 
     assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==2.0");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[1]/score==2.0");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[2]/score==2.0");
+    assertJQ("/query" + query.toQueryString(), "/response/docs/[3]/score==2.0");
   }
+  
 
   @Test
-  public void testValueFeature6_implicitlyNotRequired_shouldReturnOkStatusCode() throws Exception {
+  public void testValueFeatureImplicitlyNotRequiredShouldReturnOkStatusCode() throws Exception {
     loadFeature("c5", ValueFeature.class.getCanonicalName(), "c5",
         "{\"value\":\"${val6}\"}");
     loadModel("m5", RankSVMModel.class.getCanonicalName(), new String[] {"c5"},
@@ -123,7 +124,7 @@ public class TestValueFeature extends TestRerankBase {
   }
 
   @Test
-  public void testValueFeature6_explictlyNotRequired_shouldReturnOkStatusCode() throws Exception {
+  public void testValueFeatureExplictlyNotRequiredShouldReturnOkStatusCode() throws Exception {
     loadFeature("c7", ValueFeature.class.getCanonicalName(), "c7",
         "{\"value\":\"${val7}\",\"required\":false}");
     loadModel("m7", RankSVMModel.class.getCanonicalName(), new String[] {"c7"},
@@ -140,7 +141,7 @@ public class TestValueFeature extends TestRerankBase {
   }
 
   @Test
-  public void testValueFeature6_required_shouldReturn400StatusCode() throws Exception {
+  public void testValueFeatureRequiredShouldReturn400StatusCode() throws Exception {
     loadFeature("c8", ValueFeature.class.getCanonicalName(), "c8",
         "{\"value\":\"${val8}\",\"required\":true}");
     loadModel("m8", RankSVMModel.class.getCanonicalName(), new String[] {"c8"},
@@ -156,23 +157,4 @@ public class TestValueFeature extends TestRerankBase {
     assertJQ("/query" + query.toQueryString(), "/responseHeader/status==400");
   }
 
-  @Test
-  public void testValueFeature7() throws Exception {
-    loadFeature("c6", ValueFeature.class.getCanonicalName(), "c6",
-        "{\"value\":\"${val6}\"}");
-    loadModel("m6", RankSVMModel.class.getCanonicalName(), new String[] {"c6"},
-        "c6", "{\"weights\":{\"c6\":1.0}}");
-
-    final SolrQuery query = new SolrQuery();
-    query.setQuery("title:w1");
-    query.add("fl", "*, score");
-    query.add("rows", "4");
-    query.add("wt", "json");
-    query.add("rq", "{!ltr model=m6 reRankDocs=4 efi.val6='2'}");
-
-    // String res = restTestHarness.query("/query" + query.toQueryString());
-    // System.out.println(res);
-
-    assertJQ("/query" + query.toQueryString(), "/response/docs/[0]/score==2.0");
-  }
 }
