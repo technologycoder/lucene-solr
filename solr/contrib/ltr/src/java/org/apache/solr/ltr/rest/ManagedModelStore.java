@@ -37,7 +37,6 @@ import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.ltr.util.FeatureException;
 import org.apache.solr.ltr.util.ModelException;
 import org.apache.solr.ltr.util.NamedParams;
-import org.apache.solr.ltr.util.NormalizerException;
 import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.rest.BaseSolrResource;
 import org.apache.solr.rest.ManagedResource;
@@ -103,27 +102,20 @@ public class ManagedModelStore extends ManagedResource implements
 
   @SuppressWarnings("unchecked")
   private Feature parseFeature(Map<String,Object> featureMap,
-      FeatureStore featureStore) throws NormalizerException, FeatureException,
+      FeatureStore featureStore) throws FeatureException,
       CloneNotSupportedException {
     // FIXME name shouldn't be be null, exception?
     final String name = (String) featureMap.get(CommonLTRParams.FEATURE_NAME);
 
-    Normalizer norm = IdentityNormalizer.INSTANCE;
-    if (featureMap.containsKey(CommonLTRParams.FEATURE_NORM)) {
-      log.info("adding normalizer {}", featureMap);
-      final Map<String,Object> normMap = (Map<String,Object>) featureMap
-          .get(CommonLTRParams.FEATURE_NORM);
-      // FIXME type shouldn't be be null, exception?
-      final String type = ((String) normMap.get(CommonLTRParams.FEATURE_TYPE));
-      NamedParams params = null;
-      if (normMap.containsKey(CommonLTRParams.FEATURE_PARAMS)) {
-        final Object paramsObj = normMap.get(CommonLTRParams.FEATURE_PARAMS);
-        if (paramsObj != null) {
-          params = new NamedParams((Map<String,Object>) paramsObj);
-        }
-      }
-      norm = Normalizer.getInstance(type, params, solrResourceLoader);
+    final Normalizer norm;
+    final Object normObj = featureMap.get(CommonLTRParams.FEATURE_NORM);
+    if (normObj != null) {
+      norm = Normalizer.fromMap(solrResourceLoader,
+          (Map<String,Object>) normObj);
+    } else {
+      norm = IdentityNormalizer.INSTANCE;
     }
+
     if (featureStores == null) {
       throw new FeatureException("missing feature store");
     }
@@ -180,7 +172,7 @@ public class ManagedModelStore extends ManagedResource implements
               + " in model " + name);
         }
         features.add(feature);
-      } catch (NormalizerException | FeatureException e) {
+      } catch (FeatureException e) {
         throw new SolrException(ErrorCode.BAD_REQUEST, e);
       } catch (final CloneNotSupportedException e) {
         throw new SolrException(ErrorCode.BAD_REQUEST, e);

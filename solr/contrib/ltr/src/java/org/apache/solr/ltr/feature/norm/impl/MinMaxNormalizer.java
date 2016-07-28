@@ -17,9 +17,10 @@ package org.apache.solr.ltr.feature.norm.impl;
  * limitations under the License.
  */
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.solr.ltr.feature.norm.Normalizer;
-import org.apache.solr.ltr.util.NamedParams;
-import org.apache.solr.ltr.util.NormalizerException;
 
 public class MinMaxNormalizer extends Normalizer {
 
@@ -60,36 +61,25 @@ public class MinMaxNormalizer extends Normalizer {
   }
 
   @Override
-  public void init(NamedParams params) throws NormalizerException {
-    super.init(params);
-    if (!params.containsKey("min")) {
-      throw new NormalizerException(
-          "missing required param [min] for normalizer MinMaxNormalizer");
-    }
-    if (!params.containsKey("max")) {
-      throw new NormalizerException(
-          "missing required param [max] for normalizer MinMaxNormalizer");
-    }
-    try {
-      min = params.getFloat("min");
-
-      max = params.getFloat("max");
-
-    } catch (final Exception e) {
-      throw new NormalizerException(
-          "invalid param value for normalizer MinMaxNormalizer", e);
-    }
-
-    updateDelta();
-    if (delta <= 0) {
-      throw new NormalizerException(
-          "invalid param value for MinMaxNormalizer, min must be lower than max ");
-    }
+  public float normalize(float value) {
+    return (value - min) / delta;
   }
 
   @Override
-  public float normalize(float value) {
-    return (value - min) / delta;
+  protected Map<String,Object> paramsToMap() {
+    final Map<String,Object> params = new HashMap<>(2, 1.0f);
+    params.put("min", min);
+    params.put("max", max);
+    return params;
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder(64); // default initialCapacity of 16 won't be enough
+    sb.append(getClass().getSimpleName()).append('(');
+    sb.append("min=").append(min);
+    sb.append(",max=").append(max).append(')');
+    return sb.toString();
   }
 
 }

@@ -16,13 +16,14 @@ package org.apache.solr.ltr.feature.norm;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.lucene.search.Explanation;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
+import org.apache.solr.ltr.feature.norm.impl.MinMaxNormalizer;
 import org.apache.solr.ltr.feature.norm.impl.StandardNormalizer;
-import org.apache.solr.ltr.util.NamedParams;
-import org.apache.solr.ltr.util.NormalizerException;
 import org.apache.solr.util.SolrPluginUtils;
 
 /**
@@ -31,43 +32,61 @@ import org.apache.solr.util.SolrPluginUtils;
  * will be received by the model.
  *
  * @see IdentityNormalizer
+ * @see MinMaxNormalizer
  * @see StandardNormalizer
  *
  */
 public abstract class Normalizer {
 
-  NamedParams params;
-
-  public NamedParams getParams() {
-    return params;
-  }
-
-  public void init(NamedParams params) throws NormalizerException {
-    this.params = params;
-    SolrPluginUtils.invokeSetters(this, params.entrySet());
-  }
+  /** name of the attribute containing the normalizer type **/
+  private static final String TYPE_KEY = "type";
+  /** name of the attribute containing the normalizer params **/
+  private static final String PARAMS_KEY = "params";
 
   public abstract float normalize(float value);
 
+  protected abstract Map<String,Object> paramsToMap();
+
   public Explanation explain(Explanation explain) {
     final float normalized = normalize(explain.getValue());
-    String explainDesc = "normalized using " + getClass().getSimpleName();
-    if (params != null) {
-      explainDesc += " [params " + params + "]";
-    }
+    final String explainDesc = "normalized using " + toString();
 
     return Explanation.match(normalized, explainDesc, explain);
   }
 
-  public static Normalizer getInstance(String type, NamedParams params,
-    SolrResourceLoader solrResourceLoader) {
+  public static Normalizer getInstance(SolrResourceLoader solrResourceLoader,
+      String type, Map<String,Object> params) {
     final Normalizer f = solrResourceLoader.newInstance(type, Normalizer.class);
-    if (params == null) {
-      params = NamedParams.EMPTY;
+    if (params != null) {
+      SolrPluginUtils.invokeSetters(f, params.entrySet());
     }
-    f.init(params);
     return f;
+  }
 
+  public static Normalizer fromMap(SolrResourceLoader solrResourceLoader,
+      Map<String,Object> normMap) {
+    final String type =
+        (String) normMap.get(TYPE_KEY);
+
+    @SuppressWarnings("unchecked")
+    final Map<String,Object> params =
+    (Map<String,Object>) normMap.get(PARAMS_KEY);
+
+    return Normalizer.getInstance(solrResourceLoader,
+        type, params);
+  }
+
+  public Map<String,Object> toMap() {
+    final Map<String,Object> normalizer = new HashMap<>(2, 1.0f);
+
+    normalizer.put(TYPE_KEY, getClass().getCanonicalName());
+
+    final Map<String,Object> params = paramsToMap();
+    if (params != null) {
+      normalizer.put(PARAMS_KEY, params);
+    }
+
+    return normalizer;
   }
 
 }
