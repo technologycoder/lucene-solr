@@ -45,19 +45,21 @@ import org.apache.solr.search.RankQuery;
  */
 public class LTRQuery extends RankQuery {
   private Query mainQuery = new MatchAllDocsQuery();
-  private final LTRRescorer reRankRescorer;
+  private final ModelQuery reRankModel;
   private final int reRankDocs;
+  private final Rescorer reRankRescorer;
   private Map<BytesRef,Integer> boostedPriority;
 
-  public LTRQuery(int reRankDocs, LTRRescorer reRankRescorer) {
+  public LTRQuery(ModelQuery reRankModel, int reRankDocs) {
+    this.reRankModel = reRankModel;
     this.reRankDocs = reRankDocs;
-    this.reRankRescorer = reRankRescorer;
+    this.reRankRescorer = new LTRRescorer(reRankModel);
   }
 
   @Override
   public int hashCode() {
     //FIXME this hash function must be double checked
-    return (mainQuery.hashCode() + reRankRescorer.hashCode() + reRankDocs);
+    return (mainQuery.hashCode() + reRankModel.hashCode() + reRankDocs);
   }
 
   @Override
@@ -68,7 +70,7 @@ public class LTRQuery extends RankQuery {
   private boolean equalsTo(LTRQuery other) {
     
     return (mainQuery.equals(other.mainQuery)
-        && reRankRescorer.equals(other.reRankRescorer) && (reRankDocs == other.reRankDocs));
+        && reRankModel.equals(other.reRankModel) && (reRankDocs == other.reRankDocs));
   }
 
 
@@ -78,7 +80,7 @@ public class LTRQuery extends RankQuery {
     if (_mainQuery != null) {
       mainQuery = _mainQuery;
     }
-    reRankRescorer.setOriginalQuery(mainQuery);
+    reRankModel.setOriginalQuery(mainQuery);
     return this;
   }
 
@@ -110,8 +112,8 @@ public class LTRQuery extends RankQuery {
 
   @Override
   public String toString(String field) {
-    return "{!ltr mainQuery='" + mainQuery.toString() + "' reRankRescorer='"
-        + reRankRescorer.toString() + "' reRankDocs=" + reRankDocs + "}";
+    return "{!ltr mainQuery='" + mainQuery.toString() + "' reRankModel='"
+        + reRankModel.toString() + "' reRankDocs=" + reRankDocs + "}";
   }
 
   @Override

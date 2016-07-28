@@ -121,7 +121,7 @@ public class LTRQParserPlugin extends QParserPlugin {
       log.info("Reranking {} docs using model {}", reRankDocs, reRankModel.getMetadata().getName());
       reRankModel.setRequest(req);
 
-      return new LTRQuery(reRankDocs, new LTRRescorer(reRankModel));
+      return new LTRQuery(reRankModel, reRankDocs);
     }
   }
 }
