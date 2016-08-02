@@ -37,10 +37,11 @@ import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.search.SolrIndexSearcher;
 
 /**
- * Implements the rescoring logic. The top documents returned by solr with their original scores, will be processed by a
- * {@link ModelQuery} that will assign a new score to each document. The top documents will be resorted based on the new
- * score.
- */
+ * Implements the rescoring logic. The top documents returned by solr with their
+ * original scores, will be processed by a {@link ModelQuery} that will assign a
+ * new score to each document. The top documents will be resorted based on the
+ * new score.
+ **/
 public class LTRRescorer extends Rescorer {
 
   ModelQuery reRankModel;
@@ -151,7 +152,7 @@ public class LTRRescorer extends Rescorer {
     // save time.
     int endDoc = 0;
     int docBase = 0;
-    int readerUpTo =0;
+    int readerUpTo = 0;
     for (int hitUpTo = 0; hitUpTo < hits.length; hitUpTo++) {
       final ScoreDoc hit = hits[hitUpTo];
       final int docID = hit.doc;
