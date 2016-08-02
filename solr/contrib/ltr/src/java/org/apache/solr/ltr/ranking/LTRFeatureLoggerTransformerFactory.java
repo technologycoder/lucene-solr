@@ -45,9 +45,10 @@ import org.apache.solr.response.transform.TransformerFactory;
 import org.apache.solr.search.SolrIndexSearcher;
 
 /**
- * This transformer will take care to generate and append in the response the features declared in the feature store of
- * the current model. The class is useful if you are not interested in the reranking (e.g., bootstrapping a machine
- * learning framework).
+ * This transformer will take care to generate and append in the response the
+ * features declared in the feature store of the current model. The class is
+ * useful if you are not interested in the reranking (e.g., bootstrapping a
+ * machine learning framework).
  */
 public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
 
