@@ -21,20 +21,12 @@ import java.util.Map;
 
 import org.apache.lucene.search.Explanation;
 import org.apache.solr.core.SolrResourceLoader;
-import org.apache.solr.ltr.feature.norm.impl.IdentityNormalizer;
-import org.apache.solr.ltr.feature.norm.impl.MinMaxNormalizer;
-import org.apache.solr.ltr.feature.norm.impl.StandardNormalizer;
 import org.apache.solr.util.SolrPluginUtils;
 
 /**
  * A normalizer normalizes the value of a feature. Once that the feature values
  * will be computed, the normalizer will be applied and the resulting values
  * will be received by the model.
- *
- * @see IdentityNormalizer
- * @see MinMaxNormalizer
- * @see StandardNormalizer
- *
  */
 public abstract class Normalizer {
 
