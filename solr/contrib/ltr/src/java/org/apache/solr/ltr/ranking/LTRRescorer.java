@@ -37,11 +37,11 @@ import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.search.SolrIndexSearcher;
 
 /**
- * This transformer will take care to generate and append in the response the
- * features declared in the feature store of the current model. The class is
- * useful if you are not interested in the reranking (e.g., bootstrapping a
- * machine learning framework).
- */
+ * Implements the rescoring logic. The top documents returned by solr with their
+ * original scores, will be processed by a {@link ModelQuery} that will assign a
+ * new score to each document. The top documents will be resorted based on the
+ * new score.
+ **/
 public class LTRRescorer extends Rescorer {
 
   ModelQuery reRankModel;
