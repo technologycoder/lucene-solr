@@ -73,10 +73,7 @@ public class ModelStore {
         final Normalizer n = meta.getNorm();
 
         if (n != null) {
-          final Map<String,Object> normalizer = new HashMap<>(2, 1.0f);
-          normalizer.put("type", n.getClass().getCanonicalName());
-          normalizer.put("params", n.getParams());
-          map.put("norm", normalizer);
+          map.put("norm", n.toMap());
         }
         features.add(map);
 

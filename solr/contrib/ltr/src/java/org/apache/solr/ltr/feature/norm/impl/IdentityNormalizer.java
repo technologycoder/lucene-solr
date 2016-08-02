@@ -17,6 +17,8 @@ package org.apache.solr.ltr.feature.norm.impl;
  * limitations under the License.
  */
 
+import java.util.Map;
+
 import org.apache.solr.ltr.feature.norm.Normalizer;
 
 public class IdentityNormalizer extends Normalizer {
@@ -30,6 +32,16 @@ public class IdentityNormalizer extends Normalizer {
   @Override
   public float normalize(float value) {
     return value;
+  }
+
+  @Override
+  protected Map<String,Object> paramsToMap() {
+    return null;
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
   }
 
 }

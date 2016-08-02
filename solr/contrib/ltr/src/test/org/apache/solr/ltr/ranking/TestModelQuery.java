@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -82,6 +83,11 @@ public class TestModelQuery extends LuceneTestCase {
         @Override
         public float normalize(float value) {
           return 42.42f;
+        }
+
+        @Override
+        protected Map<String,Object> paramsToMap() {
+          return null;
         }
       };
       features.add(f);

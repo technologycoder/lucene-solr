@@ -17,9 +17,10 @@ package org.apache.solr.ltr.feature.norm.impl;
  * limitations under the License.
  */
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.solr.ltr.feature.norm.Normalizer;
-import org.apache.solr.ltr.util.NamedParams;
-import org.apache.solr.ltr.util.NormalizerException;
 
 public class StandardNormalizer extends Normalizer {
 
@@ -51,24 +52,25 @@ public class StandardNormalizer extends Normalizer {
   }
 
   @Override
-  public void init(NamedParams params) throws NormalizerException {
-    super.init(params);
-    if (!params.containsKey("avg")) {
-      throw new NormalizerException("missing param avg");
-    }
-    if (!params.containsKey("std")) {
-      throw new NormalizerException("missing param std");
-    }
-    avg = params.getFloat("avg", 0);
-    std = params.getFloat("std", 1);
-    if (std <= 0) {
-      throw new NormalizerException("std must be > 0");
-    }
+  public float normalize(float value) {
+    return (value - avg) / std;
   }
 
   @Override
-  public float normalize(float value) {
-    return (value - avg) / std;
+  protected Map<String,Object> paramsToMap() {
+    final Map<String,Object> params = new HashMap<>(2, 1.0f);
+    params.put("avg", avg);
+    params.put("std", std);
+    return params;
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder(64); // default initialCapacity of 16 won't be enough
+    sb.append(getClass().getSimpleName()).append('(');
+    sb.append("avg=").append(avg);
+    sb.append(",std=").append(avg).append(')');
+    return sb.toString();
   }
 
 }
