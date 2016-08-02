@@ -37,11 +37,10 @@ import org.apache.solr.ltr.util.CommonLTRParams;
 import org.apache.solr.search.SolrIndexSearcher;
 
 /**
- * Implements the rescoring logic. The top documents returned by solr with their
- * original scores, will be processed by a {@link ModelQuery} that will assign a
- * new score to each document. The top documents will be resorted based on the
- * new score.
- * */
+ * Implements the rescoring logic. The top documents returned by solr with their original scores, will be processed by a
+ * {@link ModelQuery} that will assign a new score to each document. The top documents will be resorted based on the new
+ * score.
+ */
 public class LTRRescorer extends Rescorer {
 
   ModelQuery reRankModel;
@@ -125,12 +124,9 @@ public class LTRRescorer extends Rescorer {
 
     final List<LeafReaderContext> leaves = searcher.getIndexReader().leaves();
 
-
-    int endDoc = 0;
-    int docBase = 0;
+    
 
     ModelScorer scorer = null;
-
 
     final ModelWeight modelWeight = (ModelWeight) searcher
         .createNormalizedWeight(reRankModel, true);
@@ -153,14 +149,16 @@ public class LTRRescorer extends Rescorer {
     // The heap is just anticipating the sorting of the array, so I don't think
     // it would
     // save time.
-    int hitUpto = 0;
-
-    while (hitUpto < hits.length) {
-      final ScoreDoc hit = hits[hitUpto];
+    int endDoc = 0;
+    int docBase = 0;
+    int readerUpTo =0;
+    for (int hitUpTo = 0; hitUpTo < hits.length; hitUpTo++) {
+      final ScoreDoc hit = hits[hitUpTo];
       final int docID = hit.doc;
 
       LeafReaderContext readerContext = null;
-      for (int readerUpTo = 0; docID >= endDoc; readerUpTo++) {
+      // finds the right atomic reader
+      for (; docID >= endDoc; readerUpTo++) {
         readerContext = leaves.get(readerUpTo);
         endDoc = readerContext.docBase + readerContext.reader().maxDoc();
       }
@@ -181,7 +179,6 @@ public class LTRRescorer extends Rescorer {
       // non-zero score from blank features.
       assert (scorer != null);
       final int targetDoc = docID - docBase;
-      scorer.docID();
       scorer.iterator().advance(targetDoc);
 
       scorer.setDocInfoParam(CommonLTRParams.ORIGINAL_DOC_SCORE, new Float(hit.score));
@@ -190,19 +187,19 @@ public class LTRRescorer extends Rescorer {
       featureValues = modelWeight.allFeatureValues;
       featuresUsed = modelWeight.allFeaturesUsed;
 
-      if (hitUpto < topN) {
-        reranked[hitUpto] = hit;
+      if (hitUpTo < topN) {
+        reranked[hitUpTo] = hit;
         // if the heap is not full, maybe I want to log the features for this
         // document
         if (featureLogger != null) {
           featureLogger.log(hit.doc, reRankModel, solrIndexSearch,
               featureNames, featureValues, featuresUsed);
         }
-      } else if (hitUpto == topN) {
+      } else if (hitUpTo == topN) {
         // collected topN document, I create the heap
         heapify(reranked, topN);
       }
-      if (hitUpto >= topN) {
+      if (hitUpTo >= topN) {
         // once that heap is ready, if the score of this document is lower that
         // the minimum
         // i don't want to log the feature. Otherwise I replace it with the
@@ -217,7 +214,6 @@ public class LTRRescorer extends Rescorer {
           }
         }
       }
-      hitUpto++;
     }
 
     // Must sort all documents that we reranked, and then select the top N
@@ -236,12 +232,6 @@ public class LTRRescorer extends Rescorer {
         }
       }
     });
-
-    // if (topN < hits.length) {
-    // ScoreDoc[] subset = new ScoreDoc[topN];
-    // System.arraycopy(hits, 0, subset, 0, topN);
-    // hits = subset;
-    // }
 
     return new TopDocs(firstPassTopDocs.totalHits, reranked, reranked[0].score);
   }

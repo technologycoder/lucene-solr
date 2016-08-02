@@ -36,6 +36,7 @@ import org.apache.solr.ltr.ranking.ModelQuery.ModelWeight;
 import org.apache.solr.ltr.ranking.ModelQuery.ModelWeight.ModelScorer;
 import org.apache.solr.ltr.rest.ManagedFeatureStore;
 import org.apache.solr.ltr.util.CommonLTRParams;
+import org.apache.solr.ltr.util.LTRRerankHelper;
 import org.apache.solr.ltr.util.LTRUtils;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.response.ResultContext;
@@ -44,10 +45,9 @@ import org.apache.solr.response.transform.TransformerFactory;
 import org.apache.solr.search.SolrIndexSearcher;
 
 /**
- * This transformer will take care to generate and append in the response the
- * features declared in the feature store of the current model. The class is
- * useful if you are not interested in the reranking (e.g., bootstrapping a
- * machine learning framework).
+ * This transformer will take care to generate and append in the response the features declared in the feature store of
+ * the current model. The class is useful if you are not interested in the reranking (e.g., bootstrapping a machine
+ * learning framework).
  */
 public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
 
@@ -69,6 +69,7 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
 
   class FeatureTransformer extends DocTransformer {
 
+    LTRRerankHelper ltrHelper;
     String name;
     SolrParams params;
     SolrQueryRequest req;
@@ -82,14 +83,14 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
 
     /**
      * @param name
-     *          Name of the field to be added in a document representing the
-     *          feature vectors
+     *          Name of the field to be added in a document representing the feature vectors
      */
     public FeatureTransformer(String name, SolrParams params,
         SolrQueryRequest req) {
       this.name = name;
       this.params = params;
       this.req = req;
+      this.ltrHelper = new LTRRerankHelper(req, params);
     }
 
     @Override
@@ -97,75 +98,62 @@ public class LTRFeatureLoggerTransformerFactory extends TransformerFactory {
       return name;
     }
 
-    @Override
-    public void setContext(ResultContext context) {
-      super.setContext(context);
+    private boolean setSearcher(ResultContext context) {
       if (context == null) {
-        return;
+        return false;
       }
       if (context.getRequest() == null) {
-        return;
+        return false;
       }
-
       searcher = context.getSearcher();
       if (searcher == null) {
         throw new SolrException(
             org.apache.solr.common.SolrException.ErrorCode.BAD_REQUEST,
             "searcher is null");
       }
+      return true;
+    }
+
+    private void setupRerankModel(String featureStoreName) {
+      if (featureStoreName == null) {
+        featureStoreName = ltrHelper.getDefaultFeatureStoreName();
+      }
+
+      final ManagedFeatureStore fr = ltrHelper.getFeatureStore();
+      FeatureStore store = null;
+      try{
+        store = fr.getFeatureStore(featureStoreName);
+      }catch (final Exception e) {
+        throw new SolrException(ErrorCode.BAD_REQUEST,
+            "retrieving the feature store "+featureStoreName, e);
+      }
+      final LoggingModel loggingModel = new LoggingModel(featureStoreName, store.getFeatures());
+      reRankModel = ltrHelper.getRerankModel(loggingModel);
+      reRankModel.setOriginalQuery(context.getQuery());
+  }
+
+    @Override
+    public void setContext(ResultContext context) {
+      super.setContext(context);
+      if (! setSearcher(context)) return;
       leafContexts = searcher.getTopReaderContext().leaves();
 
       // Setup ModelQuery
-      reRankModel = (ModelQuery) req.getContext().get(CommonLTRParams.MODEL);
-      resultsReranked = (reRankModel != null);
-      String featureStoreName = params.get(CommonLTRParams.STORE);
+      
+      reRankModel = ltrHelper.getModelFromContext();
+      resultsReranked = ltrHelper.hasModelInContext();
+      String featureStoreName = ltrHelper.getStoreName();
       if (!resultsReranked || (featureStoreName != null && (!featureStoreName.equals(reRankModel.getFeatureStoreName())))) {
         // if store is set in the trasformer we should overwrite the logger
-        if (featureStoreName == null){
-            featureStoreName =CommonLTRParams.DEFAULT_FEATURE_STORE_NAME;
-        }
-
-        final ManagedFeatureStore fr = (ManagedFeatureStore) req.getCore().getRestManager()
-            .getManagedResource(CommonLTRParams.FEATURE_STORE_END_POINT);
-
-        final FeatureStore store = fr.getFeatureStore(featureStoreName);
-
-        try {
-          final LoggingModel lm = new LoggingModel(featureStoreName,store.getFeatures());
-          reRankModel = new ModelQuery(lm);
-
-          // Local transformer efi if provided
-          final Map<String,String> externalFeatureInfo = LTRUtils.extractEFIParams(params);
-          reRankModel.setExternalFeatureInfo(externalFeatureInfo);
-
-          reRankModel.setOriginalQuery(context.getQuery());
-
-        }catch (final Exception e) {
-          throw new SolrException(ErrorCode.BAD_REQUEST,
-              "retrieving the feature store "+featureStoreName, e);
-        }
+        setupRerankModel(featureStoreName);
       }
-
       if (reRankModel.getFeatureLogger() == null){
         final String featureResponseFormat = req.getParams().get(CommonLTRParams.FV_RESPONSE_WRITER,"csv");
         reRankModel.setFeatureLogger(FeatureLogger.getFeatureLogger(featureResponseFormat));
       }
       reRankModel.setRequest(req);
-
       featureLogger = reRankModel.getFeatureLogger();
-
-      Weight w;
-      try {
-        w = reRankModel.createWeight(searcher, true, 1f);
-      } catch (final IOException e) {
-        throw new SolrException(ErrorCode.BAD_REQUEST, e.getMessage(), e);
-      }
-      if ((w == null) || !(w instanceof ModelWeight)) {
-        throw new SolrException(ErrorCode.BAD_REQUEST,
-            "error logging the features, model weight is null");
-      }
-      modelWeight = (ModelWeight) w;
-
+      modelWeight = ltrHelper.getModelWeight(reRankModel, searcher);
     }
 
     @Override
