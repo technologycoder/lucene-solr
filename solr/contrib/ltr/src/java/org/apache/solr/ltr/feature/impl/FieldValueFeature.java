@@ -36,8 +36,18 @@ import org.apache.solr.request.SolrQueryRequest;
 import com.google.common.collect.Sets;
 
 public class FieldValueFeature extends Feature {
+
   private String field;
-  Set<String> fields = Sets.newHashSet();
+  private Set<String> fieldAsSet;
+
+  public String getField() {
+    return field;
+  }
+
+  public void setField(String field) {
+    this.field = field;
+    fieldAsSet = Sets.newHashSet(field);
+  }
 
   public FieldValueFeature() {
 
@@ -50,8 +60,7 @@ public class FieldValueFeature extends Feature {
     if (!params.containsKey(CommonLTRParams.FEATURE_FIELD_PARAM)) {
       throw new FeatureException("missing param field");
     }
-    field = (String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM);
-    fields.add(field);
+    setField((String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM));
   }
 
   @Override
@@ -90,7 +99,7 @@ public class FieldValueFeature extends Feature {
 
         try {
           final Document document = context.reader().document(itr.docID(),
-              fields);
+              fieldAsSet);
           final IndexableField indexableField = document.getField(field);
           if (indexableField == null) {
             // logger.debug("no field {}", f);

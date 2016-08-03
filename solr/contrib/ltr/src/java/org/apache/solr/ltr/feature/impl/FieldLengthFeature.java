@@ -34,7 +34,16 @@ import org.apache.solr.ltr.util.NamedParams;
 import org.apache.solr.request.SolrQueryRequest;
 
 public class FieldLengthFeature extends Feature {
-  String field;
+
+  private String field;
+
+  public String getField() {
+    return field;
+  }
+
+  public void setField(String field) {
+    this.field = field;
+  }
 
   /** Cache of decoded bytes. */
 
