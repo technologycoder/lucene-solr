@@ -36,8 +36,18 @@ import org.apache.solr.request.SolrQueryRequest;
 import com.google.common.collect.Sets;
 
 public class FieldValueFeature extends Feature {
-  String fieldName;
-  Set<String> fields = Sets.newHashSet();
+
+  private String field;
+  private Set<String> fieldAsSet;
+
+  public String getField() {
+    return field;
+  }
+
+  public void setField(String field) {
+    this.field = field;
+    fieldAsSet = Sets.newHashSet(field);
+  }
 
   public FieldValueFeature() {
 
@@ -50,8 +60,7 @@ public class FieldValueFeature extends Feature {
     if (!params.containsKey(CommonLTRParams.FEATURE_FIELD_PARAM)) {
       throw new FeatureException("missing param field");
     }
-    fieldName = (String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM);
-    fields.add(fieldName);
+    setField((String) params.get(CommonLTRParams.FEATURE_FIELD_PARAM));
   }
 
   @Override
@@ -90,18 +99,18 @@ public class FieldValueFeature extends Feature {
 
         try {
           final Document document = context.reader().document(itr.docID(),
-              fields);
-          final IndexableField field = document.getField(fieldName);
-          if (field == null) {
+              fieldAsSet);
+          final IndexableField indexableField = document.getField(field);
+          if (indexableField == null) {
             // logger.debug("no field {}", f);
             // TODO define default value
             return 0;
           }
-          final Number number = field.numericValue();
+          final Number number = indexableField.numericValue();
           if (number != null) {
             return number.floatValue();
           } else {
-            final String string = field.stringValue();
+            final String string = indexableField.stringValue();
             // boolean values in the index are encoded with the
             // chars T/F
             if (string.equals("T")) {
