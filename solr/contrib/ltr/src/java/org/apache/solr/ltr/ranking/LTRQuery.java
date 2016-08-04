@@ -142,19 +142,9 @@ public class LTRQuery extends RankQuery {
     @Override
     public Explanation explain(LeafReaderContext context, int doc)
         throws IOException {
-      final Explanation mainExplain = super.explain(context, doc);
+      final Explanation mainExplain = in.explain(context, doc);
       return reRankRescorer.explain(searcher, mainExplain,
           context.docBase + doc);
-    }
-
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      super.extractTerms(terms);
-    }
-
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      return super.scorer(context);
     }
   }
 }
