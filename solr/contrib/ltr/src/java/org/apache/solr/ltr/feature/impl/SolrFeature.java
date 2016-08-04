@@ -60,7 +60,6 @@ public class SolrFeature extends Feature {
       super(SolrFeature.this, searcher, request, originalQuery, efi);
       try {
         final String df = (String) getParams().get(CommonParams.DF);
-        final String defaultParser = (String) getParams().get("defaultParser");
         String solrQuery = (String) getParams().get(CommonParams.Q);
         final List<String> fqs = (List<String>) getParams()
             .get(CommonParams.FQ);
@@ -102,8 +101,7 @@ public class SolrFeature extends Feature {
           }
         }
 
-        final QParser parser = QParser.getParser(solrQuery,
-              defaultParser == null ? "lucene" : defaultParser, req);
+        final QParser parser = QParser.getParser(solrQuery, null, req);
         query = parser.parse();
 
         // Query can be null if there was no input to parse, for instance if you
