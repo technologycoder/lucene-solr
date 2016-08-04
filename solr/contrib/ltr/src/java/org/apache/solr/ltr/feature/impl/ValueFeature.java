@@ -34,9 +34,40 @@ public class ValueFeature extends Feature {
   private static final String VALUE_FIELD = "value";
   private static final String REQUIRED_PARAM = "required";
 
-  protected float configValue = -1f;
-  protected String configValueStr = null;
-  protected boolean required = false;
+  private float configValue = -1f;
+  private String configValueStr = null;
+
+  private Object value = null;
+  private boolean required = false;
+
+  public Object getValue() {
+    return value;
+  }
+
+  public void setValue(Object value) {
+    this.value = value;
+    if (value instanceof String) {
+      configValueStr = (String) value;
+      if (configValueStr.trim().isEmpty()) {
+        throw new FeatureException("Empty field 'value' in params for " + this);
+      }
+    } else {
+      try {
+        configValue = NamedParams.convertToFloat(value);
+      } catch (final NumberFormatException e) {
+        throw new FeatureException("Invalid type for 'value' in params for "
+            + this);
+      }
+    }
+  }
+
+  public boolean isRequired() {
+    return required;
+  }
+
+  public void setRequired(boolean required) {
+    this.required = required;
+  }
 
   public ValueFeature() {}
 
@@ -53,19 +84,7 @@ public class ValueFeature extends Feature {
           + this);
     }
 
-    if (paramValue instanceof String) {
-      configValueStr = (String) paramValue;
-      if (configValueStr.trim().isEmpty()) {
-        throw new FeatureException("Empty field 'value' in params for " + this);
-      }
-    } else {
-      try {
-        configValue = NamedParams.convertToFloat(paramValue);
-      } catch (final NumberFormatException e) {
-        throw new FeatureException("Invalid type for 'value' in params for "
-            + this);
-      }
-    }
+    setValue(paramValue);
   }
 
   @Override

@@ -38,6 +38,7 @@ import org.apache.solr.response.SolrQueryResponse;
 import org.apache.solr.rest.BaseSolrResource;
 import org.apache.solr.rest.ManagedResource;
 import org.apache.solr.rest.ManagedResourceStorage.StorageIO;
+import org.apache.solr.util.SolrPluginUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,6 +144,7 @@ public class ManagedFeatureStore extends ManagedResource implements
     try {
       final Feature f = solrResourceLoader.newInstance(type, Feature.class);
       f.init(name, params, id);
+      SolrPluginUtils.invokeSetters(f, params.entrySet());
       return f;
 
     } catch (final Exception e) {
