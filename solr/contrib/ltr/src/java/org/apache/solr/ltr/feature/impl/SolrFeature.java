@@ -44,6 +44,34 @@ import org.apache.solr.search.SyntaxError;
 
 public class SolrFeature extends Feature {
 
+  private String df;
+  private String q;
+  private List<String> fq;
+
+  public String getDf() {
+    return df;
+  }
+
+  public void setDf(String df) {
+    this.df = df;
+  }
+
+  public String getQ() {
+    return q;
+  }
+
+  public void setQ(String q) {
+    this.q = q;
+  }
+
+  public List<String> getFq() {
+    return fq;
+  }
+
+  public void setFq(List<String> fq) {
+    this.fq = fq;
+  }
+
   @Override
   public FeatureWeight createWeight(IndexSearcher searcher, boolean needsScores, SolrQueryRequest request, Query originalQuery, Map<String,String> efi)
       throws IOException {
@@ -59,10 +87,8 @@ public class SolrFeature extends Feature {
         SolrQueryRequest request, Query originalQuery, Map<String,String> efi) throws IOException {
       super(SolrFeature.this, searcher, request, originalQuery, efi);
       try {
-        final String df = (String) getParams().get(CommonParams.DF);
-        String solrQuery = (String) getParams().get(CommonParams.Q);
-        final List<String> fqs = (List<String>) getParams()
-            .get(CommonParams.FQ);
+        String solrQuery = q;
+        final List<String> fqs = fq;
 
         if (((solrQuery == null) || solrQuery.isEmpty())
             && ((fqs == null) || fqs.isEmpty())) {
