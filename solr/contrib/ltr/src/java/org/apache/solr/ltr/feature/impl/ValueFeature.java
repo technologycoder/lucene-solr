@@ -18,6 +18,7 @@ package org.apache.solr.ltr.feature.impl;
  */
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.lucene.index.LeafReaderContext;
@@ -38,7 +39,7 @@ public class ValueFeature extends Feature {
   private String configValueStr = null;
 
   private Object value = null;
-  private boolean required = false;
+  private Boolean required = null;
 
   public Object getValue() {
     return value;
@@ -62,11 +63,21 @@ public class ValueFeature extends Feature {
   }
 
   public boolean isRequired() {
-    return required;
+    return Boolean.TRUE.equals(required);
   }
 
   public void setRequired(boolean required) {
     this.required = required;
+  }
+
+  @Override
+  protected LinkedHashMap<String,Object> paramsToMap() {
+    final LinkedHashMap<String,Object> params = new LinkedHashMap<>(2, 1.0f);
+    params.put("value", value);
+    if (required != null) {
+      params.put("required", required);
+    }
+    return params;
   }
 
   public ValueFeature() {}
@@ -104,7 +115,7 @@ public class ValueFeature extends Feature {
         final String expandedValue = macroExpander.expand(configValueStr);
         if (expandedValue != null) {
           featureValue = Float.parseFloat(expandedValue);
-        } else if (required) {
+        } else if (isRequired()) {
           throw new FeatureException(this.getClass().getSimpleName() + " requires efi parameter that was not passed in request.");
         } else {
           featureValue=null;

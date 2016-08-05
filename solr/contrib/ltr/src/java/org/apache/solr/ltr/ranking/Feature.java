@@ -19,6 +19,7 @@ package org.apache.solr.ltr.ranking;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -44,7 +45,9 @@ public abstract class Feature extends Query implements Cloneable {
   protected String name;
   protected Normalizer norm = IdentityNormalizer.INSTANCE;
   protected int id;
-  protected NamedParams params = NamedParams.EMPTY;
+
+  @Deprecated
+  private NamedParams params = NamedParams.EMPTY;
 
 
   /**
@@ -83,9 +86,15 @@ public abstract class Feature extends Query implements Cloneable {
 
   @Override
   public String toString(String field) {
-    return getClass().getSimpleName() 
-        + " [name=" + name 
-        + ", params=" + params + "]";
+    final StringBuilder sb = new StringBuilder(64); // default initialCapacity of 16 won't be enough
+    sb.append(getClass().getSimpleName());
+    sb.append(" [name=").append(name);
+    final Map<String,Object> params = paramsToMap();
+    if (params != null) {
+      sb.append(", params=").append(params);
+    }
+    sb.append(']');
+    return sb.toString();
   }
 
   public abstract FeatureWeight createWeight(IndexSearcher searcher,
@@ -148,16 +157,20 @@ public abstract class Feature extends Query implements Cloneable {
     return id;
   }
 
-  /**
-   * @return the params
-   */
-  public NamedParams getParams() {
-    return params;
-  }
+  protected abstract LinkedHashMap<String,Object> paramsToMap();
 
   public void setNorm(Normalizer norm) {
     this.norm = norm;
 
+  }
+
+  public LinkedHashMap<String,Object> toMap(String storeName) {
+    final LinkedHashMap<String,Object> o = new LinkedHashMap<>(4, 1.0f);
+    o.put("name", name);
+    o.put("type", getClass().getCanonicalName());
+    o.put("store", storeName);
+    o.put("params", paramsToMap());
+    return o;
   }
   
   
@@ -197,10 +210,6 @@ public abstract class Feature extends Query implements Cloneable {
 
     public Normalizer getNorm() {
       return Feature.this.norm;
-    }
-
-    public NamedParams getParams() {
-      return Feature.this.params;
     }
 
     public int getId() {

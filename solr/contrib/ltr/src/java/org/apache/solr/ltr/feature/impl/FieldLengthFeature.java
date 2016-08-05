@@ -18,6 +18,7 @@ package org.apache.solr.ltr.feature.impl;
  */
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.lucene.index.IndexableField;
@@ -43,6 +44,13 @@ public class FieldLengthFeature extends Feature {
 
   public void setField(String field) {
     this.field = field;
+  }
+
+  @Override
+  protected LinkedHashMap<String,Object> paramsToMap() {
+    final LinkedHashMap<String,Object> params = new LinkedHashMap<>(1, 1.0f);
+    params.put("field", field);
+    return params;
   }
 
   /** Cache of decoded bytes. */

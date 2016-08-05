@@ -20,8 +20,8 @@ package org.apache.solr.ltr.ranking;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -76,7 +76,7 @@ public class TestModelQuery extends LuceneTestCase {
     for (final int i : featureIds) {
       final ValueFeature f = new ValueFeature();
       f.name = "f" + i;
-      f.params = new NamedParams().add("value", i);
+      f.setValue(i);
       f.id = i;
       f.norm = new Normalizer() {
 
@@ -86,7 +86,7 @@ public class TestModelQuery extends LuceneTestCase {
         }
 
         @Override
-        protected Map<String,Object> paramsToMap() {
+        protected LinkedHashMap<String,Object> paramsToMap() {
           return null;
         }
       };
