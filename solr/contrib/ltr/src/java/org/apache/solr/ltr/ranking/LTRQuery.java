@@ -31,6 +31,7 @@ import org.apache.lucene.search.Rescorer;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.TopDocsCollector;
 import org.apache.lucene.search.Weight;
+import org.apache.lucene.search.FilterWeight;
 import org.apache.lucene.util.BytesRef;
 import org.apache.solr.handler.component.MergeStrategy;
 import org.apache.solr.handler.component.QueryElevationComponent;
@@ -127,35 +128,23 @@ public class LTRQuery extends RankQuery {
    * This is the weight for the main solr query in the LTRQuery. The only thing
    * this really does is have an explain using the reRankQuery.
    */
-  public class LTRWeight extends Weight {
+  public class LTRWeight extends FilterWeight {
     private final Rescorer reRankRescorer;
-    private final Weight mainWeight;
     private final IndexSearcher searcher;
 
     public LTRWeight(IndexSearcher searcher, Weight mainWeight,
         Rescorer reRankRescorer) throws IOException {
-      super(LTRQuery.this);
+      super(LTRQuery.this,mainWeight);
       this.reRankRescorer = reRankRescorer;
-      this.mainWeight = mainWeight;
       this.searcher = searcher;
     }
 
     @Override
     public Explanation explain(LeafReaderContext context, int doc)
         throws IOException {
-      final Explanation mainExplain = mainWeight.explain(context, doc);
+      final Explanation mainExplain = in.explain(context, doc);
       return reRankRescorer.explain(searcher, mainExplain,
           context.docBase + doc);
-    }
-
-    @Override
-    public void extractTerms(Set<Term> terms) {
-      mainWeight.extractTerms(terms);
-    }
-
-    @Override
-    public Scorer scorer(LeafReaderContext context) throws IOException {
-      return mainWeight.scorer(context);
     }
   }
 }
