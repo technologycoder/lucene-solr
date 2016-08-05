@@ -16,7 +16,6 @@
  */
 package org.apache.solr.handler.dataimport;
 
-import org.apache.lucene.util.Constants;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

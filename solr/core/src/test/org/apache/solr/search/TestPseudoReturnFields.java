@@ -30,6 +30,7 @@ import org.apache.solr.common.params.ModifiableSolrParams;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 
@@ -61,9 +62,14 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
     assertU(adoc("id", "46", "val_i", "3", "ssto", "X", "subject", "ggg"));
     assertU(commit());
 
-    // uncommitted doc in transaction log
+  }
+  
+  @Before
+  private void addUncommittedDoc99() throws Exception {
+    // uncommitted doc in transaction log at start of every test
+    // Even if an RTG causes ulog to re-open realtime searcher, next test method
+    // will get another copy of doc 99 in the ulog
     assertU(adoc("id", "99", "val_i", "1", "ssto", "X", "subject", "uncommitted"));
-
   }
 
   public void testMultiValued() throws Exception {
@@ -140,8 +146,19 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
                 );
       }
     }
-
-    
+  }
+  
+  public void testFilterAndOneRealFieldRTG() throws Exception {
+    // shouldn't matter if we use RTG (committed or otherwise)
+    // only one of these docs should match...
+    assertQ("RTG w/ 2 ids & fq that only matches 1 uncommitted doc",
+            req("qt","/get","ids","42,99", "wt","xml","fl","id,val_i",
+                "fq","{!field f='subject' v=$my_var}","my_var","uncommitted")
+            ,"//result[@numFound='1']"
+            ,"//result/doc/str[@name='id'][.='99']"
+            ,"//result/doc/int[@name='val_i'][.='1']"
+            ,"//result/doc[count(*)=2]"
+            );
   }
 
   public void testScoreAndAllRealFields() throws Exception {
@@ -531,21 +548,13 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
     }
   }
 
-  @AwaitsFix(bugUrl="https://issues.apache.org/jira/browse/SOLR-9288")
   public void testDocIdAugmenterRTG() throws Exception {
-    // NOTE: once this test is fixed to pass, testAugmentersRTG should also be updated to test [docid]
-
-    // TODO: behavior of fl=[docid] should be consistent regardless of wether doc is committed
-    // what should behavior be?
-    // right now, for an uncommited doc, [docid] is silently ignored and no value included in result
-    // perhaps it should be "null" or "-1" ?
-    
-    // behavior shouldn't matter if we are committed or uncommitted
+    // for an uncommitted doc, we should get -1
     for (String id : Arrays.asList("42","99")) {
       assertQ(id + ": fl=[docid]",
               req("qt","/get","id",id, "wt","xml", "fl","[docid]")
               ,"count(//doc)=1"
-              ,"//doc/int[@name='[docid]']"
+              ,"//doc/int[@name='[docid]'][.>=-1]"
               ,"//doc[count(*)=1]"
               );
     }
@@ -554,22 +563,21 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
   public void testAugmentersRTG() throws Exception {
     // behavior shouldn't matter if we are committed or uncommitted
     for (String id : Arrays.asList("42","99")) {
-      // NOTE: once testDocIdAugmenterRTG can pass, [docid] should be tested here as well.
       for (SolrParams p : Arrays.asList
-             (params("fl","[shard],[explain],x_alias:[value v=10 t=int],abs(val_i)"),
-              params("fl","[shard],abs(val_i)","fl","[explain],x_alias:[value v=10 t=int]"),
-              params("fl","[shard]","fl","[explain],x_alias:[value v=10 t=int]","fl","abs(val_i)"),
-              params("fl","[shard]","fl","[explain]","fl","x_alias:[value v=10 t=int]","fl","abs(val_i)"))) {
+             (params("fl","[docid],[shard],[explain],x_alias:[value v=10 t=int],abs(val_i)"),
+              params("fl","[docid],[shard],abs(val_i)","fl","[explain],x_alias:[value v=10 t=int]"),
+              params("fl","[docid],[shard]","fl","[explain],x_alias:[value v=10 t=int]","fl","abs(val_i)"),
+              params("fl","[docid]","fl","[shard]","fl","[explain]","fl","x_alias:[value v=10 t=int]","fl","abs(val_i)"))) {
         assertQ(id + ": " + p,
                 req(p, "qt","/get","id",id, "wt","xml")
                 ,"count(//doc)=1"
-                // ,"//doc/int[@name='[docid]']" // TODO
+                ,"//doc/int[@name='[docid]'][.>=-1]"
                 ,"//doc/float[@name='abs(val_i)'][.='1.0']"
                 ,"//doc/str[@name='[shard]'][.='[not a shard request]']"
                 // RTG: [explain] should be missing (ignored)
                 ,"//doc/int[@name='x_alias'][.=10]"
                 
-                ,"//doc[count(*)=3]"
+                ,"//doc[count(*)=4]"
                 );
       }
     }
@@ -595,21 +603,20 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
   public void testAugmentersAndExplicitRTG() throws Exception {
     // behavior shouldn't matter if we are committed or uncommitted
     for (String id : Arrays.asList("42","99")) {
-      // NOTE: once testDocIdAugmenterRTG can pass, [docid] should be tested here as well.
       for (SolrParams p : Arrays.asList
-             (params("fl","id,[explain],x_alias:[value v=10 t=int],abs(val_i)"),
-              params("fl","id,abs(val_i)","fl","[explain],x_alias:[value v=10 t=int]"),
-              params("fl","id","fl","[explain]","fl","x_alias:[value v=10 t=int]","fl","abs(val_i)"))) {
+             (params("fl","id,[docid],[explain],x_alias:[value v=10 t=int],abs(val_i)"),
+              params("fl","id,[docid],abs(val_i)","fl","[explain],x_alias:[value v=10 t=int]"),
+              params("fl","id","fl","[docid]","fl","[explain]","fl","x_alias:[value v=10 t=int]","fl","abs(val_i)"))) {
         assertQ(id + ": " + p,
                 req(p, "qt","/get","id",id, "wt","xml")
                 ,"count(//doc)=1"
                 ,"//doc/str[@name='id']"
-                // ,"//doc/int[@name='[docid]']" // TODO
+                ,"//doc/int[@name='[docid]'][.>=-1]"
                 ,"//doc/float[@name='abs(val_i)'][.='1.0']"
                 // RTG: [explain] should be missing (ignored)
                 ,"//doc/int[@name='x_alias'][.=10]"
                 
-                ,"//doc[count(*)=3]"
+                ,"//doc[count(*)=4]"
               );
       }
     }
@@ -646,29 +653,28 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
   public void testAugmentersAndScoreRTG() throws Exception {
     // if we use RTG (committed or otherwise) score should be ignored
     for (String id : Arrays.asList("42","99")) {
-      // NOTE: once testDocIdAugmenterRTG can pass, [docid] should be tested here as well.
       assertQ(id,
               req("qt","/get","id",id, "wt","xml",
-                  "fl","x_alias:[value v=10 t=int],score,abs(val_i)")
-              // ,"//doc/int[@name='[docid]']" // TODO
+                  "fl","x_alias:[value v=10 t=int],score,abs(val_i),[docid]")
+              ,"//doc/int[@name='[docid]'][.>=-1]"
               ,"//doc/float[@name='abs(val_i)'][.='1.0']"
               ,"//doc/int[@name='x_alias'][.=10]"
               
-              ,"//doc[count(*)=2]"
+              ,"//doc[count(*)=3]"
               );
-      for (SolrParams p : Arrays.asList(params("fl","x_alias:[value v=10 t=int],[explain],score,abs(val_i)"),
-                                        params("fl","x_alias:[value v=10 t=int],[explain]","fl","score,abs(val_i)"),
-                                        params("fl","x_alias:[value v=10 t=int]","fl","[explain]","fl","score","fl","abs(val_i)"))) {
+      for (SolrParams p : Arrays.asList(params("fl","[docid],x_alias:[value v=10 t=int],[explain],score,abs(val_i)"),
+                                        params("fl","x_alias:[value v=10 t=int],[explain]","fl","[docid],score,abs(val_i)"),
+                                        params("fl","[docid]","fl","x_alias:[value v=10 t=int]","fl","[explain]","fl","score","fl","abs(val_i)"))) {
         
         assertQ(p.toString(),
                 req(p, "qt","/get","id",id, "wt","xml")
                 
-                // ,"//doc/int[@name='[docid]']" // TODO
+                ,"//doc/int[@name='[docid]']" // TODO
                 ,"//doc/float[@name='abs(val_i)'][.='1.0']"
                 ,"//doc/int[@name='x_alias'][.=10]"
                 // RTG: [explain] and score should be missing (ignored)
                 
-                ,"//doc[count(*)=2]"
+                ,"//doc[count(*)=3]"
                 );
       }
     }
@@ -713,8 +719,7 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
 
     // NOTE: 'ssto' is the missing one
     final List<String> fl = Arrays.asList
-      // NOTE: once testDocIdAugmenterRTG can pass, [docid] should be tested here as well.
-      ("id","[explain]","score","val_*","subj*","abs(val_i)");
+      ("id","[explain]","score","val_*","subj*","abs(val_i)","[docid]");
     
     final int iters = atLeast(random, 10);
     for (int i = 0; i< iters; i++) {
@@ -734,12 +739,12 @@ public class TestPseudoReturnFields extends SolrTestCaseJ4 {
                   req(p, "qt","/get","id",id, "wt","xml")
                   ,"count(//doc)=1"
                   ,"//doc/str[@name='id']"
-                  // ,"//doc/int[@name='[docid]']" // TODO
+                  ,"//doc/int[@name='[docid]'][.>=-1]"
                   ,"//doc/float[@name='abs(val_i)'][.='1.0']"
                   // RTG: [explain] and score should be missing (ignored)
                   ,"//doc/int[@name='val_i'][.=1]"
                   ,"//doc/str[@name='subject']"
-                  ,"//doc[count(*)=4]"
+                  ,"//doc[count(*)=5]"
                   );
         }
       }
